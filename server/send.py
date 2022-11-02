@@ -32,7 +32,7 @@ token = config.get('Kiberded').get('token')
 global vk
 
 
-def send_message(message: str, peer_id: int | str, attachment=''):
+def send_message(message: str, peer_id, attachment=''):
     """
     Отправка сообщения с обработкой Flood-control
 
