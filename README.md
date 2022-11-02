@@ -1,4 +1,4 @@
-# Кибердед - ЛЭТИшный Чат-Бот#
+# Кибердед - ЛЭТИшный Чат-Бот #
 ### Cyberdedus communiter medicinae ###
 ![ded working](https://img.shields.io/badge/ded-working-brightgreen) ![python](https://img.shields.io/badge/python-%3E%3D3.8-blue) ![nodejs](https://img.shields.io/badge/nodejs-%3E%3D12.0-blue)
 ### Инструкция по установке для админов###
