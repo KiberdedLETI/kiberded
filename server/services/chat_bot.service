@@ -6,8 +6,8 @@ After=network-online.target
 
 [Service]
 Restart=always
-WorkingDirectory=/root/email-py
-ExecStart=/usr/bin/env python3 /root/email-py/chat_bot.py
+WorkingDirectory=/root/kiberded
+ExecStart=/usr/bin/env python3 /root/kiberded/chat_bot.py
 
 [Install]
 WantedBy=multi-user.target

@@ -74,7 +74,7 @@ restart(){
 if [ -n "$1" ]; then
   case "$1" in
     "-a" | "--all")
-      python3 /root/email-py/send2chat.py Перезагрузка всех дедов
+      python3 /root/kiberded/send2chat.py Перезагрузка всех дедов
       for ix in ${!deds[*]}
       do
 	      systemctl restart ${deds[ix]}
@@ -105,7 +105,7 @@ stop(){
 if [ -n "$1" ]; then
   case "$1" in
     "-a" | "--all")
-      python3 /root/email-py/send2chat.py Остановка ВСЕХ!!! дедов
+      python3 /root/kiberded/send2chat.py Остановка ВСЕХ!!! дедов
       for ix in ${!deds[*]}
       do
 	      systemctl stop ${deds[ix]}
@@ -113,7 +113,7 @@ if [ -n "$1" ]; then
 	    echo -en "Все деды остановлены. Запустить их теперь можно только отсюда, рубилово тоже не работает\n"
       ;;
     --"basic")
-      python3 /root/email-py/send2chat.py Остановка дедов, кроме обновляющего и наблюдающего
+      python3 /root/kiberded/send2chat.py Остановка дедов, кроме обновляющего и наблюдающего
       for ix in ${!deds_rubilovo[*]}
       do
 	      systemctl stop ${deds_rubilovo[ix]}
@@ -198,7 +198,7 @@ if [ -n "$1" ]; then
 	  "send_message")
 	    if [ -n "$2" ]; then
 	      shift
-	      python3 /root/email-py/server/send.py $*
+	      python3 /root/kiberded/server/send.py $*
 	    else
 	      echo -en "${RED}Недостаточно параметров.${NORMAL}\n"
 	    fi

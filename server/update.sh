@@ -1,10 +1,10 @@
 #!/bin/bash
-cd /root/email-py
+cd /root/kiberded
 git reset --hard
 git fetch
 git merge
 
-ln --force /root/email-py/server/ded /usr/bin/ded
-chmod a+x /root/email-py/server/ded
+ln --force /root/kiberded/server/ded /usr/bin/ded
+chmod a+x /root/kiberded/server/ded
 
 ded restart -a
