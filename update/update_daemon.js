@@ -77,6 +77,17 @@ app.get('/antirubilovo', function (req, res) {
 app.post('/webhook', function (req, res) {
 	if (req.body.repository.name == "email-py") {
 		branch_name = req.body.ref.split('/')[2];
+		message_text = `Произошел гитхаб email-py в ${branch_name} юзером ${req.body.head_commit.author.name}: ${req.body.head_commit.message}`;
+		const message = vk.api.messages.send({
+			chat_id: 1,
+			random_id: getRandomId(),
+			message: message_text
+		});
+		const message_telegram = telegram.sendMessage(-1001668185586, message_text);
+		console.log(message_text);
+	}
+	if (req.body.repository.name == "kiberded") {
+		branch_name = req.body.ref.split('/')[2];
 		message_text = `Произошел гитхаб деда в ${branch_name} юзером ${req.body.head_commit.author.name}: ${req.body.head_commit.message}`;
 		const message = vk.api.messages.send({
 			chat_id: 1,
@@ -84,8 +95,7 @@ app.post('/webhook', function (req, res) {
 			message: message_text
 		});
 		const message_telegram = telegram.sendMessage(-1001668185586, message_text);
-		/*
-		exec('sh /root/email-py/server/update.sh', function (error, stdout, stderr) {
+		exec('sh /root/kiberded/server/update.sh', function (error, stdout, stderr) {
 			if (error) {
 				console.log(error.stack);
 				console.log(`Error code: ${error.code}`);
@@ -94,8 +104,6 @@ app.post('/webhook', function (req, res) {
 			console.log(stdout);
 			console.log(`STDERR скрипта: ${stderr}`);
 		});
-
-		 */
 		console.log(message_text);
 	}
 	if (req.body.repository.name ==  "magnetic-rectangles"){

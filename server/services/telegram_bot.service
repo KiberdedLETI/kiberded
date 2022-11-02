@@ -6,8 +6,8 @@ After=network-online.target
 
 [Service]
 Restart=always
-WorkingDirectory=/root/email-py
-ExecStart=/usr/bin/env python3.8 /root/email-py/telegram_bot.py
+WorkingDirectory=/root/kiberded
+ExecStart=/usr/bin/env python3.8 /root/kiberded/telegram_bot.py
 
 [Install]
 WantedBy=multi-user.target

@@ -6,8 +6,8 @@ After=network-online.target
 
 [Service]
 Restart=always
-WorkingDirectory=/root/email-py
-ExecStart=/usr/local/bin/node /root/email-py/update/update_daemon.js
+WorkingDirectory=/root/kiberded
+ExecStart=/usr/local/bin/node /root/kiberded/update/update_daemon.js
 
 [Install]
 WantedBy=multi-user.target
