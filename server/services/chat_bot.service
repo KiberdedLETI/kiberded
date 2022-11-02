@@ -1,0 +1,13 @@
+# !!!!!!!!! THIS SHIT NEEDS TO БЫТЬ СКОПИРОВАНА В /lib/systemd/system/
+
+[Unit]
+Description=Дед для обработки событий из бесед
+After=network-online.target
+
+[Service]
+Restart=always
+WorkingDirectory=/root/email-py
+ExecStart=/usr/bin/env python3 /root/email-py/chat_bot.py
+
+[Install]
+WantedBy=multi-user.target

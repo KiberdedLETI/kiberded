@@ -1,0 +1,13 @@
+# !!!!!!!!! THIS SHIT NEEDS TO БЫТЬ СКОПИРОВАНА В /lib/systemd/system/
+
+[Unit]
+Description=Наблюдающий дед, работает через ded-утилиту
+After=network-online.target
+
+[Service]
+Restart=always
+WorkingDirectory=/root/email-py
+ExecStart=/usr/bin/env python3 /root/email-py/watcher.py
+
+[Install]
+WantedBy=multi-user.target

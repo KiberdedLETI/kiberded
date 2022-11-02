@@ -1,0 +1,13 @@
+# !!!!!!!!! THIS SHIT NEEDS TO БЫТЬ СКОПИРОВАНА В /lib/systemd/system/
+
+[Unit]
+Description=GitHub update daemon to DED
+After=network-online.target
+
+[Service]
+Restart=always
+WorkingDirectory=/root/email-py
+ExecStart=/usr/local/bin/node /root/email-py/update/update_daemon.js
+
+[Install]
+WantedBy=multi-user.target

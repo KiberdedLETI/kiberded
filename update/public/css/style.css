@@ -1,0 +1,410 @@
+/*
+Theme Name: 404 Day and Night Animation
+Author: HTMLBEANS
+Author URI:
+Version: 1
+Description: 404 Theme
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: base
+Tags: one-column, two-columns
+Theme URI:
+*/
+
+/*------------------------------------------------------------------
+
+1. Body
+2. Wrapper / #wrapper
+3. Blue Sky / #mt-bluesky
+4. Sun / #mt-sun
+5. Night Sun / #mt-sun2
+6. Clouds / #mt-cloud
+7. Earth / #mt-base
+8. Night / #night
+9. Stars / #stars
+10. Moon / #moon
+11. Pahe Title / #title
+12. Hock / #hock
+13. Oh / #oh
+14. Text / .txt
+15. Responsive Start
+
+-------------------------------------------------------------------*/
+
+html{background: #8ab407;}
+/* html{background: #1c2401;} */
+/*------------------------------------------------------------------
+        1. Body
+-------------------------------------------------------------------*/
+body{margin: 0;}
+/*------------------------------------------------------------------
+        2. Wrapper / #wrapper
+-------------------------------------------------------------------*/
+#wrapper{
+	height: 969px;
+	overflow: hidden;
+	min-height: 969px;
+	position: relative;
+}
+#mt-cloud,
+#mt-bluesky,
+#night,
+#stars{
+	top:0px;
+	left:0px;
+	right:0px;
+	bottom:0px;
+	width:100%;
+	position:absolute;
+}
+/*------------------------------------------------------------------
+        3. Blue Sky / #mt-bluesky
+-------------------------------------------------------------------*/
+#mt-bluesky{
+	z-index:1;
+	background:#fff url(../images/sky.png) repeat-x top left;
+}
+/*------------------------------------------------------------------
+        4. Sun / #mt-sun
+-------------------------------------------------------------------*/
+#mt-sun{
+	top:50%;
+	left:45%;
+	z-index:2;
+	width:150px;
+	height:152px;
+	position:absolute;
+	background:transparent url(../images/sun.png) no-repeat center center;
+}
+/*------------------------------------------------------------------
+        5. Night Sun / #mt-sun2
+-------------------------------------------------------------------*/
+#mt-sun2{
+	top:50%;
+	left:45%;
+	z-index:2;
+	opacity:0;
+	width:150px;
+	height:152px;
+	position:absolute;
+	background:transparent url(../images/sun2.png) no-repeat center center;
+}
+/*------------------------------------------------------------------
+        6. Clouds / #mt-cloud
+-------------------------------------------------------------------*/
+#mt-cloud{
+	z-index:3;
+	background:transparent url(../images/clouds.png) repeat-x top left;
+}
+/*------------------------------------------------------------------
+        7. Earth / #mt-base
+-------------------------------------------------------------------*/
+#mt-base{
+	position:absolute;
+	left:0px;
+	right:0px;
+	bottom:0px;
+	width:100%;
+	height:232px;
+	background:transparent url(../images/ground.png) repeat-x bottom center;
+	z-index:3;
+}
+#base-overlay{
+	position:absolute;
+	left:0px;
+	right:0px;
+	bottom:0px;
+	width:100%;
+	height:232px;
+	opacity: 0;
+	background:transparent url(../images/night-glow.png) repeat-x bottom center;
+	z-index:7;
+}
+/*------------------------------------------------------------------
+        8. Night / #night
+-------------------------------------------------------------------*/
+#night{
+	z-index:4;
+	opacity:0;
+	background-color:#000;
+}
+/*------------------------------------------------------------------
+        9. Stars / #stars
+-------------------------------------------------------------------*/
+#stars{
+	z-index:5;
+	opacity:0;
+	bottom:200px;
+	background:transparent url(../images/stars.png) repeat-x bottom center;
+}
+#sstar{
+	top:10%;
+	left:40%;
+	z-index:5;
+	opacity:0;
+	width:126px;
+	height:80px;
+	position:absolute;
+	background:transparent url(../images/shootingstar.png) no-repeat 80px -200px;
+}
+/*------------------------------------------------------------------
+        10. Moon / #moon
+-------------------------------------------------------------------*/
+#moon{
+	top:60%;
+	left:45%;
+	z-index:6;
+	opacity:0;
+	width:292px;
+	height:292px;
+	position:absolute;
+	background:transparent url(../images/moon.png) no-repeat center center;
+}
+/*------------------------------------------------------------------
+        11. Pahe Title / #title
+-------------------------------------------------------------------*/
+#title{
+	top:80%;
+	z-index:6;
+	opacity:0;
+	left: 45%;
+	color: #fff;
+	width: 292px;
+	position:absolute;
+	letter-spacing: 23px;
+	font: 108px/120px 'Bangers', cursive;
+}
+#title span{
+	top: 0;
+	right: 64.8%;
+	position: absolute;
+	transform: rotate(-19deg);
+}
+#title span:after{
+	top: -8px;
+	left: 169px;
+	width: 17px;
+	content: "";
+	height: 43px;
+	position: absolute;
+	transform: rotate(19deg);
+	background: url('../images/img01.png') no-repeat;
+}
+/*------------------------------------------------------------------
+        12. Hock / #hock
+-------------------------------------------------------------------*/
+#hock{
+	top: 37.9%;
+	width: 2px;
+	z-index: 5;
+	opacity: 0;
+	left: 47.2%;
+	position: absolute;
+	background: url('../images/img03.png') repeat-y;
+}
+#hock:after{
+	left: 0;
+	width: 2px;
+	content: "";
+	bottom: 100%;
+	height: 153px;
+	position: absolute;
+	background: url('../images/img02.png') no-repeat;
+}
+/*------------------------------------------------------------------
+        13. Oh / #oh
+-------------------------------------------------------------------*/
+#oh{
+	opacity: 0;
+	z-index: 7;
+	left: 34.6%;
+	bottom: 42%;
+	color: #96bb06;
+	word-spacing: 2px;
+	position: absolute;
+	letter-spacing: 3px;
+	transform: rotate(-23deg);
+	font: 40px/50px 'Bangers', cursive;
+}
+/*------------------------------------------------------------------
+        14. Text / .txt
+-------------------------------------------------------------------*/
+.txt{
+	left: 50%;
+	opacity: 0;
+	z-index: 7;
+	color: #fff;
+	width: 380px;
+	bottom: 180px;
+	color: #f6f6f6;
+	position: absolute;
+	text-align: center;
+	margin: 0 0 0 -290px;
+	font: 300 16px/20px 'Poppins', sans-serif;
+}
+.txt p{
+	margin: 0 0 35px;
+	letter-spacing: 1px;
+}
+.btn{
+	color: #fff;
+	width: 170px;
+	padding: 10px;
+	border-radius: 5px;
+	vertical-align: top;
+	background: #96bb06;
+	display: inline-block;
+	text-decoration: none;
+	text-transform: uppercase;
+	font: 16px/20px 'Poppins', sans-serif;
+}
+/*------------------------------------------------------------------
+        15. Responsive Start
+-------------------------------------------------------------------*/
+@media only screen and (max-width: 1870px){
+	#hock{left: 47.25%;}
+	#title{top: 77%;}
+}
+@media only screen and (max-width: 1760px){
+	#hock{left: 47.35%;}
+}
+@media only screen and (max-width: 1680px){
+	#wrapper{min-height: 870px;height: 870px;}
+	#hock{left: 47.45%; top: 40.9%;}
+	#oh{left: 33.2%;}
+}
+@media only screen and (max-width: 1600px){
+	#hock{left: 47.6%;}
+}
+@media only screen and (max-width: 1570px){
+	#hock{left: 47.7%;}
+	#oh{left: 32.2%;}
+}
+@media only screen and (max-width: 1462px){
+	#hock{left: 47.85%;}
+}
+@media only screen and (max-width: 1400px){
+	#wrapper{min-height: 768px;height: 768px;}
+	#hock{left: 48.05%; top: 45.9%;}
+	#oh{left: 31.2%;}
+	.txt{
+		bottom: 127px;
+		margin: 0 0 0 -230px;
+	}
+	.txt p{margin: 0 0 23px;}
+	#title{top: 76%;}
+}
+@media only screen and (max-width: 1370px){
+	#wrapper{min-height: 650px;height: 650px;}
+	#hock{left: 48.095%; top: 41.9%;}
+	#oh{left: 29.9%; bottom: 39%;}
+	.txt{bottom: 86px;}
+	#moon{margin: -60px 0 0;}
+	#title{top: 70%;}
+}
+@media only screen and (max-width: 1300px){
+	#hock{left: 48.2%;}
+	#oh{left: 30.2%;}
+}
+@media only screen and (max-width: 1240px){
+	#hock{left: 48.3%; top: 41.9%;}
+}
+@media only screen and (max-width: 1240px){
+	#hock{left: 48.4%;}
+	#oh{left: 28%;}
+}
+@media only screen and (max-width: 1180px){
+	#hock{left: 48.6%;}
+	#oh{left: 27%;}
+}
+@media only screen and (max-width: 1120px){
+	#hock{left: 48.7%;}
+	#oh{left: 25%;}
+}
+@media only screen and (max-width: 1090px){
+	#hock{left: 48.9%;}
+}
+@media only screen and (max-width: 1030px){
+	#hock{left: 49.1%;}
+}
+@media only screen and (max-width: 970px){
+	#hock{left: 49.3%;}
+	#oh{left: 25%;}
+	.txt{margin: 0 0 0 -210px;}
+}
+@media only screen and (max-width: 920px){
+	#hock{left: 49.5%;}
+}
+@media only screen and (max-width: 880px){
+	#wrapper{min-height: 1000px;height: 1000px;}
+	#hock{left: 49.8%; top: 35.9%;}
+	#title{top: 82%;}
+	#moon{margin: 0;}
+	#oh{left: 20%; bottom: 42%;}
+}
+@media only screen and (max-width: 835px){
+	#hock{left: 50.0%;}
+}
+@media only screen and (max-width: 785px){
+	#hock{left: 50.4%; top: 37%;}
+	#oh{left: 19%;}
+}
+@media only screen and (max-width: 755px){
+	#hock{left: 50.6%;}
+}
+@media only screen and (max-width: 700px){
+	#hock{left: 50.9%;}
+}
+@media only screen and (max-width: 670px){
+	#wrapper{min-height: 920px;height: 920px;}
+	#hock{left: 51.2%; top: 39.9%;}
+	#oh{left: 17%;}
+}
+@media only screen and (max-width: 630px){
+	#hock{left: 51.6%;}
+	#oh{left: 16%;}
+}
+@media only screen and (max-width: 595px){
+	#hock{left: 52.0%;}
+	#oh{left: 12%;}
+}
+@media only screen and (max-width: 565px){
+	#hock{left: 52.4%;}
+	#oh{left: 8%;}
+}
+@media only screen and (max-width: 540px){
+	#hock{left: 52.8%;}
+}
+@media only screen and (max-width: 510px){
+	#hock{left: 53.1%;}
+}
+@media only screen and (max-width: 490px){
+	#wrapper{min-height: 840px;height: 840px;}
+	#moon{margin: -22px 0 0;}
+	#hock{left: 53.6%;}
+	#oh{left: 6%;}
+}
+@media only screen and (max-width: 469px){
+	#hock{left: 54.3%;}
+}
+@media only screen and (max-width: 430px){
+	#hock{left: 54.8%;}
+}
+@media only screen and (max-width: 415px){
+	#hock{left: 55.4%;}
+	.txt{margin: 0 0 0 -180px;}
+}
+@media only screen and (max-width: 385px){
+	#hock{left: 56.1%;}
+	.txt{
+		width: 340px;
+		bottom: 150px;
+		margin: 0 0 0 -170px;
+	}
+}
+@media only screen and (max-width: 355px){
+	#hock{left: 57.4%;}
+}
+@media only screen and (max-width: 325px){
+	#hock{left: 57.8%;}
+}

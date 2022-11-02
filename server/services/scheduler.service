@@ -1,0 +1,13 @@
+# !!!!!!!!! THIS SHIT NEEDS TO БЫТЬ СКОПИРОВАНА В /lib/systemd/system/
+
+[Unit]
+Description=Планировочный дед
+After=network-online.target
+
+[Service]
+Restart=always
+WorkingDirectory=/root/email-py
+ExecStart=/usr/bin/env python3 /root/email-py/scheduler.py
+
+[Install]
+WantedBy=multi-user.target

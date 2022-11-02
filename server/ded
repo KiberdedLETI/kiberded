@@ -1,0 +1,212 @@
+#!/bin/bash
+
+# атрибуты для echo:
+NORMAL='\033[0m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+
+# текущие деды: ОБНОВЛЯЮЩЕГО ОСТАВИТЬ НА ПОСЛЕДНЕМ МЕСТЕ
+deds=("chat_bot" "main_bot" "watcher" "scheduler" "telegram_bot" "update_daemon")
+deds_names=("Кибердед" "Почтовый" "Наблюдающий" "Планировочный" "Кибертелеграмный" "Обновляющий")
+
+# деды для остановки из рубилова:
+deds_rubilovo=("chat_bot" "main_bot" "scheduler" "telegram_bot")
+
+# функция отображения статуса дедов
+status(){
+if [ -n "$1" ]; then
+  case "$1" in
+    "--without-color")
+      NORMAL=''
+      RED=''
+      GREEN=''
+      ;;
+  esac
+fi
+echo -en "	Статус дедов:\n"
+for ix in ${!deds[*]}
+do
+	perem="$(systemctl is-active ${deds[ix]} 2>&1)"
+	ded_status_active="${GREEN}активирован${NORMAL}"
+	ded_status_inactive="${RED}остановлен${NORMAL}"
+	ded_status_failed="${RED}сломался${NORMAL}"
+	if [ $perem = "active" ]; then
+		message="$ded_status_active"
+	elif [ $perem = "inactive" ]; then
+		message="$ded_status_inactive"
+	elif [ $perem = "failed" ]; then
+		message="$ded_status_failed"
+	else
+		message="${RED}статус неизвестен: ${perem}${NORMAL}\n"
+	fi
+	echo -en "	${deds_names[$ix]} - ${message}, $(systemctl status ${deds[ix]} | grep -Po '.*; \K(.*)(?= ago)')\n"
+done
+uptime="$(uptime -p 2>&1)"
+echo -en "  Аптайм сервера: ${uptime}\n"
+echo -en ""
+}
+
+# отображение статуса всех дедов ("ok" если все из deds работают, иначе "dead")
+status_all(){
+count_active=0
+count_inactive=0
+for ix in ${!deds[*]}
+do
+	perem="$(systemctl is-active ${deds[ix]} 2>&1)"
+	if [ $perem = "active" ]; then
+		(( count_active++ ))
+	#elif [ $perem = "inactive" ]; then
+	   # (( count_inactive++ ))
+	fi
+	# count_act_inact=$count_inactive+count_active
+done
+if [ "$count_active" -eq "${#deds[@]}" ]; then
+	echo "ok"
+# elif [ "$count_act_inact" -eq "${#deds[@}" ]; then  # todo проверить работоспособность
+  # echo "stopped"
+else
+	echo "dead"
+fi
+}
+
+# функция перезапуска дедов
+restart(){
+if [ -n "$1" ]; then
+  case "$1" in
+    "-a" | "--all")
+      python3 /root/email-py/send2chat.py Перезагрузка всех дедов
+      for ix in ${!deds[*]}
+      do
+	      systemctl restart ${deds[ix]}
+	    done
+	    echo -en "Все деды перезапущены.\n"
+      ;;
+    *)
+      echo -en "${RED}Неизвестная команда. Для справки запусти ded help${NORMAL}\n"
+      ;;
+  esac
+else
+  echo "	Выбери деда для перезагрузки. Если нужно выйти - Ctrl-C тебе в помощь"
+  select ded in ${deds_names[*]}
+  do
+    if [ "${REPLY}" -le "${#deds[@]}" ]; then
+      $(systemctl restart ${deds[${REPLY}-1]})
+      echo -en "${GREEN}${ded} перезагружен${NORMAL}\n"
+    else
+      echo -en "${RED}Такого деда нет.${NORMAL}\n"
+    fi
+    break
+  done
+fi
+}
+
+# функция остановки дедов
+stop(){
+if [ -n "$1" ]; then
+  case "$1" in
+    "-a" | "--all")
+      python3 /root/email-py/send2chat.py Остановка ВСЕХ!!! дедов
+      for ix in ${!deds[*]}
+      do
+	      systemctl stop ${deds[ix]}
+	    done
+	    echo -en "Все деды остановлены. Запустить их теперь можно только отсюда, рубилово тоже не работает\n"
+      ;;
+    --"basic")
+      python3 /root/email-py/send2chat.py Остановка дедов, кроме обновляющего и наблюдающего
+      for ix in ${!deds_rubilovo[*]}
+      do
+	      systemctl stop ${deds_rubilovo[ix]}
+	    done
+	    echo -en "Все деды кроме обновляющего и наблюдающего остановлены\n"
+      ;;
+    *)
+      echo -en "${RED}Неизвестная команда. Для справки запусти ded help${NORMAL}\n"
+      ;;
+  esac
+else
+  echo "	Выбери деда для остановки. Если нужно выйти - Ctrl-C тебе в помощь"
+	select ded in ${deds_names[*]}
+	do
+		if [ "${REPLY}" -le "${#deds[@]}" ]; then
+			$(systemctl stop ${deds[${REPLY}-1]})
+			echo -en "${GREEN}${ded} остановлен до перезагрузки сервера.${NORMAL}\n"
+		else
+			echo -en "${RED}Такого деда нет.${NORMAL}\n"
+		fi
+		break
+	done
+fi
+}
+
+# основная часть линуксового деда
+if [ -n "$1" ]; then
+	case "$1" in
+		"help" | "-h" )
+			echo "Доступные команды: "
+			echo "	help, -h - справка"
+			echo "	start - запуск дедов"
+			echo "	stop - остановка дедов"
+			echo "    stop -a | --all - останавливает ВСЕХ дедов, в т.ч. обновляющего и наблюдающего"
+			echo "    stop --basic - останавливает всех дедов кроме обновляющего и наблюдающего"
+			echo "	restart - перезагрузка дедов"
+			echo "    restart -a | --all - перезагрузка всех дедов"
+			echo "	status - информация о дедах"
+			echo "    status --without-color - вывод информации белым шрифтом"
+			echo "		status -a - информация о всех дедах"
+			echo "  send_message - отправка сообщения в отладочную конфу"
+			echo "    send_message -c | --chat PARAM - отправка сообщения в конфу с произвольным chat_id (ОСТОРОЖНО!!!)"
+			echo "    send_message -u | --user PARAM- отправка сообщения юзеру (или конфу через peer_id) с произвольным user_id"
+			echo "    send_message -m | --moderator PARAM- отправка сообщения модераторам определенной группы"
+			echo "    send_message -g | --group PARAM - отправка сообщения в беседы определенной группы"
+			;;
+		"start")
+			echo "	Выбери деда для запуска. Если нужно выйти - Ctrl-C тебе в помощь"
+			select ded in ${deds_names[*]}
+			do
+				if [ "${REPLY}" -le "${#deds[@]}" ]; then
+					$(systemctl start ${deds[${REPLY}-1]})
+					echo -en "${GREEN}${ded} запущен${NORMAL}\n"
+				else
+					echo -en "${RED}Такого деда нет.${NORMAL}\n"
+				fi
+				break
+			done
+			;;
+		"stop")
+			shift
+			stop $*
+			;;
+		"restart")
+		  shift
+		  restart $*
+			;;
+		"status")
+			if [ -n "$2" ]; then
+				case "$2" in
+					"-a") 
+						status_all
+						;;
+				  *)
+				    status "$2"
+				    ;;
+				esac
+			else
+			  status
+			fi
+			;;
+	  "send_message")
+	    if [ -n "$2" ]; then
+	      shift
+	      python3 /root/email-py/server/send.py $*
+	    else
+	      echo -en "${RED}Недостаточно параметров.${NORMAL}\n"
+	    fi
+	    ;;
+	  *)
+			echo -en "${RED}Неизвестная команда. Для справки запусти ded help${NORMAL}\n"
+			;;
+	esac
+else
+	echo -en "${RED}Линуксовый дед без аргументов работать еще не умеет :( Запускай ded -h или ded help для справОчки${NORMAL}\n"
+fi

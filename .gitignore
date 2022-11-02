@@ -1,0 +1,16 @@
+venv/
+.idea/
+/bot_functions/pidor_time_log.txt
+/__pycache__/
+/bot_functions/__pycache__/
+/shiza/__pycache__/
+/keyboards_telegram/__pycache__/
+/test.py
+/base/
+/cache/
+/server/__pycache__/
+/messages_backup
+debug.py
+*.db
+*.log
+configuration.toml

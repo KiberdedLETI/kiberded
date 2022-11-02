@@ -1,0 +1,13 @@
+# !!!!!!!!! THIS SHIT NEEDS TO БЫТЬ СКОПИРОВАНА В /lib/systemd/system/
+
+[Unit]
+Description=Телеграмный дед
+After=network-online.target
+
+[Service]
+Restart=always
+WorkingDirectory=/root/email-py
+ExecStart=/usr/bin/env python3.8 /root/email-py/telegram_bot.py
+
+[Install]
+WantedBy=multi-user.target
