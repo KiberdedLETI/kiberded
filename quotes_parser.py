@@ -72,9 +72,13 @@ def get_vk_wall_content(group_id="126643733") -> list:
     return full_items
 
 
-def get_quotes_from_vk_wall_content(content: list) -> list:
+def get_quotes_from_vk_wall_content(content: list):
     """
-    Обработка полученного списка содержимого стены сообщества - получаем цитаты и автора из каждого элемента и заносим в БД
+    Обработка полученного списка содержимого стены сообщества - получаем цитаты и автора из каждого элемента
+    и заносим в БД admindb/prepods_quotes.db (таблица quotes (surname, quote)).
+
+    :param content: список с содержимым стены
+    :return: 0
     """
 
     with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
@@ -82,8 +86,8 @@ def get_quotes_from_vk_wall_content(content: list) -> list:
         cur = con.cursor()
         query = 'SELECT surname FROM prepods'
         list_prepods_surnames = list(set(cur.execute(query).fetchall()))  # сразу без дубликатов
-        query = 'SELECT initials FROM prepods'
-        list_prepods_initials = cur.execute(query).fetchall()
+        # query = 'SELECT initials FROM prepods'
+        # list_prepods_initials = cur.execute(query).fetchall()
     con.close()
 
     # Парсим цитаты
