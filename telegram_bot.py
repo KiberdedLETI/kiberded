@@ -49,6 +49,7 @@ except FileNotFoundError:
 
 path = config.get('Kiberded').get('path')  # необходимо для корректной работы на сервере
 token = config.get('Kiberded').get('token_telegram')
+group_token = config.get('Kiberded').get('group_token')
 tg_deeplink_token = config.get('Kiberded').get('deeplink_token_key')
 days = [['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'], [' (чёт)', ' (нечёт)']]
 timetable = config.get('Kiberded').get('timetable')
@@ -956,6 +957,7 @@ def help_private(message):
     if message.chat.id in admins:
         answer = 'Ты админ, тебе доступны команды, которых нет в меню. Вот список всех доступных:' \
                  '\n/main - кнопка на случай, если вдруг куда-то пропала основная нижняя клавиатура' \
+                 '\n/auth - авторизация через ВКонтакте, для доступа к методичкам и синхронизации настроек' \
                  '\n/help - справка, ты здесь' \
                  '\n/add_book - добавление книг' \
                  '\n/add_moderator - добавить модератора' \
@@ -965,6 +967,7 @@ def help_private(message):
     elif message.chat.id in moderators:
         answer = 'Ты модератор, тебе доступны команды, которых нет в меню. Вот список всех доступных:' \
                  '\n/main - кнопка на случай, если вдруг куда-то пропала основная нижняя клавиатура' \
+                 '\n/auth - авторизация через ВКонтакте, для доступа к методичкам и синхронизации настроек' \
                  '\n/help - справка, ты здесь' \
                  '\n/add_book - добавление книг' \
                  '\nЧтобы добавить бота в беседу, напиши "/start@kiberded_bot_leti" в чате после добавления' \
@@ -972,11 +975,20 @@ def help_private(message):
     else:
         answer = 'Список доступных команд:' \
                  '\n/main - кнопка на случай, если вдруг куда-то пропала основная нижняя клавиатура' \
+                 '\n/auth - авторизация через ВКонтакте, для доступа к методичкам и синхронизации настроек' \
                  '\n/change_group - изменить группу' \
                  '\n/help - справка, ты здесь' \
                  '\nЧтобы добавить бота в беседу, напиши "/start@kiberded_bot_leti" в чате после добавления' \
                  '\n\nОбщая справка под боту: будет позже'
     send_message(message.chat.id, answer)
+
+
+@bot.message_handler(commands=['auth'], chat_types='private', is_registered=True)
+def auth_message(message):
+    dump_message(message)
+    send_message(message.chat.id, 'Чтобы авторизоваться в боте, зайди в раздел "Прочее" в боте '
+                                  f'[ВКонтакте](https://vk.com/im?sel=-{group_token}) и перейди по ссылке с кнопки '
+                                  '"Телеграм"')
 
 
 @bot.message_handler(commands=['minigames'], chat_types='private', is_registered=True)
