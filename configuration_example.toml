@@ -19,3 +19,5 @@ telegram_admin_chat = -1001668185586  # chat.id админского чата в
 telegram_backup_chat = -640134320  # chat.id чата для бэкапов
 telegram_books_chat = -1001596534310 # chat.id чата для книжек
 telegram_dayofdaypics_chat = -1001758218447 # chat.id чата с картиночками дня дня
+vk_ded_page_login = ""  # "Длюдеда" - страница-пользователь для Кибердеда
+vk_ded_page_password = ""

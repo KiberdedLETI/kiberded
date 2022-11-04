@@ -26,13 +26,14 @@ except FileNotFoundError:
         sys.exit()
 
 token = config.get('Kiberded').get('token')
+vk_login = config.get('Kiberded').get('vk_ded_page_login')
+vk_password = config.get('Kiberded').get('vk_ded_page_password')
 
 
 # обновлялка базы /admindb/databases/day_of_day.db
 def dayofday_db_updater():
     try:
-        login, password = '+', ''  # логин и пароль от длюдеды, необходимо прописать вручную
-        vk_session = vk_api.VkApi(login, password)
+        vk_session = vk_api.VkApi(vk_login, vk_password)
         vk_session.auth()
         response = vk_session.method('photos.get', {'owner_id': 648179760, 'album_id': 280009249, 'count': 1000})
         items = json.loads(json.dumps(response.get('items')))
@@ -115,8 +116,7 @@ def download_photo(url, name):  # загружает фотку в cache/name.jp
 
 def add_photo(id, master):  # добавляет фото №id в альбом, master - айди предложившего
     try:
-        login, password = '', ''  # логин и пароль длюдеды, необходимо прописать вручную
-        vk_session = vk_api.VkApi(login, password)  # сессия страницыдлюдеды
+        vk_session = vk_api.VkApi(vk_login, vk_password)  # сессия страницыдлюдеды
         vk_session.auth()
 
         vk_session_bot = vk_api.VkApi(token=token)  # сессия основного деда
