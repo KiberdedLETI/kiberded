@@ -257,7 +257,7 @@ def update_prepods():  # ее нужно вызывать каждый раз п
     :return: 0 если все ок
     """
     global list_prepods
-    with sqlite3.connect(f'databases/admindb/databases/prepods.db') as con:
+    with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
         con.row_factory = lambda cursor, row: row[0]  # чтобы возвращать list, а не list of tuples
         cur = con.cursor()
         query = 'SELECT surname FROM prepods'
@@ -518,7 +518,7 @@ def get_prepod_info(prepod_id):
     :param int prepod_id: id препода
     :return: лист с информацией о преподе как в БД + читабельное название кафедры
     """
-    with sqlite3.connect(f'databases/admindb/databases/prepods.db') as con:
+    with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
         cur = con.cursor()
         query = f"SELECT * FROM prepods WHERE id=?"
         prepod_info = cur.execute(query, [prepod_id]).fetchall()
@@ -530,7 +530,7 @@ def get_prepod_info(prepod_id):
         prepod_info = prepod_info[0]
         readable_department = ''
         for department in departments:
-            with sqlite3.connect(f'databases/admindb/databases/prepods.db') as con:
+            with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
                 cur = con.cursor()
                 query = f"SELECT title FROM departments WHERE id=?"
                 readable_department += cur.execute(query, [department]).fetchone()[0] + ', '
