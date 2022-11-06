@@ -272,7 +272,7 @@ def callback_to_json(callback_data) -> dict:
 
     Пример:
     callback_data='t:action,a_t:message,c:table_empty'
-    payload={"type": "action", "action_type": "message", "command": "table_empty"}
+    payload={"type": "action", "command": "table_empty"}
     :param callback_data: входная строка
     :return: json-dict payload
     """
@@ -294,7 +294,7 @@ def callback_to_json(callback_data) -> dict:
         'week (even)': 'full (чёт)',
         'week (odd)': 'full (нечёт)'
         }
-    payload_item_list = ['type', 'action_type', 'command', 'place', 'weekday', 'subject', 'department_id', 'list_id']
+    payload_item_list = ['type', 'command', 'place', 'weekday', 'subject', 'department_id', 'list_id']
     callback_item_list = ['t', 'a_t', 'c', 'p', 'wd', 'sj', 'did', 'lid']
     payload = {}
     for i in callback_data.split(','):
@@ -303,11 +303,10 @@ def callback_to_json(callback_data) -> dict:
             key = payload_item_list[callback_item_list.index(key)]
         payload[key] = value
     if payload['type'] == 'action':
-        if payload['action_type'] == 'message':
-            if payload['command'] == 'table_weekday' \
-                    or payload['command'] == 'table_weekday_2' \
-                    or payload['command'] == 'table_prepod':
-                payload['weekday'] = eng_to_rus_days[payload['weekday']]
+        if payload['command'] == 'table_weekday' \
+                or payload['command'] == 'table_weekday_2' \
+                or payload['command'] == 'table_prepod':
+            payload['weekday'] = eng_to_rus_days[payload['weekday']]
     return payload
 
 
@@ -559,7 +558,6 @@ def get_prepods_history(call):
         for prepod_id in prepod_history:
             prepod, department = get_prepod_info(prepod_id)
             payload = {"type": "action",
-                       "action_type": "message",
                        "command": f"choose_prepod",
                        "id": str(prepod[0]),
                        "department_id": str(prepod[1])
@@ -803,7 +801,6 @@ def search_prepod_text_step(message):
         for prepod_id in prepods:
             prepod, department = get_prepod_info(prepod_id)
             payload = {"type": "action",
-                       "action_type": "message",
                        "command": f"choose_prepod",
                        "id": str(prepod[0]),
                        "department_id": str(prepod[1])
@@ -823,7 +820,6 @@ def search_prepod_text_step(message):
             for prepod_id in prepods:
                 prepod, department = get_prepod_info(prepod_id)
                 payload = {"type": "action",
-                           "action_type": "message",
                            "command": f"choose_prepod",
                            "id": str(prepod[0]),
                            "department_id": str(prepod[1])
@@ -1243,263 +1239,262 @@ def callback_query(call):
         dump_message(cl, callback=True)
 
     if payload['type'] == 'action':
-        if payload['action_type'] == 'message':  # пережиток вк-шного бота, тут шизы нет, мб убрать? todo
-            group = get_group(call.from_user.id)
-            additional_group = get_additional_group(call.from_user.id)
-            command = payload["command"]
-            next_step = ''  # вместо шизы, так сказать
+        group = get_group(call.from_user.id)
+        additional_group = get_additional_group(call.from_user.id)
+        command = payload["command"]
+        next_step = ''  # вместо шизы, так сказать
 
-            if command == 'table_today':
-                if additional_group:
-                    kb = f'keyboard_table_{group_study_status(group)}_additional'
-                else:
-                    kb = f'keyboard_table_{group_study_status(group)}'
-                message_ans = read_table(group)
-
-            elif command == 'table_tomorrow':
-                if additional_group:
-                    kb = f'keyboard_table_{group_study_status(group)}_additional'
-                else:
-                    kb = f'keyboard_table_{group_study_status(group)}'
-                message_ans = read_table(group, get_day(today + timedelta(days=1)))
-
-            elif command == 'table_weekday':
-                kb = f'kb_table_other_{"even" if get_day().split()[1] == "(чёт)" else "odd"}'
-                message_ans = read_table(group, payload["weekday"])
-
-            elif command == 'table_exam':
-                if additional_group:
-                    kb = f'keyboard_table_{group_study_status(group)}_additional'
-                else:
-                    kb = f'keyboard_table_{group_study_status(group)}'
-                message_ans = get_exams(group)
-
-            elif command == 'table_today_2':
-                if additional_group:
-                    kb = f'keyboard_table_{group_study_status(group)}_additional'
-                else:
-                    kb = f'keyboard_table_{group_study_status(group)}'
-                message_ans = f'Расписание группы {additional_group}\n' + read_table(additional_group)
-
-            elif command == 'table_tomorrow_2':
-                if additional_group:
-                    kb = f'keyboard_table_{group_study_status(group)}_additional'
-                else:
-                    kb = f'keyboard_table_{group_study_status(group)}'
-                message_ans = f'Расписание группы {additional_group}\n' + \
-                              read_table(additional_group, get_day(today + timedelta(days=1)))
-
-            elif command == 'table_weekday_2':
-                kb = f'kb_table_other_{"even" if get_day().split()[1] == "(чёт)" else "odd"}_2'
-                message_ans = f'Расписание группы {additional_group}\n' + \
-                              read_table(additional_group, payload["weekday"])
-
-            elif command == 'table_exam_2':
-                if additional_group:
-                    kb = f'keyboard_table_{group_study_status(group)}_additional'
-                else:
-                    kb = f'keyboard_table_{group_study_status(group)}'
-                message_ans = f'Расписание группы {additional_group}\n' + get_exams(additional_group)
-
-            elif command == 'table_empty':  # todo открывать расписание пораньше?
+        if command == 'table_today':
+            if additional_group:
+                kb = f'keyboard_table_{group_study_status(group)}_additional'
+            else:
                 kb = f'keyboard_table_{group_study_status(group)}'
-                message_ans = 'Расписание на новый семестр еще не выложено, ' \
-                              'следи за апдейтами на digital.etu.ru/schedule ' \
-                              '\nРасписание в боте появляется на следующий день после выхода'
+            message_ans = read_table(group)
 
-            elif command == 'table_back':
-                if additional_group:
-                    kb = f'keyboard_table_{group_study_status(group)}_additional'
-                else:
-                    kb = f'keyboard_table_{group_study_status(group)}'
-                message_ans = f'Сегодня у нас: {get_day()}'  # get_day() по умолчанию today
+        elif command == 'table_tomorrow':
+            if additional_group:
+                kb = f'keyboard_table_{group_study_status(group)}_additional'
+            else:
+                kb = f'keyboard_table_{group_study_status(group)}'
+            message_ans = read_table(group, get_day(today + timedelta(days=1)))
 
-            elif command == 'get_books':
+        elif command == 'table_weekday':
+            kb = f'kb_table_other_{"even" if get_day().split()[1] == "(чёт)" else "odd"}'
+            message_ans = read_table(group, payload["weekday"])
+
+        elif command == 'table_exam':
+            if additional_group:
+                kb = f'keyboard_table_{group_study_status(group)}_additional'
+            else:
+                kb = f'keyboard_table_{group_study_status(group)}'
+            message_ans = get_exams(group)
+
+        elif command == 'table_today_2':
+            if additional_group:
+                kb = f'keyboard_table_{group_study_status(group)}_additional'
+            else:
+                kb = f'keyboard_table_{group_study_status(group)}'
+            message_ans = f'Расписание группы {additional_group}\n' + read_table(additional_group)
+
+        elif command == 'table_tomorrow_2':
+            if additional_group:
+                kb = f'keyboard_table_{group_study_status(group)}_additional'
+            else:
+                kb = f'keyboard_table_{group_study_status(group)}'
+            message_ans = f'Расписание группы {additional_group}\n' + \
+                          read_table(additional_group, get_day(today + timedelta(days=1)))
+
+        elif command == 'table_weekday_2':
+            kb = f'kb_table_other_{"even" if get_day().split()[1] == "(чёт)" else "odd"}_2'
+            message_ans = f'Расписание группы {additional_group}\n' + \
+                          read_table(additional_group, payload["weekday"])
+
+        elif command == 'table_exam_2':
+            if additional_group:
+                kb = f'keyboard_table_{group_study_status(group)}_additional'
+            else:
+                kb = f'keyboard_table_{group_study_status(group)}'
+            message_ans = f'Расписание группы {additional_group}\n' + get_exams(additional_group)
+
+        elif command == 'table_empty':  # todo открывать расписание пораньше?
+            kb = f'keyboard_table_{group_study_status(group)}'
+            message_ans = 'Расписание на новый семестр еще не выложено, ' \
+                          'следи за апдейтами на digital.etu.ru/schedule ' \
+                          '\nРасписание в боте появляется на следующий день после выхода'
+
+        elif command == 'table_back':
+            if additional_group:
+                kb = f'keyboard_table_{group_study_status(group)}_additional'
+            else:
+                kb = f'keyboard_table_{group_study_status(group)}'
+            message_ans = f'Сегодня у нас: {get_day()}'  # get_day() по умолчанию today
+
+        elif command == 'get_books':
+            kb = ''
+            message_ans = ''
+            try:
+                normal_subject = get_subject_from_id(payload["subject"], group)
+                get_books(normal_subject, group, call)
+            except Exception as e:
+                message_ans = 'Произошла ошибка. Админы уже знают, скоро починят'  # todo а знают ли?
+                send_message(admin_chat, f'Ошибка в get_books: {e}\nГруппа {group}\n\n'
+                                         f'Traceback:\n{traceback.format_exc()}')
+
+        elif command == 'get_prepods':
+            kb = f'{group}_prepods'
+            try:
+                normal_subject = get_subject_from_id(payload["subject"], group)
+                message_ans = get_prepods(normal_subject, group)
+            except Exception as e:
+                message_ans = 'Произошла ошибка. Админы уже знают, скоро починят'
+                send_message(admin_chat, f'Ошибка в get_prepods: {e}\nГруппа {group}'
+                                         f'\n\nTraceback:\n{traceback.format_exc()}')
+
+        elif command == 'calendar_today':
+            if call.from_user.id in list_unauthorized_users:
+                message_ans = f'Ошибка доступа - календарь группы могут смотреть только авторизованные участники. ' \
+                             f'Чтобы получить доступ, зарегистрируйся в сообществе ВКонтакте: https://vk.com/kiberded_bot' \
+                             f' \nВ случае возникновения сложностей можешь писать админам: ' \
+                             f'https://t.me/evgeniy_setrov или https://t.me/TSheyd'
                 kb = ''
-                message_ans = ''
-                try:
-                    normal_subject = get_subject_from_id(payload["subject"], group)
-                    get_books(normal_subject, group, call)
-                except Exception as e:
-                    message_ans = 'Произошла ошибка. Админы уже знают, скоро починят'  # todo а знают ли?
-                    send_message(admin_chat, f'Ошибка в get_books: {e}\nГруппа {group}\n\n'
-                                             f'Traceback:\n{traceback.format_exc()}')
+            else:
+                kb = 'keyboard_calendar'
+                message_ans = read_calendar(group)  # по умолчанию read_calendar('today')
 
-            elif command == 'get_prepods':
-                kb = f'{group}_prepods'
-                try:
-                    normal_subject = get_subject_from_id(payload["subject"], group)
-                    message_ans = get_prepods(normal_subject, group)
-                except Exception as e:
-                    message_ans = 'Произошла ошибка. Админы уже знают, скоро починят'
-                    send_message(admin_chat, f'Ошибка в get_prepods: {e}\nГруппа {group}'
-                                             f'\n\nTraceback:\n{traceback.format_exc()}')
-
-            elif command == 'calendar_today':
-                if call.from_user.id in list_unauthorized_users:
-                    message_ans = f'Ошибка доступа - календарь группы могут смотреть только авторизованные участники. ' \
-                                 f'Чтобы получить доступ, зарегистрируйся в сообществе ВКонтакте: https://vk.com/kiberded_bot' \
-                                 f' \nВ случае возникновения сложностей можешь писать админам: ' \
-                                 f'https://t.me/evgeniy_setrov или https://t.me/TSheyd'
-                    kb = ''
-                else:
-                    kb = 'keyboard_calendar'
-                    message_ans = read_calendar(group)  # по умолчанию read_calendar('today')
-
-            elif command == 'calendar_tomorrow':
-                if call.from_user.id in list_unauthorized_users:
-                    message_ans = f'Ошибка доступа - календарь группы могут смотреть только авторизованные участники. ' \
-                                 f'Чтобы получить доступ, зарегистрируйся в сообществе ВКонтакте: https://vk.com/kiberded_bot' \
-                                 f' \nВ случае возникновения сложностей можешь писать админам: ' \
-                                 f'https://t.me/evgeniy_setrov или https://t.me/TSheyd'
-                    kb = ''
-                else:
-                    kb = 'keyboard_calendar'
-                    message_ans = read_calendar(group, 'tomorrow')
-
-            # закомментированное - это то, что отсутствует в create_keyboards, так что надо смотреть аккуратнее
-
-            # elif command == 'remove_notifications':
-            # pass
-
-            elif command == 'random_anecdote':
-                kb = 'keyboard_other'
-                message_ans = get_random_anekdot()
-
-            elif command == 'random_toast':
-                kb = 'keyboard_other'
-                message_ans = get_random_toast()
-
-            elif command == 'anecdote_subscribe':
-                kb = 'keyboard_other'
-                message_ans = add_user_to_anekdot(call.from_user.id, '1', source='tg')
-
-            elif command == 'anecdote_unsubscribe':
-                kb = 'keyboard_other'
-                message_ans = add_user_to_anekdot(call.from_user.id, '-1', source='tg')
-
-            elif command == 'table_subscribe':
-                kb = 'keyboard_other'
-                message_ans = add_user_to_table(call.from_user.id, '1', source='tg')
-
-            elif command == 'table_unsubscribe':
-                kb = 'keyboard_other'
-                message_ans = add_user_to_table(call.from_user.id, '-1', source='tg')
-
-            elif command == 'change_group':
+        elif command == 'calendar_tomorrow':
+            if call.from_user.id in list_unauthorized_users:
+                message_ans = f'Ошибка доступа - календарь группы могут смотреть только авторизованные участники. ' \
+                             f'Чтобы получить доступ, зарегистрируйся в сообществе ВКонтакте: https://vk.com/kiberded_bot' \
+                             f' \nВ случае возникновения сложностей можешь писать админам: ' \
+                             f'https://t.me/evgeniy_setrov или https://t.me/TSheyd'
                 kb = ''
-                message_ans = 'Введи номер группы в формате ХХХХ, например 9281'
-                next_step = change_group_step
+            else:
+                kb = 'keyboard_calendar'
+                message_ans = read_calendar(group, 'tomorrow')
 
-            elif command == 'change_additional_group':
-                kb = ''
-                message_ans = 'Введи номер дополнительной группы в формате ХХХХ, например 9281\n\n' \
-                              'Чтобы удалить доп.группу, напиши 0000'
-                next_step = change_additional_group_step
+        # закомментированное - это то, что отсутствует в create_keyboards, так что надо смотреть аккуратнее
 
-            elif command == 'search_department':
-                list_id = payload['list_id']
-                kb = f'keyboard_departments_{list_id}'
-                message_ans = f'Выбери кафедру преподавателя:'
+        # elif command == 'remove_notifications':
+        # pass
 
-            elif command == 'search_prepod':
-                list_id = payload['list_id']
-                department_id = payload['department_id']
-                kb = f'keyboard_prepods_{department_id}_{list_id}'
-                message_ans = f'Выбери преподавателя:'
+        elif command == 'random_anecdote':
+            kb = 'keyboard_other'
+            message_ans = get_random_anekdot()
 
-            elif command == 'choose_department':
-                department_id = payload['id']
-                kb = f'keyboard_prepods_{department_id}_0'
-                message_ans = f'Выбери преподавателя:'
+        elif command == 'random_toast':
+            kb = 'keyboard_other'
+            message_ans = get_random_toast()
 
-            elif command == 'choose_prepod':
-                prepod_id = payload['id']
-                kb = f'SPECIAL;choose_prepod;{prepod_id}'
-                prepod, department = get_prepod_info(prepod_id)
-                message_ans = f'Расписание преподавателя: {prepod[2]} {department}\nСегодня у нас: {get_day()}'
-                add_prepod_to_history(prepod_id, call.from_user.id)
+        elif command == 'anecdote_subscribe':
+            kb = 'keyboard_other'
+            message_ans = add_user_to_anekdot(call.from_user.id, '1', source='tg')
 
-            elif command == 'prepods_history':
-                kb = ''
-                message_ans = ''
-                try:
-                    get_prepods_history(call)
-                except Exception as e:
-                    message_ans = 'Произошла ошибка. Админы уже знают, скоро починят'
-                    send_message(admin_chat, f'Ошибка в get_prepods: {e}\nГруппа {group}'
-                                             f'\n\nTraceback:\n{traceback.format_exc()}')
+        elif command == 'anecdote_unsubscribe':
+            kb = 'keyboard_other'
+            message_ans = add_user_to_anekdot(call.from_user.id, '-1', source='tg')
 
-            elif command == 'search_prepod_text':
-                kb = ''
-                message_ans = 'Напиши фамилию преподавателя. Поиск НЕ чувствителен к регистру и может исправлять ' \
-                              'опечатки'
-                next_step = search_prepod_text_step
+        elif command == 'table_subscribe':  # todo
+            kb = 'keyboard_other'
+            message_ans = add_user_to_table(call.from_user.id, '1', source='tg')
 
-            elif command == 'table_prepod':
-                prepod_id = payload['id']
-                kb = f'SPECIAL;choose_prepod;{prepod_id}'
-                weekday = payload['weekday']
-                message_ans = get_prepod_schedule(prepod_id, weekday)
+        elif command == 'table_unsubscribe':
+            kb = 'keyboard_other'
+            message_ans = add_user_to_table(call.from_user.id, '-1', source='tg')
 
-            elif command == 'minigames':
-                kb = 'keyboard_minigames'
-                message_ans = 'Выбери мини-игру:'
+        elif command == 'change_group':
+            kb = ''
+            message_ans = 'Введи номер группы в формате ХХХХ, например 9281'
+            next_step = change_group_step
 
-            elif command == 'heads_or_tails_toss':
-                kb = 'keyboard_heads_or_tails_retoss'
-                message_ans = get_coin_flip_result(call.from_user.id)
+        elif command == 'change_additional_group':
+            kb = ''
+            message_ans = 'Введи номер дополнительной группы в формате ХХХХ, например 9281\n\n' \
+                          'Чтобы удалить доп.группу, напиши 0000'
+            next_step = change_additional_group_step
 
-            elif command == 'start_classical_RPC':
-                kb = 'SPECIAL;start_classical_RPC'
-                markup = start_classical_rock_paper_scissors(call.from_user.id, int(time.time()))
-                message_ans = 'Игра началась!'
+        elif command == 'search_department':
+            list_id = payload['list_id']
+            kb = f'keyboard_departments_{list_id}'
+            message_ans = f'Выбери кафедру преподавателя:'
 
-            elif command == 'classical_RPC':
-                kb = 'keyboard_minigames'
-                id = payload['id']
-                choose = payload['choose']
-                if choose == 'c':  # отмена типа
-                    message_ans = stop_classical_rock_paper_scissors(call.from_user.id, id)
-                else:
-                    message_ans = classical_rock_paper_scissors(call.from_user.id, id, choose)
+        elif command == 'search_prepod':
+            list_id = payload['list_id']
+            department_id = payload['department_id']
+            kb = f'keyboard_prepods_{department_id}_{list_id}'
+            message_ans = f'Выбери преподавателя:'
 
-            # elif command == 'add_chat':
-            # pass
+        elif command == 'choose_department':
+            department_id = payload['id']
+            kb = f'keyboard_prepods_{department_id}_0'
+            message_ans = f'Выбери преподавателя:'
 
-            # elif command == 'day_of_day_toggle':
-            # pass
+        elif command == 'choose_prepod':  # TODO copy to quotes
+            prepod_id = payload['id']
+            kb = f'SPECIAL;choose_prepod;{prepod_id}'
+            prepod, department = get_prepod_info(prepod_id)
+            message_ans = f'Расписание преподавателя: {prepod[2]} {department}\nСегодня у нас: {get_day()}'
+            add_prepod_to_history(prepod_id, call.from_user.id)
 
-            # elif command == 'weekly_toast_toggle':
-            # pass
+        elif command == 'prepods_history':
+            kb = ''
+            message_ans = ''
+            try:
+                get_prepods_history(call)
+            except Exception as e:
+                message_ans = 'Произошла ошибка. Админы уже знают, скоро починят'
+                send_message(admin_chat, f'Ошибка в get_prepods: {e}\nГруппа {group}'
+                                         f'\n\nTraceback:\n{traceback.format_exc()}')
 
-            else:  # все остальное - типа обработка ошибков
-                kb = ''
-                message_ans = 'Ошибка - неизвестная команда'  # дефолтное значение
-                logger.error(f'Ошибка ответа на запрос {command};'
-                             f'\nПэйлоад: {payload}')
+        elif command == 'search_prepod_text':
+            kb = ''
+            message_ans = 'Напиши фамилию преподавателя. Поиск НЕ чувствителен к регистру и может исправлять ' \
+                          'опечатки'
+            next_step = search_prepod_text_step
 
-            if message_ans:  # get_books возвращает 0, так что вот
-                if kb:
-                    if kb.startswith('SPECIAL'):  # обработка специальных случаев
-                        kb = kb.split(';')
-                        if kb[1] == 'choose_prepod':
-                            markup = keyboard_prepod_schedule(kb[2], get_day())
-                        elif kb[1] == 'start_classical_RPC':
-                            markup = markup  # тут все норм
-                        else:
-                            markup = ''
+        elif command == 'table_prepod':
+            prepod_id = payload['id']
+            kb = f'SPECIAL;choose_prepod;{prepod_id}'
+            weekday = payload['weekday']
+            message_ans = get_prepod_schedule(prepod_id, weekday)
+
+        elif command == 'minigames':
+            kb = 'keyboard_minigames'
+            message_ans = 'Выбери мини-игру:'
+
+        elif command == 'heads_or_tails_toss':
+            kb = 'keyboard_heads_or_tails_retoss'
+            message_ans = get_coin_flip_result(call.from_user.id)
+
+        elif command == 'start_classical_RPC':
+            kb = 'SPECIAL;start_classical_RPC'
+            markup = start_classical_rock_paper_scissors(call.from_user.id, int(time.time()))
+            message_ans = 'Игра началась!'
+
+        elif command == 'classical_RPC':
+            kb = 'keyboard_minigames'
+            id = payload['id']
+            choose = payload['choose']
+            if choose == 'c':  # отмена типа
+                message_ans = stop_classical_rock_paper_scissors(call.from_user.id, id)
+            else:
+                message_ans = classical_rock_paper_scissors(call.from_user.id, id, choose)
+
+        # elif command == 'add_chat':
+        # pass
+
+        # elif command == 'day_of_day_toggle':
+        # pass
+
+        # elif command == 'weekly_toast_toggle':
+        # pass
+
+        else:  # все остальное - типа обработка ошибков
+            kb = ''
+            message_ans = 'Ошибка - неизвестная команда'  # дефолтное значение
+            logger.error(f'Ошибка ответа на запрос {command};'
+                         f'\nПэйлоад: {payload}')
+
+        if message_ans:  # get_books возвращает 0, так что вот
+            if kb:
+                if kb.startswith('SPECIAL'):  # обработка специальных случаев
+                    kb = kb.split(';')
+                    if kb[1] == 'choose_prepod':
+                        markup = keyboard_prepod_schedule(kb[2], get_day())
+                    elif kb[1] == 'start_classical_RPC':
+                        markup = markup  # тут все норм
                     else:
-                        markup = open_keyboard(kb)
+                        markup = ''
                 else:
-                    markup = ''
-                if next_step:
-                    msg = send_message(call.from_user.id, message_ans, reply_markup=markup)
-                    bot.register_next_step_handler(msg, next_step)
-                else:
-                    cl = bot.edit_message_text(chat_id=call.from_user.id, text=message_ans, message_id=call.message.id,
-                                          reply_markup=markup)
-                    dump_message(cl, callback=True)
+                    markup = open_keyboard(kb)
+            else:
+                markup = ''
+            if next_step:
+                msg = send_message(call.from_user.id, message_ans, reply_markup=markup)
+                bot.register_next_step_handler(msg, next_step)
+            else:
+                cl = bot.edit_message_text(chat_id=call.from_user.id, text=message_ans, message_id=call.message.id,
+                                      reply_markup=markup)
+                dump_message(cl, callback=True)
 
 
 # Обработка сообщений в лс от незарегистрированных юзеров todo remove - уже не нужно

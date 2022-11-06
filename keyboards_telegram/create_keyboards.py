@@ -124,7 +124,6 @@ def keyboard_table_exam():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_exam"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
@@ -141,14 +140,12 @@ def keyboard_table_exam_additional():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_exam"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_exam = InlineKeyboardButton('Расписание экзаменов', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_exam_2"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
@@ -165,14 +162,12 @@ def keyboard_table_study():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_today"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_today = InlineKeyboardButton('Расписание на сегодня', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_tomorrow"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
@@ -205,28 +200,24 @@ def keyboard_table_study_additional():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_today"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_today = InlineKeyboardButton('Сегодня', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_today_2"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_today_additional = InlineKeyboardButton('Сегодня (доп)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_tomorrow"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_tomorrow = InlineKeyboardButton('Завтра', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_tomorrow_2"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
@@ -265,21 +256,18 @@ def keyboard_table_mixed():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_exam"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_exam = InlineKeyboardButton('Расписание экзаменов', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_today"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_today = InlineKeyboardButton('Расписание на сегодня', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_tomorrow"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
@@ -313,42 +301,36 @@ def keyboard_table_mixed_additional():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_exam"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_exam = InlineKeyboardButton('Экзамены', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_exam_2"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_exam_additional = InlineKeyboardButton('Экзамены (доп)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_today"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_today = InlineKeyboardButton('Сегодня', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_today_2"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_today_additional = InlineKeyboardButton('Сегодня (доп)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_tomorrow"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_tomorrow = InlineKeyboardButton('Завтра', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_tomorrow_2"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
@@ -388,14 +370,12 @@ def keyboard_calendar():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "calendar_today"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_cal_today = InlineKeyboardButton('Календарь на сегодня', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "calendar_tomorrow"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
@@ -414,42 +394,36 @@ def keyboard_other():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "random_anecdote"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_random_anecdote = InlineKeyboardButton('Случайный анекдот', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "random_toast"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_random_toast = InlineKeyboardButton('Случайный тост', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "anecdote_subscribe"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_anecdote_subscribe = InlineKeyboardButton('Подписаться на Анекдот', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_subscribe"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_table_subscribe = InlineKeyboardButton('Подписаться на Расписание', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "anecdote_unsubscribe"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_anecdote_unsubscribe = InlineKeyboardButton('Отписаться от Анекдота', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_unsubscribe"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
@@ -522,7 +496,6 @@ def kb_table_other_even():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Monday (even)"}
     callback_data = payload_to_callback(payload)
@@ -530,7 +503,6 @@ def kb_table_other_even():
     btn_monday_even = InlineKeyboardButton('Понедельник (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Monday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -538,7 +510,6 @@ def kb_table_other_even():
     btn_monday_odd = InlineKeyboardButton('Понедельник (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Tuesday (even)"}
     callback_data = payload_to_callback(payload)
@@ -546,7 +517,6 @@ def kb_table_other_even():
     btn_tuesday_even = InlineKeyboardButton('Вторник (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Tuesday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -554,7 +524,6 @@ def kb_table_other_even():
     btn_tuesday_odd = InlineKeyboardButton('Вторник (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Wednesday (even)"}
     callback_data = payload_to_callback(payload)
@@ -562,7 +531,6 @@ def kb_table_other_even():
     btn_wednesday_even = InlineKeyboardButton('Среда (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Wednesday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -570,7 +538,6 @@ def kb_table_other_even():
     btn_wednesday_odd = InlineKeyboardButton('Среда (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Thursday (even)"}
     callback_data = payload_to_callback(payload)
@@ -578,7 +545,6 @@ def kb_table_other_even():
     btn_thursday_even = InlineKeyboardButton('Четверг (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Thursday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -586,7 +552,6 @@ def kb_table_other_even():
     btn_thursday_odd = InlineKeyboardButton('Четверг (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Friday (even)"}
     callback_data = payload_to_callback(payload)
@@ -594,7 +559,6 @@ def kb_table_other_even():
     btn_friday_even = InlineKeyboardButton('Пятница (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Friday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -602,7 +566,6 @@ def kb_table_other_even():
     btn_friday_odd = InlineKeyboardButton('Пятница (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Saturday (even)"}
     callback_data = payload_to_callback(payload)
@@ -610,7 +573,6 @@ def kb_table_other_even():
     btn_saturday_even = InlineKeyboardButton('Суббота (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Saturday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -618,7 +580,6 @@ def kb_table_other_even():
     btn_saturday_odd = InlineKeyboardButton('Суббота (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_back"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
@@ -643,7 +604,6 @@ def kb_table_other_odd():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Monday (even)"}
     callback_data = payload_to_callback(payload)
@@ -651,7 +611,6 @@ def kb_table_other_odd():
     btn_monday_even = InlineKeyboardButton('Понедельник (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Monday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -659,7 +618,6 @@ def kb_table_other_odd():
     btn_monday_odd = InlineKeyboardButton('Понедельник (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Tuesday (even)"}
     callback_data = payload_to_callback(payload)
@@ -667,7 +625,6 @@ def kb_table_other_odd():
     btn_tuesday_even = InlineKeyboardButton('Вторник (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Tuesday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -675,7 +632,6 @@ def kb_table_other_odd():
     btn_tuesday_odd = InlineKeyboardButton('Вторник (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Wednesday (even)"}
     callback_data = payload_to_callback(payload)
@@ -683,7 +639,6 @@ def kb_table_other_odd():
     btn_wednesday_even = InlineKeyboardButton('Среда (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Wednesday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -691,7 +646,6 @@ def kb_table_other_odd():
     btn_wednesday_odd = InlineKeyboardButton('Среда (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Thursday (even)"}
     callback_data = payload_to_callback(payload)
@@ -699,7 +653,6 @@ def kb_table_other_odd():
     btn_thursday_even = InlineKeyboardButton('Четверг (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Thursday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -707,7 +660,6 @@ def kb_table_other_odd():
     btn_thursday_odd = InlineKeyboardButton('Четверг (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Friday (even)"}
     callback_data = payload_to_callback(payload)
@@ -715,7 +667,6 @@ def kb_table_other_odd():
     btn_friday_even = InlineKeyboardButton('Пятница (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Friday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -723,7 +674,6 @@ def kb_table_other_odd():
     btn_friday_odd = InlineKeyboardButton('Пятница (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Saturday (even)"}
     callback_data = payload_to_callback(payload)
@@ -731,7 +681,6 @@ def kb_table_other_odd():
     btn_saturday_even = InlineKeyboardButton('Суббота (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday",
                "weekday": "Saturday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -739,7 +688,6 @@ def kb_table_other_odd():
     btn_saturday_odd = InlineKeyboardButton('Суббота (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_back"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
@@ -763,7 +711,6 @@ def kb_table_other_even_2():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Monday (even)"}
     callback_data = payload_to_callback(payload)
@@ -771,7 +718,6 @@ def kb_table_other_even_2():
     btn_monday_even = InlineKeyboardButton('Понедельник (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Monday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -779,7 +725,6 @@ def kb_table_other_even_2():
     btn_monday_odd = InlineKeyboardButton('Понедельник (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Tuesday (even)"}
     callback_data = payload_to_callback(payload)
@@ -787,7 +732,6 @@ def kb_table_other_even_2():
     btn_tuesday_even = InlineKeyboardButton('Вторник (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Tuesday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -795,7 +739,6 @@ def kb_table_other_even_2():
     btn_tuesday_odd = InlineKeyboardButton('Вторник (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Wednesday (even)"}
     callback_data = payload_to_callback(payload)
@@ -803,7 +746,6 @@ def kb_table_other_even_2():
     btn_wednesday_even = InlineKeyboardButton('Среда (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Wednesday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -811,7 +753,6 @@ def kb_table_other_even_2():
     btn_wednesday_odd = InlineKeyboardButton('Среда (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Thursday (even)"}
     callback_data = payload_to_callback(payload)
@@ -819,7 +760,6 @@ def kb_table_other_even_2():
     btn_thursday_even = InlineKeyboardButton('Четверг (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Thursday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -827,7 +767,6 @@ def kb_table_other_even_2():
     btn_thursday_odd = InlineKeyboardButton('Четверг (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Friday (even)"}
     callback_data = payload_to_callback(payload)
@@ -835,7 +774,6 @@ def kb_table_other_even_2():
     btn_friday_even = InlineKeyboardButton('Пятница (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Friday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -843,7 +781,6 @@ def kb_table_other_even_2():
     btn_friday_odd = InlineKeyboardButton('Пятница (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Saturday (even)"}
     callback_data = payload_to_callback(payload)
@@ -851,7 +788,6 @@ def kb_table_other_even_2():
     btn_saturday_even = InlineKeyboardButton('Суббота (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Saturday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -859,7 +795,6 @@ def kb_table_other_even_2():
     btn_saturday_odd = InlineKeyboardButton('Суббота (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_back"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
@@ -884,7 +819,6 @@ def kb_table_other_odd_2():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Monday (even)"}
     callback_data = payload_to_callback(payload)
@@ -892,7 +826,6 @@ def kb_table_other_odd_2():
     btn_monday_even = InlineKeyboardButton('Понедельник (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Monday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -900,7 +833,6 @@ def kb_table_other_odd_2():
     btn_monday_odd = InlineKeyboardButton('Понедельник (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Tuesday (even)"}
     callback_data = payload_to_callback(payload)
@@ -908,7 +840,6 @@ def kb_table_other_odd_2():
     btn_tuesday_even = InlineKeyboardButton('Вторник (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Tuesday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -916,7 +847,6 @@ def kb_table_other_odd_2():
     btn_tuesday_odd = InlineKeyboardButton('Вторник (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Wednesday (even)"}
     callback_data = payload_to_callback(payload)
@@ -924,7 +854,6 @@ def kb_table_other_odd_2():
     btn_wednesday_even = InlineKeyboardButton('Среда (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Wednesday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -932,7 +861,6 @@ def kb_table_other_odd_2():
     btn_wednesday_odd = InlineKeyboardButton('Среда (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Thursday (even)"}
     callback_data = payload_to_callback(payload)
@@ -940,7 +868,6 @@ def kb_table_other_odd_2():
     btn_thursday_even = InlineKeyboardButton('Четверг (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Thursday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -948,7 +875,6 @@ def kb_table_other_odd_2():
     btn_thursday_odd = InlineKeyboardButton('Четверг (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Friday (even)"}
     callback_data = payload_to_callback(payload)
@@ -956,7 +882,6 @@ def kb_table_other_odd_2():
     btn_friday_even = InlineKeyboardButton('Пятница (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Friday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -964,7 +889,6 @@ def kb_table_other_odd_2():
     btn_friday_odd = InlineKeyboardButton('Пятница (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Saturday (even)"}
     callback_data = payload_to_callback(payload)
@@ -972,7 +896,6 @@ def kb_table_other_odd_2():
     btn_saturday_even = InlineKeyboardButton('Суббота (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_weekday_2",
                "weekday": "Saturday (odd)"}
     callback_data = payload_to_callback(payload)
@@ -980,7 +903,6 @@ def kb_table_other_odd_2():
     btn_saturday_odd = InlineKeyboardButton('Суббота (нечёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_back"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
@@ -1007,7 +929,6 @@ def keyboard_change_groups():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "change_group"
                }
     callback_data = payload_to_callback(payload)
@@ -1015,7 +936,6 @@ def keyboard_change_groups():
     btn_change_group = InlineKeyboardButton('Изменить основную группу', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "change_additional_group"
                }
     callback_data = payload_to_callback(payload)
@@ -1036,7 +956,6 @@ def keyboard_change_additional_group():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "change_additional_group"
                }
     callback_data = payload_to_callback(payload)
@@ -1056,7 +975,6 @@ def keyboard_search_department():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "search_prepod_text"
                }
     callback_data = payload_to_callback(payload)
@@ -1064,7 +982,6 @@ def keyboard_search_department():
     btn_search_text = InlineKeyboardButton('Поиск по фамилии', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "search_department",
                "list_id": str(0)  # 0 потому что первая клава
                }
@@ -1073,7 +990,6 @@ def keyboard_search_department():
     btn_search_department = InlineKeyboardButton('Выбор кафедры преподавателя', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "prepods_history"
                }
     callback_data = payload_to_callback(payload)
@@ -1081,7 +997,6 @@ def keyboard_search_department():
     btn_history = InlineKeyboardButton('История поиска', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_back"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
@@ -1103,7 +1018,6 @@ def keyboard_minigames():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "heads_or_tails_toss"
                }
     callback_data = payload_to_callback(payload)
@@ -1111,7 +1025,6 @@ def keyboard_minigames():
     btn_heads_or_nails = InlineKeyboardButton('Орел или решка?', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "start_classical_RPC"
                }
     callback_data = payload_to_callback(payload)
@@ -1119,7 +1032,6 @@ def keyboard_minigames():
     btn_RPC = InlineKeyboardButton('Камень-ножницы-бумага с ботом', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "start_multi_RPC"
                }
     callback_data = payload_to_callback(payload)
@@ -1140,7 +1052,6 @@ def keyboard_heads_or_tails_retoss():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "heads_or_tails_toss"
                }
     callback_data = payload_to_callback(payload)
@@ -1148,7 +1059,6 @@ def keyboard_heads_or_tails_retoss():
     btn_retoss = InlineKeyboardButton('Бросить ещё раз', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "minigames"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
@@ -1193,7 +1103,6 @@ def keyboard_prepod_schedule(prepod_id, day):
     day = rus_to_eng_days[day]
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_prepod",
                "id": str(prepod_id),
                "weekday": day}
@@ -1202,7 +1111,6 @@ def keyboard_prepod_schedule(prepod_id, day):
     btn_today = InlineKeyboardButton('Расписание на сегодня', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_prepod",
                "id": str(prepod_id),
                "weekday": "week (even)"}
@@ -1211,7 +1119,6 @@ def keyboard_prepod_schedule(prepod_id, day):
     btn_week_even = InlineKeyboardButton('Вся неделя (чёт)', callback_data=callback_data)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "table_prepod",
                "id": str(prepod_id),
                "weekday": "week (odd)"}

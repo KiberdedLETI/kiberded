@@ -105,7 +105,6 @@ def start_classical_rock_paper_scissors(user_id, date):
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "classical_RPC",
                "id": f"{date}",
                "choose": "r"}
@@ -113,7 +112,6 @@ def start_classical_rock_paper_scissors(user_id, date):
     rock_button = InlineKeyboardButton(text="Камень", callback_data=callback)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "classical_RPC",
                "id": f"{date}",
                "choose": "p"}
@@ -121,7 +119,6 @@ def start_classical_rock_paper_scissors(user_id, date):
     paper_button = InlineKeyboardButton(text="Бумага", callback_data=callback)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "classical_RPC",
                "id": f"{date}",
                "choose": "s"}
@@ -129,7 +126,6 @@ def start_classical_rock_paper_scissors(user_id, date):
     scissors_button = InlineKeyboardButton(text="Ножницы", callback_data=callback)
 
     payload = {"type": "action",
-               "action_type": "message",
                "command": "classical_RPC",
                "id": f"{date}",
                "choose": "c"}
