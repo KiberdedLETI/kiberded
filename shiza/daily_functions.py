@@ -67,7 +67,7 @@ def get_user_table_ids(source='vk') -> list:  # список юзеров для
         cursor.execute(f'CREATE TABLE IF NOT EXISTS `{source}_users` (id text, count text)')
 
         # todo replace with fetchall()
-        for row in cursor.execute(f'SELECT * FROM {source}_users'):
+        for row in cursor.execute(f'SELECT id, count FROM {source}_users'):
             data.append(tuple((int(row[0]), int(row[1]))))
         # \
     con.close()
