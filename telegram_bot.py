@@ -1005,7 +1005,10 @@ def set_table_mode(user_id, mode):
         upd_query = f'UPDATE tg_users SET type=? WHERE id=?'
         cur.execute(upd_query, (mode, user_id))
         con.commit()
-    return f'Режим рассылки изменен на {table_type}. Изменения вступят в силу со следующего дня'
+    msg = f'Режим рассылки изменен на {mode}. Изменения вступят в силу со следующего дня'
+
+    send_message(message.chat.id, msg)
+    return True
 
 
 def set_tables_time(message):
@@ -1017,9 +1020,11 @@ def set_tables_time(message):
     time_ = str(message.text)
 
     try:  # Проверка формата времени
-        time_check = time.strptime(input, '%H:%M')
+        time_check = time.strptime(time_, '%H:%M')
     except ValueError:
-        return 'Ошибка - проверь формат сообщения (ЧЧ:ММ), нажми кнопку и попробуй еще раз'
+        msg = 'Ошибка - проверь формат сообщения (ЧЧ:ММ), нажми кнопку и попробуй еще раз'
+        send_message(message.chat.id, msg)
+        return False
 
     with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
         cur = con.cursor()
@@ -1027,7 +1032,9 @@ def set_tables_time(message):
         cur.execute(upd_query, (time_, message.chat.id))
         con.commit()
 
-    return f'Время рассылки расписания установлено: {time_}. Изменения вступят в силу со следующего дня'
+    msg = f'Время рассылки расписания установлено: {time_}. Изменения вступят в силу со следующего дня'
+    send_message(message.chat.id, msg)
+    return True
 
 
 # Команды для модераторов:
@@ -1246,6 +1253,10 @@ def callback_query(call):
             kb = 'keyboard_other'
             kb_message = f'Тут будут всякие штуки и шутки'
 
+        elif endpoint == 'table_settings':  # Назад в Прочее, костыль навигации
+            kb = 'keyboard_set_tables_mode'
+            kb_message = f'Тут будут всякие штуки и шутки'
+
         elif endpoint == 'donate':
             donate_status, deadline = group_is_donator(group)
             if donate_status:
@@ -1425,7 +1436,7 @@ def callback_query(call):
             message_ans = 'Доступные режимы рассылки расписания:' \
                           '\nЕжедневное - каждый день расписание на завтра (если завтра есть пары)' \
                           '\nЕженедельное - каждое воскресенье на всю следующую неделю' \
-                          '\nОба - собственно, оба варианта.'
+                          '\nОба - собственно, оба варианта.'  # todo текущий статус
 
         elif command == 't_mode_set':
             mode = payload['mode']

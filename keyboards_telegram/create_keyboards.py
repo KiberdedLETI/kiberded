@@ -1111,7 +1111,7 @@ def keyboard_table_settings():
     btn_table_unsubscribe = InlineKeyboardButton('Отписаться', callback_data=callback_data)
 
     payload = {"type": "navigation",
-               "place": "other"}
+               "place": "table_settings"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_table_back = InlineKeyboardButton('Назад', callback_data=callback_data)
@@ -1159,7 +1159,7 @@ def keyboard_set_tables_mode():
     btn_table_set_mode_mix = InlineKeyboardButton('Оба', callback_data=callback_data)
 
     payload = {"type": "navigation",
-               "place": "keyboard_table_settings"}
+               "place": "table_settings"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_table_back = InlineKeyboardButton('Назад', callback_data=callback_data)
