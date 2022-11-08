@@ -1005,7 +1005,9 @@ def set_table_mode(user_id, mode):
         upd_query = f'UPDATE tg_users SET type=? WHERE id=?'
         cur.execute(upd_query, (mode, user_id))
         con.commit()
-    msg = f'Режим рассылки изменен на {mode}. Изменения вступят в силу со следующего дня'
+
+    mode_names = {'daily': 'ежедневный', 'weekly': 'еженедельный', 'both': 'ежедневный и еженедельный'}
+    msg = f'Режим рассылки изменен на {mode_names[mode]}. Изменения вступят в силу со следующего дня'
     return msg
 
 
