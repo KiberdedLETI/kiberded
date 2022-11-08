@@ -1006,9 +1006,7 @@ def set_table_mode(user_id, mode):
         cur.execute(upd_query, (mode, user_id))
         con.commit()
     msg = f'Режим рассылки изменен на {mode}. Изменения вступят в силу со следующего дня'
-
-    send_message(user_id, msg)
-    return True
+    return msg
 
 
 def set_tables_time(message):

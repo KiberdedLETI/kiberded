@@ -414,7 +414,7 @@ def keyboard_other():
                "command": "table_subscribe"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
-    btn_table_subscribe = InlineKeyboardButton('Подписаться на Расписание', callback_data=callback_data)
+    btn_table_subscribe = InlineKeyboardButton('Рассылка Расписания', callback_data=callback_data)
 
     payload = {"type": "action",
                "command": "anecdote_unsubscribe"}
@@ -441,8 +441,8 @@ def keyboard_other():
     btn_donate = InlineKeyboardButton('Поддержать проект', callback_data=callback_data)
 
     markup.row(btn_random_anecdote, btn_random_toast)
-    markup.row(btn_anecdote_subscribe, btn_table_subscribe)
-    markup.row(btn_anecdote_unsubscribe, btn_table_unsubscribe)
+    markup.row(btn_anecdote_subscribe,btn_anecdote_unsubscribe)
+    markup.row(btn_table_subscribe)
     markup.row(btn_settings, btn_donate)
 
     logger.info(f'Клавиатура "Прочее" готова.\n')
