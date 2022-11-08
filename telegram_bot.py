@@ -1007,7 +1007,7 @@ def set_table_mode(user_id, mode):
         con.commit()
     msg = f'Режим рассылки изменен на {mode}. Изменения вступят в силу со следующего дня'
 
-    send_message(message.chat.id, msg)
+    send_message(user_id, msg)
     return True
 
 
