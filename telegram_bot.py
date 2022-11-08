@@ -1421,7 +1421,7 @@ def callback_query(call):
             message_ans = add_user_to_table(call.from_user.id, '-1', source='tg')
 
         elif command == 'set_tables_mode':
-            kb = 'keyboard_tables_modes'
+            kb = 'keyboard_set_tables_mode'
             message_ans = 'Доступные режимы рассылки расписания:' \
                           '\nЕжедневное - каждый день расписание на завтра (если завтра есть пары)' \
                           '\nЕженедельное - каждое воскресенье на всю следующую неделю' \
