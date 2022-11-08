@@ -1139,19 +1139,22 @@ def keyboard_set_tables_mode():
     markup = InlineKeyboardMarkup()
 
     payload = {"type": "action",
-               "command": "t_mode_day"}
+               "command": "t_mode_set",
+               "mode": "daily"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_table_set_mode_day = InlineKeyboardButton('Ежедневно', callback_data=callback_data)
 
     payload = {"type": "action",
-               "command": "t_mode_week"}
+               "command": "t_mode_set",
+               "mode": "weekly"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_table_set_mode_week = InlineKeyboardButton('Еженедельно', callback_data=callback_data)
 
     payload = {"type": "action",
-               "command": "t_mode_mix"}
+               "command": "t_mode_set",
+               "mode": "both"}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
     btn_table_set_mode_mix = InlineKeyboardButton('Оба', callback_data=callback_data)

@@ -995,6 +995,41 @@ def minigames(message):
     send_message(message.chat.id, 'Выбери игру', reply_markup=markup)
 
 
+def set_table_mode(message, mode):
+    """
+    Настройка подписки на расписания (режим рассылки)
+    """
+
+    with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
+        cur = con.cursor()
+        upd_query = f'UPDATE tg_users SET type=? WHERE id=?'
+        cur.execute(upd_query, (mode, message.chat.id))
+        con.commit()
+    return f'Режим рассылки изменен на {table_type}'
+
+
+def set_tables_time(message):
+    """
+    next_step_handler настройки подписки на расписания (время рассылки)
+    """
+    dump_message(message)
+
+    time_ = str(message.text)
+
+    try:  # Проверка формата времени
+        time_check = time.strptime(input, '%H:%M')
+    except ValueError:
+        return 'Ошибка - проверь формат сообщения (ЧЧ:ММ), нажми кнопку и попробуй еще раз'
+
+    with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
+        cur = con.cursor()
+        upd_query = f'UPDATE tg_users SET time=? WHERE id=?'
+        cur.execute(upd_query, (time_, message.chat.id))
+        con.commit()
+
+    return f'Время рассылки расписания установлено: {time_}'
+
+
 # Команды для модераторов:
 @bot.message_handler(commands=['add_book'], is_moderator=True)
 def add_book(message):
@@ -1207,6 +1242,10 @@ def callback_query(call):
             kb = 'keyboard_other'
             kb_message = 'Пока что настроек нет. Номер группы можно изменить через /change_group'
 
+        elif endpoint == 'other':  # Назад в Прочее, костыль навигации
+            kb = 'keyboard_other'
+            kb_message = f'Тут будут всякие штуки и шутки'
+
         elif endpoint == 'donate':
             donate_status, deadline = group_is_donator(group)
             if donate_status:
@@ -1374,12 +1413,29 @@ def callback_query(call):
             message_ans = add_user_to_anekdot(call.from_user.id, '-1', source='tg')
 
         elif command == 'table_subscribe':  # todo
-            kb = 'keyboard_other'
+            kb = 'keyboard_table_settings'
             message_ans = add_user_to_table(call.from_user.id, '1', source='tg')
 
         elif command == 'table_unsubscribe':
             kb = 'keyboard_other'
             message_ans = add_user_to_table(call.from_user.id, '-1', source='tg')
+
+        elif command == 'set_tables_mode':
+            kb = 'keyboard_tables_modes'
+            message_ans = 'Доступные режимы рассылки расписания:' \
+                          '\nЕжедневное - каждый день расписание на завтра (если завтра есть пары)' \
+                          '\nЕженедельное - каждое воскресенье на всю следующую неделю' \
+                          '\nОба - собственно, оба варианта.'
+
+        elif command == 't_mode_set':
+            mode = payload['mode']
+            kb = 'keyboard_table_settings'
+            message_ans = set_table_mode(message, mode)
+
+        elif command == 'set_tables_time':
+            kb = 'keyboard_table_settings'
+            message_ans = 'Введи время отправки сообщения в формате ЧЧ:ММ'
+            next_step = set_tables_time
 
         elif command == 'change_group':
             kb = ''
