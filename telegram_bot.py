@@ -1005,7 +1005,7 @@ def set_table_mode(message, mode):
         upd_query = f'UPDATE tg_users SET type=? WHERE id=?'
         cur.execute(upd_query, (mode, message.chat.id))
         con.commit()
-    return f'Режим рассылки изменен на {table_type}'
+    return f'Режим рассылки изменен на {table_type}. Изменения вступят в силу со следующего дня'
 
 
 def set_tables_time(message):
@@ -1027,7 +1027,7 @@ def set_tables_time(message):
         cur.execute(upd_query, (time_, message.chat.id))
         con.commit()
 
-    return f'Время рассылки расписания установлено: {time_}'
+    return f'Время рассылки расписания установлено: {time_}. Изменения вступят в силу со следующего дня'
 
 
 # Команды для модераторов:
