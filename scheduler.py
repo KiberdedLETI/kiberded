@@ -493,10 +493,13 @@ def send_personal_tables(table_time=None):
     else:
         day_today = tomorrow
 
-    all_ids = {'vk': get_user_table_ids(source='vk')[table_time],
-               'tg': get_user_table_ids(source='tg')[table_time]}
+    all_ids = {'vk': get_user_table_ids(source='vk'),  # для ВК пока не сделано настраиваемое время отправки
+               'tg': get_user_table_ids(source='tg')}
 
     for source, table_types_ids in all_ids.items():
+        if table_time not in table_types_ids.keys():
+            continue
+        table_types_ids = table_types_ids[table_time]
         for table_type, id in table_types_ids.items():
             group = None  # чтобы не ругался на неинициализированную переменную
             try:
@@ -518,7 +521,7 @@ def send_personal_tables(table_time=None):
 
                 elif is_study:  # если обычный учебный день
                     if table_type == 'daily':  # соотношение настроек пользователя и предложенного расписания
-                        day_today = tomorrow
+                        day_today = get_day(tomorrow)
                     elif table_type == 'weekly' and day_today == tomorrow and not exam_notification:
                         continue  # если у пользователя только еженедельное, не отправляем ему ежедневное
 
@@ -617,9 +620,8 @@ if is_sendCron:
 
     schedule.every().day.at(tables_time).do(send_personal_tables)
     custom_table_times = get_custom_personal_tables_time()
-    for custom_time in custom_tables:
-        schedule.every().day.at(custom_time).do(send_custom_personal_tables, custom_time)
-
+    for custom_time in custom_table_times:
+        schedule.every().day.at(custom_time).do(send_personal_tables, custom_time)
 
 
 

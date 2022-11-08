@@ -66,7 +66,7 @@ def get_user_table_ids(source='vk') -> dict:  # список юзеров для
         cursor = con.cursor()
         data = []
 
-        cursor.execute(f'CREATE TABLE IF NOT EXISTS `{source}_users` (id text, count text)')
+        cursor.execute(f'CREATE TABLE IF NOT EXISTS `{source}_users` (id text, count text, type text, time text)')
 
         query = f'SELECT id, count, type, time FROM `{source}_users`'
         for row in cursor.execute(query):
@@ -83,7 +83,7 @@ def get_user_table_ids(source='vk') -> dict:  # список юзеров для
         data = result.setdefault(table_time, {})
         data.setdefault(table_mode, []).append(user_id)
 
-    return data
+    return result
 
 
 def get_groups():
