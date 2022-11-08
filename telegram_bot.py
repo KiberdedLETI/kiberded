@@ -1252,8 +1252,8 @@ def callback_query(call):
             kb_message = f'Тут будут всякие штуки и шутки'
 
         elif endpoint == 'table_settings':  # Назад в Прочее, костыль навигации
-            kb = 'keyboard_set_tables_mode'
-            kb_message = f'Тут будут всякие штуки и шутки'
+            kb = 'keyboard_table_settings'
+            kb_message = f'Настройки рассылки расписания:'
 
         elif endpoint == 'donate':
             donate_status, deadline = group_is_donator(group)
