@@ -995,7 +995,7 @@ def minigames(message):
     send_message(message.chat.id, 'Выбери игру', reply_markup=markup)
 
 
-def set_table_mode(message, mode):
+def set_table_mode(user_id, mode):
     """
     Настройка подписки на расписания (режим рассылки)
     """
@@ -1003,7 +1003,7 @@ def set_table_mode(message, mode):
     with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
         cur = con.cursor()
         upd_query = f'UPDATE tg_users SET type=? WHERE id=?'
-        cur.execute(upd_query, (mode, message.chat.id))
+        cur.execute(upd_query, (mode, user_id))
         con.commit()
     return f'Режим рассылки изменен на {table_type}. Изменения вступят в силу со следующего дня'
 
@@ -1430,7 +1430,7 @@ def callback_query(call):
         elif command == 't_mode_set':
             mode = payload['mode']
             kb = 'keyboard_table_settings'
-            message_ans = set_table_mode(message, mode)
+            message_ans = set_table_mode(call.from_user.id, mode)
 
         elif command == 'set_tables_time':
             kb = 'keyboard_table_settings'
