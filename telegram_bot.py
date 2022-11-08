@@ -1018,6 +1018,8 @@ def set_tables_time(message):
     dump_message(message)
 
     time_ = str(message.text)
+    if len(time_) != 5:  # Дополняем нулями, если необходимо
+        time_ = time_.zfill(5)
 
     try:  # Проверка формата времени
         time_check = time.strptime(time_, '%H:%M')

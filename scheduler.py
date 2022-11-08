@@ -623,8 +623,6 @@ if is_sendCron:
     for custom_time in custom_table_times:
         schedule.every().day.at(custom_time).do(send_personal_tables, custom_time)
 
-
-
 if is_sendToast:
     schedule.every().minute.do(check_toast)
 
