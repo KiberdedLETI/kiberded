@@ -1071,6 +1071,106 @@ def keyboard_heads_or_tails_retoss():
     return markup
 
 
+def keyboard_table_settings():
+    """
+    Клавиатура настройки рассылки расписаний (keyboard_table_settings)
+
+    доступные опции:
+    - Время отправки
+    - Тип рассылки (ежедневная/еженедельная/обе)
+    - TODO Тип сообщения (полные названия предметов и ФИО или как сейчас - сокращенная информация)
+    другие кнопки:
+    - Отписаться от рассылки
+    - Назад
+    """
+    logger.info(f'Генерируем мини-клавиатуру настройки рассылки расписаний')
+
+    markup = InlineKeyboardMarkup()
+
+    payload = {"type": "action",
+               "command": "set_tables_mode"}
+    callback_data = payload_to_callback(payload)
+    logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
+    btn_table_set_mode = InlineKeyboardButton('Тип рассылки', callback_data=callback_data)
+
+    payload = {"type": "action",
+               "command": "set_tables_time"}
+    callback_data = payload_to_callback(payload)
+    logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
+    btn_table_set_time = InlineKeyboardButton('Время рассылки', callback_data=callback_data)
+
+    # payload = {"type": "action",
+    #            "command": "set_tables_mode"}
+    # callback_data = payload_to_callback(payload)
+    # logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
+    # btn_table_set_format = InlineKeyboardButton('Формат рассылки', callback_data=callback_data)
+
+    payload = {"type": "action",
+               "command": "table_unsubscribe"}
+    callback_data = payload_to_callback(payload)
+    logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
+    btn_table_unsubscribe = InlineKeyboardButton('Отписаться', callback_data=callback_data)
+
+    payload = {"type": "navigation",
+               "place": "other"}
+    callback_data = payload_to_callback(payload)
+    logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
+    btn_table_back = InlineKeyboardButton('Назад', callback_data=callback_data)
+
+    markup.row(btn_table_set_mode)
+    markup.row(btn_table_set_time)
+    # markup.row(btn_table_set_format)
+    markup.row(btn_table_unsubscribe)
+    markup.row(btn_table_back)
+
+    logger.info(f'Клавиатура настройки рассылок готова.\n')
+    return markup
+
+
+def keyboard_set_tables_mode():
+    """
+    Клавиатура настройки рассылки расписаний (set_tables_mode)
+    Кнопки:
+    - Тип рассылки (ежедневная/еженедельная/обе)
+    - Назад
+    """
+    logger.info(f'Генерируем мини-клавиатуру настройки режима рассылки расписаний')
+
+    markup = InlineKeyboardMarkup()
+
+    payload = {"type": "action",
+               "command": "t_mode_day"}
+    callback_data = payload_to_callback(payload)
+    logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
+    btn_table_set_mode_day = InlineKeyboardButton('Ежедневно', callback_data=callback_data)
+
+    payload = {"type": "action",
+               "command": "t_mode_week"}
+    callback_data = payload_to_callback(payload)
+    logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
+    btn_table_set_mode_week = InlineKeyboardButton('Еженедельно', callback_data=callback_data)
+
+    payload = {"type": "action",
+               "command": "t_mode_mix"}
+    callback_data = payload_to_callback(payload)
+    logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
+    btn_table_set_mode_mix = InlineKeyboardButton('Оба', callback_data=callback_data)
+
+    payload = {"type": "navigation",
+               "place": "keyboard_table_settings"}
+    callback_data = payload_to_callback(payload)
+    logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
+    btn_table_back = InlineKeyboardButton('Назад', callback_data=callback_data)
+
+    markup.row(btn_table_set_mode_day)
+    markup.row(btn_table_set_mode_week)
+    markup.row(btn_table_set_mode_mix)
+    markup.row(btn_table_back)
+
+    logger.info(f'Клавиатура настройки рассылок готова.\n')
+    return markup
+
+
 # мини-клавиатура для настройки уведомлений о неизвестной команде, для всех пользователей
 def false_command_keyboard():  # todo надо ли в тг??
     logger.info(f'Генерируем мини-клавиатуру для настройки уведомлений о неизвестной команде')
@@ -1162,7 +1262,9 @@ if __name__ == '__main__':
         'keyboard_change_additional_group',
         'keyboard_search_department',
         'keyboard_minigames',
-        'keyboard_heads_or_tails_retoss'
+        'keyboard_heads_or_tails_retoss',
+        'keyboard_table_settings',
+        'keyboard_set_tables_mode'
     ]
     for keyboard in keyboards:
         try:
