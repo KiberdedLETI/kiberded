@@ -53,7 +53,7 @@ def payload_to_callback(payload) -> str:
         pass
     else:
         raise TypeError('Передан неправильный тип данных')
-    payload_item_list = ['type', 'action_type', 'command', 'place', 'weekday', 'subject', 'department_id', 'list_id']
+    payload_item_list = ['type', 'command', 'place', 'weekday', 'subject', 'department_id', 'list_id']
     callback_item_list = ['t', 'a_t', 'c', 'p', 'wd', 'sj', 'did', 'lid']
     callback_data = ''
     for item in payload:
@@ -107,7 +107,6 @@ def keyboard_table_():
     markup = InlineKeyboardMarkup()
 
     payload = {'type': 'action',
-               'action_type': 'message',
                'command': 'table_empty'}
     callback_data = payload_to_callback(payload)
     logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
