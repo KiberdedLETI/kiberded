@@ -482,7 +482,7 @@ def send_personal_tables(table_time=None):
     tg_last_messages = {i[0]: i[1] for i in tg_last_messages}
 
     day_today = date.today()
-    tomorrow = day_today + timedelta(days=1)
+    tomorrow_weekday = get_day(day_today + timedelta(days=1))
     pin_msg = False
 
     # Настройка типа расписания (ежедневное/еженедельное)
@@ -491,7 +491,7 @@ def send_personal_tables(table_time=None):
         day_today = f"full {get_day(date.today() + timedelta(days=1)).split()[-1]}"  # "full (parity)"
         pin_msg = True
     else:
-        day_today = tomorrow
+        day_today = tomorrow_weekday
 
     all_ids = {'vk': get_user_table_ids(source='vk'),  # для ВК пока не сделано настраиваемое время отправки
                'tg': get_user_table_ids(source='tg')}
@@ -521,8 +521,8 @@ def send_personal_tables(table_time=None):
 
                 elif is_study:  # если обычный учебный день
                     if table_type == 'daily':  # соотношение настроек пользователя и предложенного расписания
-                        day_today = get_day(tomorrow)
-                    elif table_type == 'weekly' and day_today == tomorrow and not exam_notification:
+                        day_today = tomorrow_weekday
+                    elif table_type == 'weekly' and day_today == tomorrow_weekday and not exam_notification:
                         continue  # если у пользователя только еженедельное, не отправляем ему ежедневное
 
                     table_message += read_table(group, day=day_today)
