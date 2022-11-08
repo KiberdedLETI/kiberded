@@ -1444,8 +1444,8 @@ def callback_query(call):
             message_ans = set_table_mode(call.from_user.id, mode)
 
         elif command == 'set_tables_time':
-            kb = 'keyboard_table_settings'
-            message_ans = 'Введи время отправки сообщения в формате ЧЧ:ММ'
+            kb = ''
+            message_ans = 'Напиши время отправки сообщения в формате ЧЧ:ММ'
             next_step = set_tables_time
 
         elif command == 'change_group':
