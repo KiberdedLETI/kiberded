@@ -448,18 +448,30 @@ def anekdots():
                 send_anekdot(id[0], random.randint(0, num_of_base), target=source)
 
 
-def send_personal_tables():
+def get_custom_personal_tables_time(source='tg') -> list:
+    """
+    Возвращает список уникальных времен отправки расписаний
+
+    :param str source: 'vk' / 'tg' - источник сообщения
+    """
+
+    with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
+        con.row_factory = lambda cursor, row: row[0]  # чтобы возвращать list, а не list of tuples
+        cursor = con.cursor()
+        res = cursor.execute(f'SELECT DISTINCT time FROM `{source}_users` WHERE time IS NOT NULL').fetchall()
+    return res
+
+
+def send_personal_tables(table_time=None):
     """
     Отправка расписаний в ЛС подписавшимся пользователям (копия обычного ежедневного расписания
 
     todo это можно отрефакторить - сделать единую функцию составления сообщения в беседу и пользователям,
         а тут оставить только отправку.
 
+    :param str table_time: время отправки. 'None' - дефолтное (из конфига)
     :return: 0
     """
-
-    all_ids = {'vk': get_user_table_ids(source='vk'),
-               'tg': get_user_table_ids(source='tg')}
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
@@ -470,15 +482,22 @@ def send_personal_tables():
     tg_last_messages = {i[0]: i[1] for i in tg_last_messages}
 
     day_today = date.today()
+    tomorrow = day_today + timedelta(days=1)
     pin_msg = False
+
+    # Настройка типа расписания (ежедневное/еженедельное)
+    # К сожалению, фильтровать режимы расписаний на данном этапе нельзя - есть исключение в виде экзаменов
     if day_today.weekday() == 6:  # Если воскресенье, отправляем расписание на всю след. неделю + закрепляем
         day_today = f"full {get_day(date.today() + timedelta(days=1)).split()[-1]}"  # "full (parity)"
         pin_msg = True
     else:
-        day_today = get_day(day_today + timedelta(days=1))
+        day_today = tomorrow
 
-    for source, ids in all_ids.items():
-        for id in ids:
+    all_ids = {'vk': get_user_table_ids(source='vk')[table_time],
+               'tg': get_user_table_ids(source='tg')[table_time]}
+
+    for source, table_types_ids in all_ids.items():
+        for table_type, id in table_types_ids.items():
             group = None  # чтобы не ругался на неинициализированную переменную
             try:
                 group = get_group(id[0], source=source)
@@ -487,18 +506,22 @@ def send_personal_tables():
 
                 is_exam, is_study, daily_str = daily_cron(group)  # состояние группы (семестр/сессия)
 
-                if is_exam and is_study:
+                if is_exam and is_study:  # is_exam может =1 пораньше, для открытия расписона сессии
                     is_exam = 0
                 table_message = daily_str
 
+                exam_notification = None
                 if is_exam:  # если идут экзамены, добавляем экзамен на сегодня в сообщение
                     exam_notification = get_exam_notification(group, day=date.today() + timedelta(days=1))
-
                     if exam_notification:
                         table_message += exam_notification
 
                 elif is_study:  # если обычный учебный день
-                    # if read_table(group).split()[-1] != 'Пусто':
+                    if table_type == 'daily':  # соотношение настроек пользователя и предложенного расписания
+                        day_today = tomorrow
+                    elif table_type == 'weekly' and day_today == tomorrow and not exam_notification:
+                        continue  # если у пользователя только еженедельное, не отправляем ему ежедневное
+
                     table_message += read_table(group, day=day_today)
 
                 if table_message:  # если есть хоть что-то в сообщении на день
@@ -591,7 +614,15 @@ if initialization():
 # Тут что и когда нужно выполнять
 if is_sendCron:
     schedule.every().day.at(cron_time).do(cron)
+
     schedule.every().day.at(tables_time).do(send_personal_tables)
+    custom_table_times = get_custom_personal_tables_time()
+    for custom_time in custom_tables:
+        schedule.every().day.at(custom_time).do(send_custom_personal_tables, custom_time)
+
+
+
+
 if is_sendToast:
     schedule.every().minute.do(check_toast)
 
