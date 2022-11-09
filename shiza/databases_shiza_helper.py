@@ -886,6 +886,7 @@ def generate_subject_keyboards(group, write_as_old=False):  # создает к�
 
             new_subjects.add_button(str(*subject_list[subject_number]), color=button_color,
                                     payload={"type": "action",
+                                             "action_type": "message",
                                              "command": f"get_books{old_or_new}",
                                              "subject": str(*subject_list[subject_number])})
             count += -1
@@ -917,6 +918,7 @@ def generate_subject_keyboards(group, write_as_old=False):  # создает к�
     for subject_number in range(len(subject_list)):
         new_prepods.add_button(str(*subject_list[subject_number]), color=VkKeyboardColor.POSITIVE,
                                payload={"type": "action",
+                                        "action_type": "message",
                                         "command": f"get_prepods{old_or_new}",
                                         "subject": str(*subject_list[subject_number])})
         count += -1
