@@ -886,7 +886,6 @@ def generate_subject_keyboards(group, write_as_old=False):  # создает к�
 
             new_subjects.add_button(str(*subject_list[subject_number]), color=button_color,
                                     payload={"type": "action",
-                                             "action_type": "message",
                                              "command": f"get_books{old_or_new}",
                                              "subject": str(*subject_list[subject_number])})
             count += -1
@@ -918,7 +917,6 @@ def generate_subject_keyboards(group, write_as_old=False):  # создает к�
     for subject_number in range(len(subject_list)):
         new_prepods.add_button(str(*subject_list[subject_number]), color=VkKeyboardColor.POSITIVE,
                                payload={"type": "action",
-                                        "action_type": "message",
                                         "command": f"get_prepods{old_or_new}",
                                         "subject": str(*subject_list[subject_number])})
         count += -1
@@ -977,15 +975,12 @@ def generate_subject_keyboards_tg(group):  # создает клавиатуры
             third_subject = subject_list[subject_number * 3 + 2]
 
             first_payload = {"type": "action",
-                             "action_type": "message",
                              "command": f"get_books",
                              "subject": first_subject[1]}
             second_payload = {"type": "action",
-                              "action_type": "message",
                               "command": f"get_books",
                               "subject": second_subject[1]}
             third_payload = {"type": "action",
-                             "action_type": "message",
                              "command": f"get_books",
                              "subject": third_subject[1]}
 
@@ -1009,11 +1004,9 @@ def generate_subject_keyboards_tg(group):  # создает клавиатуры
             second_subject = subject_list[-1]
 
             first_payload = {"type": "action",
-                             "action_type": "message",
                              "command": f"get_books",
                              "subject": first_subject[1]}
             second_payload = {"type": "action",
-                              "action_type": "message",
                               "command": f"get_books",
                               "subject": second_subject[1]}
 
@@ -1031,7 +1024,6 @@ def generate_subject_keyboards_tg(group):  # создает клавиатуры
             first_subject = subject_list[-1]
 
             first_payload = {"type": "action",
-                             "action_type": "message",
                              "command": f"get_books",
                              "subject": first_subject[1]}
 
@@ -1058,15 +1050,12 @@ def generate_subject_keyboards_tg(group):  # создает клавиатуры
             third_subject = subject_list[subject_number * 3 + 2]
 
             first_payload = {"type": "action",
-                             "action_type": "message",
                              "command": f"get_prepods",
                              "subject": first_subject[1]}
             second_payload = {"type": "action",
-                              "action_type": "message",
                               "command": f"get_prepods",
                               "subject": second_subject[1]}
             third_payload = {"type": "action",
-                             "action_type": "message",
                              "command": f"get_prepods",
                              "subject": third_subject[1]}
 
@@ -1090,11 +1079,9 @@ def generate_subject_keyboards_tg(group):  # создает клавиатуры
             second_subject = subject_list[-1]
 
             first_payload = {"type": "action",
-                             "action_type": "message",
                              "command": f"get_prepods",
                              "subject": first_subject[1]}
             second_payload = {"type": "action",
-                              "action_type": "message",
                               "command": f"get_prepods",
                               "subject": second_subject[1]}
 
@@ -1112,7 +1099,6 @@ def generate_subject_keyboards_tg(group):  # создает клавиатуры
             first_subject = subject_list[-1]
 
             first_payload = {"type": "action",
-                             "action_type": "message",
                              "command": f"get_prepods",
                              "subject": first_subject[1]}
 
@@ -1240,7 +1226,6 @@ def generate_departments_keyboards():  # создает клавиатуры д�
     for department in departments:
         # формирование callback-ов:
         payload = {"type": "action",
-                   "action_type": "message",
                    "command": f"choose_department",
                    "id": str(department[0])}
         callback = payload_to_callback(payload)
@@ -1267,7 +1252,6 @@ def generate_departments_keyboards():  # создает клавиатуры д�
                 markup.add(buttons[i * 24 + j * 3 + 0])
         if i == 0:  # если это первая клавиатура, то нужно добавить только кнопку вперед
             payload = {"type": "action",
-                       "action_type": "message",
                        "command": f"search_department",
                        "list_id": str(i + 1)
                        }
@@ -1275,7 +1259,6 @@ def generate_departments_keyboards():  # создает клавиатуры д�
             markup.add(InlineKeyboardButton('>', callback_data=callback_next))
         elif i == ((math.ceil(len(departments) / 24)) - 1):  # если последняя, то нужно добавить только кнопку назад
             payload = {"type": "action",
-                       "action_type": "message",
                        "command": f"search_department",
                        "list_id": str(i - 1)
                        }
@@ -1283,13 +1266,11 @@ def generate_departments_keyboards():  # создает клавиатуры д�
             markup.add(InlineKeyboardButton('<', callback_data=callback_prev))
         else:  # если не первая и не последняя, то нужно добавить обе кнопки
             payload = {"type": "action",
-                       "action_type": "message",
                        "command": f"search_department",
                        "list_id": str(i + 1)
                        }
             callback_next = payload_to_callback(payload)
             payload = {"type": "action",
-                       "action_type": "message",
                        "command": f"search_department",
                        "list_id": str(i - 1)
                        }
@@ -1330,7 +1311,6 @@ def generate_prepods_keyboards():  # создает клавиатуры для 
         # формирование кнопок, чтоб потом удобнее было:
         for prepod in prepods:
             payload = {"type": "action",
-                       "action_type": "message",
                        "command": f"choose_prepod",
                        "id": str(prepod[0]),
                        "department_id": str(id)
@@ -1346,7 +1326,6 @@ def generate_prepods_keyboards():  # создает клавиатуры для 
                     markup.add(buttons[i * 8 + j])
             if i == 0 and is_many_keyboards:  # если это первая клавиатура, то нужно добавить только кнопку вперед
                 payload = {"type": "action",
-                           "action_type": "message",
                            "command": f"search_prepod",
                            "list_id": str(i + 1),
                            "department_id": str(id)
@@ -1355,7 +1334,6 @@ def generate_prepods_keyboards():  # создает клавиатуры для 
                 markup.add(InlineKeyboardButton('>', callback_data=callback_next))
             elif i == (math.ceil(len(buttons) / 8) - 1) and is_many_keyboards:  # если последняя, то нужно добавить только кнопку назад
                 payload = {"type": "action",
-                           "action_type": "message",
                            "command": f"search_prepod",
                            "list_id": str(i - 1),
                            "department_id": str(id)
@@ -1364,14 +1342,12 @@ def generate_prepods_keyboards():  # создает клавиатуры для 
                 markup.add(InlineKeyboardButton('<', callback_data=callback_prev))
             elif is_many_keyboards:
                 payload = {"type": "action",
-                           "action_type": "message",
                            "command": f"search_prepod",
                            "list_id": str(i - 1),
                            "department_id": str(id)
                            }
                 callback_prev = payload_to_callback(payload)
                 payload = {"type": "action",
-                           "action_type": "message",
                            "command": f"search_prepod",
                            "list_id": str(i + 1),
                            "department_id": str(id)
@@ -1380,7 +1356,6 @@ def generate_prepods_keyboards():  # создает клавиатуры для 
                 markup.add(InlineKeyboardButton('<', callback_data=callback_prev),
                            InlineKeyboardButton('>', callback_data=callback_next))
             payload = {"type": "action",
-                       "action_type": "message",
                        "command": f"search_department",
                        "list_id": str(0)
                        }
@@ -1392,7 +1367,6 @@ def generate_prepods_keyboards():  # создает клавиатуры для 
         if len(buttons) == 0:  # на случай отсутствия преподов, например как в военке
             markup = InlineKeyboardMarkup()
             payload = {"type": "action",
-                       "action_type": "message",
                        "command": f"search_department",
                        "list_id": str(0)
                        }
