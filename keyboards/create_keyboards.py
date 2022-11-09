@@ -291,13 +291,14 @@ keyboard_other.add_button('Отписаться от Анекдота', color=Vk
                                    "action_type": "message",
                                    "command": "anecdote_unsubscribe"})
 keyboard_other.add_line()
-keyboard_other.add_button('Рассылка Расписания', color=VkKeyboardColor.SECONDARY,
+keyboard_other.add_button('Рассылка Расписания', color=VkKeyboardColor.PRIMARY,
                           payload={"type": "navigation",
                                    "place": "kb_table_settings_sub"})
 keyboard_other.add_line()
 keyboard_other.add_button('Настройки', color=VkKeyboardColor.NEGATIVE,
                           payload={"type": "navigation",
                                    "place": "settings"})
+keyboard_other.add_line()
 keyboard_other.add_button('Telegram', color=VkKeyboardColor.PRIMARY,
                           payload={"type": "action",
                                    "action_type": "message",
@@ -316,6 +317,7 @@ kb_table_settings = VkKeyboard(one_time=False)
 kb_table_settings.add_button('Тип', color=VkKeyboardColor.PRIMARY,
                                 payload={"type": "navigation",
                                          "place": "table_settings_type"})
+keyboard_other.add_line()
 kb_table_settings.add_button('Время', color=VkKeyboardColor.PRIMARY,
                                   payload={"type": "action",
                                            "action_type": "shiza",
@@ -326,7 +328,7 @@ kb_table_settings.add_button('Отписаться', color=VkKeyboardColor.NEGAT
                                            "action_type": "message",
                                            "command": "table_unsubscribe"})
 kb_table_settings.add_line()
-kb_table_settings.add_button('Назад', color=VkKeyboardColor.NEGATIVE,
+kb_table_settings.add_button('Назад', color=VkKeyboardColor.SECONDARY,
                                         payload={"type": "navigation",
                                                  "place": "other"})
 
