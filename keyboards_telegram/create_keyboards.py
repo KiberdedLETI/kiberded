@@ -52,8 +52,8 @@ def payload_to_callback(payload) -> str:
         pass
     else:
         raise TypeError('Передан неправильный тип данных')
-    payload_item_list = ['type', 'command', 'place', 'weekday', 'subject', 'department_id', 'list_id']
-    callback_item_list = ['t', 'c', 'p', 'wd', 'sj', 'did', 'lid']
+    payload_item_list = ['type', 'action_type', 'command', 'place', 'weekday', 'subject', 'department_id', 'list_id']
+    callback_item_list = ['t', 'a_t', 'c', 'p', 'wd', 'sj', 'did', 'lid']
     callback_data = ''
     for item in payload:
         if item in payload_item_list:
