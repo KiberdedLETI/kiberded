@@ -390,6 +390,10 @@ def main(vk_session, group_token):
                         kb_message = add_user_to_table(message["from_id"], '1')
                         kb = 'keyboard_table_settings'
 
+                    elif endpoint == 'kb_table_settings_unsub':
+                        kb_message = add_user_to_table(message["from_id"], '-1')
+                        kb = 'keyboard_other'
+
                     elif endpoint == 'kb_table_settings':
                         kb_message = get_tables_settings(message["from_id"], 'vk')
                         kb = 'keyboard_table_settings'
@@ -508,9 +512,6 @@ def main(vk_session, group_token):
 
                         elif command == 'anecdote_unsubscribe':
                             message_ans = add_user_to_anekdot(message["from_id"], '-1')
-
-                        elif command == 'table_unsubscribe':
-                            message_ans = add_user_to_table(message["from_id"], '-1')
 
                         elif command == 'table_set_type':
                             message_ans = set_table_mode(message["from_id"], payload["arg"], 'vk')

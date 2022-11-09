@@ -323,9 +323,8 @@ kb_table_settings.add_button('Время', color=VkKeyboardColor.PRIMARY,
                                            "target": "table_settings_time"})
 kb_table_settings.add_line()
 kb_table_settings.add_button('Отписаться', color=VkKeyboardColor.NEGATIVE,
-                                  payload={"type": "action",
-                                           "action_type": "message",
-                                           "command": "table_unsubscribe"})
+                                  payload={"type": "navigation",
+                                           "place": "kb_table_settings_unsub"})
 kb_table_settings.add_line()
 kb_table_settings.add_button('Назад', color=VkKeyboardColor.SECONDARY,
                                         payload={"type": "navigation",
