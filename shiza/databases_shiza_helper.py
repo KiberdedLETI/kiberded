@@ -1108,6 +1108,12 @@ def generate_subject_keyboards_tg(group):  # создает клавиатуры
 
             new_prepods.add(InlineKeyboardButton(first_subject[0], callback_data=first_callback))
 
+    # payload = {"type": "navigation",
+    #            "place": "prepods_quotes"}
+    # callback_data = payload_to_callback(payload)
+    # btn_quote = InlineKeyboardButton('Цитатник', callback_data=callback_data)
+    # new_prepods.add(btn_quote)
+
     payload = {"type": "navigation",
                "place": "table_prepods"}
     callback_data = payload_to_callback(payload)
