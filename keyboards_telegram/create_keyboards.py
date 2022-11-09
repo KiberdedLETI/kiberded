@@ -1240,41 +1240,39 @@ def keyboard_prepod_schedule(prepod_id, day):
     return markup
 
 
-def generate_all_default_kbs():
-    keyboards = [
-        'keyboard_main_cal',
-        'keyboard_main',
-        'keyboard_table_',
-        'keyboard_table_exam',
-        'keyboard_table_exam_additional',
-        'keyboard_table_study',
-        'keyboard_table_study_additional',
-        'keyboard_table_mixed',
-        'keyboard_table_mixed_additional',
-        'keyboard_calendar',
-        'keyboard_other',
-        'keyboard_links_mail',
-        'keyboard_links',
-        'kb_table_other_even',
-        'kb_table_other_even_2',
-        'kb_table_other_odd',
-        'kb_table_other_odd_2',
-        'keyboard_change_groups',
-        'keyboard_change_additional_group',
-        'keyboard_search_department',
-        'keyboard_minigames',
-        'keyboard_heads_or_tails_retoss',
-        'keyboard_table_settings',
-        'keyboard_set_tables_mode'
-    ]
-    for keyboard in keyboards:
-        try:
-            with open(f'{keyboard}.json', 'w', encoding='utf-8') as f:
-                exec(f'markup = {keyboard}()')
-                f.write(markup.to_json())  # тут нет ошибки! markup - переменная, создается в предыдущей строке
-        except:
-            logger.critical(f'Ошибка при генерации клавиатуры {keyboard}\ntraceback: {traceback.format_exc()}')
+# выполняется не в if __name__ == '__main__' специально
+keyboards = [
+    'keyboard_main_cal',
+    'keyboard_main',
+    'keyboard_table_',
+    'keyboard_table_exam',
+    'keyboard_table_exam_additional',
+    'keyboard_table_study',
+    'keyboard_table_study_additional',
+    'keyboard_table_mixed',
+    'keyboard_table_mixed_additional',
+    'keyboard_calendar',
+    'keyboard_other',
+    'keyboard_links_mail',
+    'keyboard_links',
+    'kb_table_other_even',
+    'kb_table_other_even_2',
+    'kb_table_other_odd',
+    'kb_table_other_odd_2',
+    'keyboard_change_groups',
+    'keyboard_change_additional_group',
+    'keyboard_search_department',
+    'keyboard_minigames',
+    'keyboard_heads_or_tails_retoss',
+    'keyboard_table_settings',
+    'keyboard_set_tables_mode'
+]
+for keyboard in keyboards:
+    try:
+        with open(f'{keyboard}.json', 'w', encoding='utf-8') as f:
+            exec(f'markup = {keyboard}()')
+            f.write(markup.to_json())  # тут нет ошибки! markup - переменная, создается в предыдущей строке
+    except:
+        logger.critical(f'Ошибка при генерации клавиатуры {keyboard}\ntraceback: {traceback.format_exc()}')
 
 
-if __name__ == '__main__':
-    generate_all_default_kbs()
