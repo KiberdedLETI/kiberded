@@ -22,7 +22,7 @@ from vk_api.utils import get_random_id
 from shiza.etu_parsing import parse_etu_ids, parse_exams, get_exam_data, parse_prepods_schedule, load_prepods_table_cache, load_table_cache
 from shiza.databases_shiza_helper import edit_gcal, create_database, load_teacher_ids, get_stock_groups, \
     generate_subject_ids, generate_subject_keyboards, generate_subject_keyboards_tg, load_calendar_cache, \
-    generate_main_keyboard, generate_links_keyboard, add_preset_books
+    generate_main_keyboard, generate_links_keyboard, add_preset_books, generate_departments_keyboards
 from keyboards_telegram.create_keyboards import generate_all_default_kbs
 from shiza.daily_functions import daily_cron
 from bot_functions.bots_common_funcs import get_day, read_table
@@ -42,7 +42,7 @@ headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:45.0) 
 
 
 if __name__ == '__main__':
-
+    generate_departments_keyboards()
     generate_all_default_kbs()
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
