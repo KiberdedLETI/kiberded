@@ -20,20 +20,21 @@ from keyboards_telegram.create_keyboards import payload_to_callback, keyboard_pr
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 from transliterate import translit
+import logging
+import toml
+import sys
+import pickle
+from requests.exceptions import ReadTimeout
 
-from bot_functions.bots_common_funcs import read_calendar, day_of_day_toggle, read_table, get_day, compile_group_stats, \
-    add_user_to_table, get_exams, get_prepods, get_subjects, group_is_donator, add_user_to_anekdot
+from bot_functions.bots_common_funcs import read_calendar, day_of_day_toggle, read_table, get_day, \
+    compile_group_stats, add_user_to_table, get_exams, get_prepods, get_subjects, group_is_donator, \
+    add_user_to_anekdot, set_table_mode, get_tables_settings
 from bot_functions.anekdot import get_random_anekdot, get_random_toast, create_link_to_telegram
 from bot_functions.minigames import get_coin_flip_result, start_classical_rock_paper_scissors, \
     stop_classical_rock_paper_scissors, classical_rock_paper_scissors
 from shiza.databases_shiza_helper import change_user_group, create_database, change_user_additional_group, \
     check_group_exists
-import logging
-import toml
-import sys
-import pickle
 
-from requests.exceptions import ReadTimeout
 
 # init
 logger = logging.getLogger(__name__)
@@ -606,6 +607,33 @@ def get_prepod_schedule(prepod_id, weekday):
     return schedule
 
 
+def set_tables_time(message, source='tg'):
+    """
+    Настройка подписки на расписания (время рассылки)
+    """
+
+    time_ = str(message.text)
+    if len(time_) != 5:  # Дополняем нулями, если необходимо
+        time_ = time_.zfill(5)
+
+    try:  # Проверка формата времени
+        time_check = time.strptime(time_, '%H:%M')
+    except ValueError:
+        msg = 'Ошибка - проверь формат сообщения (ЧЧ:ММ), нажми кнопку и попробуй еще раз'
+        send_message(message.chat.id, msg)
+        return False
+
+    with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
+        cur = con.cursor()
+        upd_query = f'UPDATE `{source}_users` SET time=? WHERE id=?'
+        cur.execute(upd_query, (time_, message.chat.id))
+        con.commit()
+
+    msg = f'Время рассылки расписания установлено: {time_}. Изменения вступят в силу со следующего дня'
+    send_message(message.chat.id, msg)
+    return True
+
+
 # Команды в ЛС:
 @bot.message_handler(commands=['main'], is_registered=True)
 def main_reply(message):
@@ -995,50 +1023,6 @@ def minigames(message):
     send_message(message.chat.id, 'Выбери игру', reply_markup=markup)
 
 
-def set_table_mode(user_id, mode):
-    """
-    Настройка подписки на расписания (режим рассылки)
-    """
-
-    with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
-        cur = con.cursor()
-        upd_query = f'UPDATE tg_users SET type=? WHERE id=?'
-        cur.execute(upd_query, (mode, user_id))
-        con.commit()
-
-    mode_names = {'daily': 'ежедневный', 'weekly': 'еженедельный', 'both': 'ежедневный и еженедельный'}
-    msg = f'Режим рассылки изменен на {mode_names[mode]}. Изменения вступят в силу со следующего дня'
-    return msg
-
-
-def set_tables_time(message):
-    """
-    next_step_handler настройки подписки на расписания (время рассылки)
-    """
-    dump_message(message)
-
-    time_ = str(message.text)
-    if len(time_) != 5:  # Дополняем нулями, если необходимо
-        time_ = time_.zfill(5)
-
-    try:  # Проверка формата времени
-        time_check = time.strptime(time_, '%H:%M')
-    except ValueError:
-        msg = 'Ошибка - проверь формат сообщения (ЧЧ:ММ), нажми кнопку и попробуй еще раз'
-        send_message(message.chat.id, msg)
-        return False
-
-    with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
-        cur = con.cursor()
-        upd_query = f'UPDATE tg_users SET time=? WHERE id=?'
-        cur.execute(upd_query, (time_, message.chat.id))
-        con.commit()
-
-    msg = f'Время рассылки расписания установлено: {time_}. Изменения вступят в силу со следующего дня'
-    send_message(message.chat.id, msg)
-    return True
-
-
 # Команды для модераторов:
 @bot.message_handler(commands=['add_book'], is_moderator=True)
 def add_book(message):
@@ -1255,9 +1239,9 @@ def callback_query(call):
             kb = 'keyboard_other'
             kb_message = f'Тут будут всякие штуки и шутки'
 
-        elif endpoint == 'table_settings':  # Назад в Прочее, костыль навигации
+        elif endpoint == 'table_settings':  # Назад в настройки рассылки, костыль навигации
             kb = 'keyboard_table_settings'
-            kb_message = f'Настройки рассылки расписания:'
+            kb_message = get_tables_settings(call.from_user.id)
 
         elif endpoint == 'donate':
             donate_status, deadline = group_is_donator(group)
