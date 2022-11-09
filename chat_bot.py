@@ -23,7 +23,8 @@ import sys
 import subprocess
 from shiza import elements_of_shiza
 from bot_functions.bots_common_funcs import read_calendar, day_of_day_toggle, read_table, get_day, weekly_toast_toggle, \
-    compile_group_stats, add_user_to_table, get_exams, get_prepods, get_subjects, group_is_donator, add_user_to_anekdot
+    compile_group_stats, add_user_to_table, get_exams, get_prepods, get_subjects, group_is_donator, add_user_to_anekdot, \
+    get_tables_settings, set_table_mode
 from bot_functions.anekdot import get_random_anekdot, get_random_toast, create_link_to_telegram
 # init
 logger = logging.getLogger('chat_bot')
@@ -385,6 +386,21 @@ def main(vk_session, group_token):
                         kb = 'keyboard_other'
                         kb_message = 'Тут будут всякие штуки и шутки'
 
+                    elif endpoint == 'kb_table_settings_sub':
+                        kb_message = add_user_to_table(message["from_id"], '1')
+                        kb = 'keyboard_table_settings'
+
+                    elif endpoint == 'kb_table_settings':
+                        kb_message = get_tables_settings(message["from_id"], 'vk')
+                        kb = 'keyboard_table_settings'
+
+                    elif endpoint == 'table_settings_type':
+                        kb = 'keyboard_table_settings_type'
+                        kb_message = 'Доступные режимы рассылки расписания:' \
+                                     '\nЕжедневное - каждый день расписание на завтра (если завтра есть пары)' \
+                                     '\nЕженедельное - каждое воскресенье на всю следующую неделю' \
+                                     '\nОба - собственно, оба варианта.'
+
                     elif endpoint == 'settings':
                         kb = f'keyboard_settings_{get_freedom(message["from_id"])}'
                         if get_freedom(message["from_id"]) == 'user':
@@ -493,11 +509,11 @@ def main(vk_session, group_token):
                         elif command == 'anecdote_unsubscribe':
                             message_ans = add_user_to_anekdot(message["from_id"], '-1')
 
-                        elif command == 'table_subscribe':
-                            message_ans = add_user_to_table(message["from_id"], '1')
-
                         elif command == 'table_unsubscribe':
                             message_ans = add_user_to_table(message["from_id"], '-1')
+
+                        elif command == 'table_set_type':
+                            message_ans = set_table_mode(message["from_id"], payload["arg"], 'vk')
 
                         elif command == 'add_chat':
                             message_ans = 'Добавить бота в чат группы можно, ' \
@@ -530,7 +546,10 @@ def main(vk_session, group_token):
                         shiza_message = ''
                         shiza_user = message["from_id"]
 
-                        if payload["target"] == 'change_group' and freedom == 'user':
+                        if payload["target"] == 'table_settings_time':
+                            shiza = threading.Thread(target=elements_of_shiza.set_tables_time_vk,
+                                                     args=[shiza_user])
+                        elif payload["target"] == 'change_group' and freedom == 'user':
                             shiza = threading.Thread(target=elements_of_shiza.change_group_func,
                                                      args=[shiza_user])
                         elif payload["target"] == 'change_additional_group' and freedom in ('admin', 'moderator', 'user'):

@@ -286,19 +286,14 @@ keyboard_other.add_button('Подписаться на Анекдот', color=Vk
                           payload={"type": "action",
                                    "action_type": "message",
                                    "command": "anecdote_subscribe"})
-keyboard_other.add_button('Подписаться на Расписание', color=VkKeyboardColor.SECONDARY,
-                          payload={"type": "action",
-                                   "action_type": "message",
-                                   "command": "table_subscribe"})
-keyboard_other.add_line()
 keyboard_other.add_button('Отписаться от Анекдота', color=VkKeyboardColor.SECONDARY,
                           payload={"type": "action",
                                    "action_type": "message",
                                    "command": "anecdote_unsubscribe"})
-keyboard_other.add_button('Отписаться от Расписания', color=VkKeyboardColor.SECONDARY,
-                          payload={"type": "action",
-                                   "action_type": "message",
-                                   "command": "table_unsubscribe"})
+keyboard_other.add_line()
+keyboard_other.add_button('Рассылка Расписания', color=VkKeyboardColor.SECONDARY,
+                          payload={"type": "navigation",
+                                   "place": "kb_table_settings_sub"})
 keyboard_other.add_line()
 keyboard_other.add_button('Настройки', color=VkKeyboardColor.NEGATIVE,
                           payload={"type": "navigation",
@@ -315,6 +310,48 @@ keyboard_other.add_line()
 keyboard_other.add_button('Вернуться в начало',
                           payload={"type": "navigation",
                                    "place": "main"})
+
+# Клавиатура "Настройки рассылки расписания"; кнопки - тип, время, отписаться, назад
+kb_table_settings = VkKeyboard(one_time=False)
+kb_table_settings.add_button('Тип', color=VkKeyboardColor.PRIMARY,
+                                payload={"type": "navigation",
+                                         "place": "table_settings_type"})
+kb_table_settings.add_button('Время', color=VkKeyboardColor.PRIMARY,
+                                  payload={"type": "action",
+                                           "action_type": "shiza",
+                                           "target": "table_settings_time"})
+kb_table_settings.add_line()
+kb_table_settings.add_button('Отписаться', color=VkKeyboardColor.NEGATIVE,
+                                  payload={"type": "action",
+                                           "action_type": "message",
+                                           "command": "table_unsubscribe"})
+kb_table_settings.add_line()
+kb_table_settings.add_button('Назад', color=VkKeyboardColor.NEGATIVE,
+                                        payload={"type": "navigation",
+                                                 "place": "other"})
+
+# Клавиатура "Настройки типа рассылки расписания"; кнопки - ежедневно, еженедельно, обе, назад
+kb_table_settings_type = VkKeyboard(one_time=False)
+kb_table_settings_type.add_button('Ежедневно', color=VkKeyboardColor.PRIMARY,
+                                  payload={"type": "action",
+                                           "action_type": "message",
+                                           "command": "table_set_type",
+                                           "arg": "daily"})
+kb_table_settings_type.add_button('Еженедельно', color=VkKeyboardColor.PRIMARY,
+                                  payload={"type": "action",
+                                           "action_type": "message",
+                                           "command": "table_set_type",
+                                           "arg": "weekly"})
+kb_table_settings_type.add_line()
+kb_table_settings_type.add_button('Оба', color=VkKeyboardColor.PRIMARY,
+                                  payload={"type": "action",
+                                           "action_type": "message",
+                                           "command": "table_set_type",
+                                           "arg": "monthly"})
+kb_table_settings_type.add_line()
+kb_table_settings_type.add_button('Назад', color=VkKeyboardColor.NEGATIVE,
+                                        payload={"type": "navigation",
+                                                 "place": "kb_table_settings"})
 
 # Клавиатура "Расписания на другие дни"; even - чёт, odd - нечёт
 # Четная неделя - "главная"
@@ -719,6 +756,12 @@ with open('keyboard_settings_user.json', 'w', encoding='utf-8') as f:
 
 with open('keyboard_settings_donator.json', 'w', encoding='utf-8') as f:
     f.write(keyboard_settings_donator.get_keyboard())
+
+with open('keyboard_table_settings.json', 'w', encoding='utf-8') as f:
+    f.write(kb_table_settings.get_keyboard())
+
+with open('keyboard_table_settings_type.json', 'w', encoding='utf-8') as f:
+    f.write(kb_table_settings_type.get_keyboard())
 
 # ШИЗА
 with open('keyboard_change_group.json', 'w', encoding='utf-8') as f:
