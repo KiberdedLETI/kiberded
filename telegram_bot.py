@@ -20,20 +20,21 @@ from keyboards_telegram.create_keyboards import payload_to_callback, keyboard_pr
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 from transliterate import translit
+import logging
+import toml
+import sys
+import pickle
+from requests.exceptions import ReadTimeout
 
-from bot_functions.bots_common_funcs import read_calendar, day_of_day_toggle, read_table, get_day, compile_group_stats, \
-    add_user_to_table, get_exams, get_prepods, get_subjects, group_is_donator, add_user_to_anekdot
+from bot_functions.bots_common_funcs import read_calendar, day_of_day_toggle, read_table, get_day, \
+    compile_group_stats, add_user_to_table, get_exams, get_prepods, get_subjects, group_is_donator, \
+    add_user_to_anekdot, set_table_mode, get_tables_settings
 from bot_functions.anekdot import get_random_anekdot, get_random_toast, create_link_to_telegram
 from bot_functions.minigames import get_coin_flip_result, start_classical_rock_paper_scissors, \
     stop_classical_rock_paper_scissors, classical_rock_paper_scissors
 from shiza.databases_shiza_helper import change_user_group, create_database, change_user_additional_group, \
     check_group_exists
-import logging
-import toml
-import sys
-import pickle
 
-from requests.exceptions import ReadTimeout
 
 # init
 logger = logging.getLogger(__name__)
@@ -604,6 +605,33 @@ def get_prepod_schedule(prepod_id, weekday):
     else:
         schedule = 'У преподавателя нет расписания на этот семестр.'
     return schedule
+
+
+def set_tables_time(message, source='tg'):
+    """
+    Настройка подписки на расписания (время рассылки)
+    """
+
+    time_ = str(message.text)
+    if len(time_) != 5:  # Дополняем нулями, если необходимо
+        time_ = time_.zfill(5)
+
+    try:  # Проверка формата времени
+        time_check = time.strptime(time_, '%H:%M')
+    except ValueError:
+        msg = 'Ошибка - проверь формат сообщения (ЧЧ:ММ), нажми кнопку и попробуй еще раз'
+        send_message(message.chat.id, msg)
+        return False
+
+    with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
+        cur = con.cursor()
+        upd_query = f'UPDATE `{source}_users` SET time=? WHERE id=?'
+        cur.execute(upd_query, (time_, message.chat.id))
+        con.commit()
+
+    msg = f'Время рассылки расписания установлено: {time_}. Изменения вступят в силу со следующего дня'
+    send_message(message.chat.id, msg)
+    return True
 
 
 # Команды в ЛС:
@@ -1207,6 +1235,14 @@ def callback_query(call):
             kb = 'keyboard_other'
             kb_message = 'Пока что настроек нет. Номер группы можно изменить через /change_group'
 
+        elif endpoint == 'other':  # Назад в Прочее, костыль навигации
+            kb = 'keyboard_other'
+            kb_message = f'Тут будут всякие штуки и шутки'
+
+        elif endpoint == 'table_settings':  # Назад в настройки рассылки, костыль навигации
+            kb = 'keyboard_table_settings'
+            kb_message = get_tables_settings(call.from_user.id)
+
         elif endpoint == 'donate':
             donate_status, deadline = group_is_donator(group)
             if donate_status:
@@ -1239,6 +1275,10 @@ def callback_query(call):
         dump_message(cl, callback=True)
 
     if payload['type'] == 'action':
+
+        if 'action_type' in payload:  # todo remove - обработка старых клавиатур
+            payload = payload['action_type']
+
         group = get_group(call.from_user.id)
         additional_group = get_additional_group(call.from_user.id)
         command = payload["command"]
@@ -1374,12 +1414,29 @@ def callback_query(call):
             message_ans = add_user_to_anekdot(call.from_user.id, '-1', source='tg')
 
         elif command == 'table_subscribe':  # todo
-            kb = 'keyboard_other'
+            kb = 'keyboard_table_settings'
             message_ans = add_user_to_table(call.from_user.id, '1', source='tg')
 
         elif command == 'table_unsubscribe':
             kb = 'keyboard_other'
             message_ans = add_user_to_table(call.from_user.id, '-1', source='tg')
+
+        elif command == 'set_tables_mode':
+            kb = 'keyboard_set_tables_mode'
+            message_ans = 'Доступные режимы рассылки расписания:' \
+                          '\nЕжедневное - каждый день расписание на завтра (если завтра есть пары)' \
+                          '\nЕженедельное - каждое воскресенье на всю следующую неделю' \
+                          '\nОба - собственно, оба варианта.'  # todo текущий статус
+
+        elif command == 't_mode_set':
+            mode = payload['mode']
+            kb = 'keyboard_table_settings'
+            message_ans = set_table_mode(call.from_user.id, mode)
+
+        elif command == 'set_tables_time':
+            kb = ''
+            message_ans = 'Напиши время отправки сообщения в формате ЧЧ:ММ'
+            next_step = set_tables_time
 
         elif command == 'change_group':
             kb = ''

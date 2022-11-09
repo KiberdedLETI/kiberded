@@ -53,25 +53,37 @@ def get_anekdot_user_ids(source='vk') -> list:  # список юзеров дл
     return data
 
 
-def get_user_table_ids(source='vk') -> list:  # список юзеров для рассылки расписания
+def get_user_table_ids(source='vk') -> dict:  # список юзеров для рассылки расписания
     """
-    Получение списка пользователей, подписанных на ежедневное расписание.
-
+    Получение списка пользователей, подписанных на ежедневное расписание, а также параметров рассылки
     :param str source: 'vk' / 'tg' - источник сообщения
-    :return: список [(user_id, count), ...]
+
+    :return: {"time": {"type":[user_ids], ...}, ...};
+        "time"=None - дефолтное время, "type"='None' дефолтный режим рассылки.
     """
 
     with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
         cursor = con.cursor()
         data = []
-        cursor.execute(f'CREATE TABLE IF NOT EXISTS `{source}_users` (id text, count text)')
 
-        # todo replace with fetchall()
-        for row in cursor.execute(f'SELECT * FROM {source}_users'):
-            data.append(tuple((int(row[0]), int(row[1]))))
-        # \
+        cursor.execute(f'CREATE TABLE IF NOT EXISTS `{source}_users` (id text, count text, type text, time text)')
+
+        query = f'SELECT id, count, type, time FROM `{source}_users`'
+        for row in cursor.execute(query):
+            data.append(tuple((int(row[0]), tuple((int(row[1]), str(row[2]), str(row[3]))))))
     con.close()
-    return data
+
+    # Форматируем в {"time": {"type":[user_ids], ...}, ...}
+    # Для ВК формат тот же, для совместимости, однако функционала пока нет todo
+    result = {}
+    for user_id, user_settings in data:
+        table_mode = user_settings[1]
+        table_time = user_settings[2]
+
+        data = result.setdefault(table_time, {})
+        data.setdefault(table_mode, []).append(user_id)
+
+    return result
 
 
 def get_groups():

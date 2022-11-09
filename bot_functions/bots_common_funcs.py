@@ -269,6 +269,35 @@ def group_is_donator(group) -> bool:
     return False, 0  # не знаю нужен ли второй параметр
 
 
+def get_tables_settings(user_id, source='tg'):
+    """
+    Получение настроек рассылки расписаний для пользователя
+    """
+
+    with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
+        cur = con.cursor()
+        upd_query = f'SELECT time, type, format FROM `{source}_users` WHERE id=?'
+        cur.execute(upd_query, (user_id,))
+
+        if cur.rowcount == 0:
+            return f'Ты не подписан(-а) на рассылку расписаний.\nНастройки рассылки расписаний:'
+
+        else:
+            time_, type_, format_ = cur.fetchone()  # format пока не используется
+            if time_ is None:
+                time_ = tables_time
+            if type_ is None:
+                type_ = 'ежедневный и еженедельный'
+            else:
+                mode_names = {'daily': 'ежедневный', 'weekly': 'еженедельный', 'both': 'ежедневный и еженедельный'}
+                type_ = mode_names[type_]
+
+            ret_str = f'Текущие настройки рассылки:\n' \
+                      f'Время: {time_}\n' \
+                      f'Режим: {type_}\n'
+            return ret_str
+
+
 def add_user_to_table(user_id, count, source='vk') -> str:  # добавление user_id в table_ids для рассылки расписонов
     """
     Добавление пользователя в рассылку расписания
@@ -288,17 +317,37 @@ def add_user_to_table(user_id, count, source='vk') -> str:  # добавлени
         if data is None and count == '1':
             cursor.execute(f'INSERT INTO {source}_users (id, count) VALUES({user_id}, {count})')
             str_to_vk = f'Подписка на рассылку оформлена! ' \
-                        f'Теперь тебе каждый день в {tables_time} МСК будет приходить расписание.'
+                        f'Теперь тебе каждый день в {tables_time} МСК будет приходить расписание в личные сообщения.'
+            if source == 'tg':
+                str_to_vk += '\nНастроить рассылку ты можешь кнопками ниже:'
 
         elif data is not None:
             if count == '-1':
                 cursor.execute(f"DELETE FROM {source}_users WHERE id=?", [user_id])
                 str_to_vk = f'Подписка на рассылку расписаний отменена.'
             else:
-                str_to_vk = f'Подписка на рассылку расписаний уже включена.'
+                str_to_vk = f'Подписка на рассылку расписаний включена.'
+                if source == 'tg':
+                    str_to_vk += f'\n{get_tables_settings(user_id, source)}'
 
     con.close()
     return str_to_vk
+
+
+def set_table_mode(user_id, mode, source='tg'):
+    """
+    Настройка подписки на расписания (режим рассылки)
+    """
+
+    with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
+        cur = con.cursor()
+        upd_query = f'UPDATE `{source}_users` SET type=? WHERE id=?'
+        cur.execute(upd_query, (mode, user_id))
+        con.commit()
+
+    mode_names = {'daily': 'ежедневный', 'weekly': 'еженедельный', 'both': 'ежедневный и еженедельный'}
+    msg = f'Режим рассылки изменен на {mode_names[mode]}. Изменения вступят в силу со следующего дня'
+    return msg
 
 
 def add_user_to_anekdot(user_id, count, source='vk') -> str:
