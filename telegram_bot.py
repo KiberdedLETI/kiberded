@@ -1216,6 +1216,11 @@ def callback_query(call):
         group = get_group(call.from_user.id)
         additional_group = get_additional_group(call.from_user.id)
 
+        if "place" not in payload:
+            markup = open_keyboard(f'{group}_main')
+            kb_message = f'Ошибка навигации - скорее всего, старая клавиатура. Открой новую с главной страницы:'
+            send_message(call.from_user.id, text=kb_message, reply_markup=markup)
+
         # endpoint-ы навигации
         endpoint = payload["place"]
 
