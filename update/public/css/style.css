@@ -27,7 +27,8 @@ Theme URI:
 12. Hock / #hock
 13. Oh / #oh
 14. Text / .txt
-15. Responsive Start
+15. Button (panel)
+16. Responsive Start
 
 -------------------------------------------------------------------*/
 
@@ -182,7 +183,7 @@ body{margin: 0;}
 }
 #title span:after{
 	top: -8px;
-	left: 255px;
+	left: 252px;
 	width: 17px;
 	content: "";
 	height: 43px;
@@ -259,7 +260,22 @@ body{margin: 0;}
 	font: 16px/20px 'Poppins', sans-serif;
 }
 /*------------------------------------------------------------------
-        15. Responsive Start
+		15. Button (panel)
+ ------------------------------------------------------------------*/
+.button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 10px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 14px;
+    margin: -80px 2px;
+    cursor: pointer;
+}
+/*------------------------------------------------------------------
+        16. Responsive Start
 -------------------------------------------------------------------*/
 @media only screen and (max-width: 1870px){
 	#hock{left: 47.25%;}
