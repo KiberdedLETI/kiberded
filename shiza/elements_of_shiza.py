@@ -863,7 +863,7 @@ def set_tables_time_vk(user_id):
 
     for event in longpoll.listen():
         if event.type == VkBotEventType.MESSAGE_NEW and event.obj.message["peer_id"] == user_id:
-            time_ = str(event.obj.message['text']).strip()
+            time_ = str(event.obj.message['text'])
 
             if len(time_) != 5:  # Дополняем нулями, если необходимо
                 time_ = time_.zfill(5)
@@ -878,7 +878,7 @@ def set_tables_time_vk(user_id):
             with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
                 cur = con.cursor()
                 upd_query = f'UPDATE `vk_users` SET time=? WHERE id=?'
-                cur.execute(upd_query, (time_, message.chat.id))
+                cur.execute(upd_query, (time_, user_id))
                 con.commit()
 
             msg = f'Время рассылки расписания установлено: {time_}. Изменения вступят в силу со следующего дня'
