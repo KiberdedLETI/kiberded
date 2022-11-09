@@ -1240,7 +1240,7 @@ def keyboard_prepod_schedule(prepod_id, day):
     return markup
 
 
-if __name__ == '__main__':
+def generate_all_default_kbs():
     keyboards = [
         'keyboard_main_cal',
         'keyboard_main',
@@ -1274,3 +1274,7 @@ if __name__ == '__main__':
                 f.write(markup.to_json())  # тут нет ошибки! markup - переменная, создается в предыдущей строке
         except:
             logger.critical(f'Ошибка при генерации клавиатуры {keyboard}\ntraceback: {traceback.format_exc()}')
+
+
+if __name__ == '__main__':
+    generate_all_default_kbs()
