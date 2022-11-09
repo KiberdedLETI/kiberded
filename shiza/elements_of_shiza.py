@@ -875,7 +875,7 @@ def set_tables_time_vk(user_id):
                 send_message(peer_id=user_id, message=msg)
                 return False
 
-            with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
+            with sqlite3.connect(f'{path_db}admindb/databases/table_ids.db') as con:
                 cur = con.cursor()
                 upd_query = f'UPDATE `vk_users` SET time=? WHERE id=?'
                 cur.execute(upd_query, (time_, user_id))
