@@ -1275,6 +1275,10 @@ def callback_query(call):
         dump_message(cl, callback=True)
 
     if payload['type'] == 'action':
+
+        if 'action_type' in payload:  # todo remove - обработка старых клавиатур
+            payload = payload['action_type']
+
         group = get_group(call.from_user.id)
         additional_group = get_additional_group(call.from_user.id)
         command = payload["command"]
