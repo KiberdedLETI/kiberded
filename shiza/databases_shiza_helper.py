@@ -1260,26 +1260,26 @@ def generate_departments_keyboards():  # создает клавиатуры д�
                 markup.add(buttons[i * 24 + j * 3 + 0])
         if i == 0:  # если это первая клавиатура, то нужно добавить только кнопку вперед
             payload = {"type": "action",
-                       "command": f"search_department",
+                       "command": "search_department",
                        "list_id": str(i + 1)
                        }
             callback_next = payload_to_callback(payload)
             markup.add(InlineKeyboardButton('>', callback_data=callback_next))
         elif i == ((math.ceil(len(departments) / 24)) - 1):  # если последняя, то нужно добавить только кнопку назад
             payload = {"type": "action",
-                       "command": f"search_department",
+                       "command": "search_department",
                        "list_id": str(i - 1)
                        }
             callback_prev = payload_to_callback(payload)
             markup.add(InlineKeyboardButton('<', callback_data=callback_prev))
         else:  # если не первая и не последняя, то нужно добавить обе кнопки
             payload = {"type": "action",
-                       "command": f"search_department",
+                       "command": "search_department",
                        "list_id": str(i + 1)
                        }
             callback_next = payload_to_callback(payload)
             payload = {"type": "action",
-                       "command": f"search_department",
+                       "command": "search_department",
                        "list_id": str(i - 1)
                        }
             callback_prev = payload_to_callback(payload)

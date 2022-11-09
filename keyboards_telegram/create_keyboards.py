@@ -14,7 +14,6 @@
   с расписанием данные к ключам weekday на английском. (callback_to_json переводит обратно)
 - По тем же причинам введены сокращения в callback_data:
     - type -> t
-    - action_type -> a_t
     - command -> c
     - place -> p
     - weekday -> wd
@@ -41,7 +40,7 @@ def payload_to_callback(payload) -> str:
     Обратная функция callback_to_json() в файле telegram_bot.py.
 
     Пример:
-    payload={"type": "action", "action_type": "message", "command": "table_empty"}
+    payload={"type": "action", "command": "table_empty"}
     callback_data='t:action,a_t:message,c:table_empty'
     :param payload: входная строка или json-dict payload-а из вк
     :return: callback_data string
@@ -54,7 +53,7 @@ def payload_to_callback(payload) -> str:
     else:
         raise TypeError('Передан неправильный тип данных')
     payload_item_list = ['type', 'command', 'place', 'weekday', 'subject', 'department_id', 'list_id']
-    callback_item_list = ['t', 'a_t', 'c', 'p', 'wd', 'sj', 'did', 'lid']
+    callback_item_list = ['t', 'c', 'p', 'wd', 'sj', 'did', 'lid']
     callback_data = ''
     for item in payload:
         if item in payload_item_list:

@@ -296,7 +296,7 @@ def callback_to_json(callback_data) -> dict:
         'week (odd)': 'full (нечёт)'
         }
     payload_item_list = ['type', 'command', 'place', 'weekday', 'subject', 'department_id', 'list_id']
-    callback_item_list = ['t', 'a_t', 'c', 'p', 'wd', 'sj', 'did', 'lid']
+    callback_item_list = ['t', 'c', 'p', 'wd', 'sj', 'did', 'lid']
     payload = {}
     for i in callback_data.split(','):
         key, value = i.split(':')
