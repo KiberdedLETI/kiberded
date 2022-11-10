@@ -42,7 +42,7 @@ def send_file(file_path, name):
 if __name__ == '__main__':
     now = datetime.now()
     file = now.strftime('%Y-%m-%d_00-01')
-    send_file(f'../../Yandex.Disk/backups/databases/{file}.tar.gz', f'Databases_{file[:-6]}.tar.gz')
-    send_file(f'../../Yandex.Disk/backups/keyboards/{file}.tar.gz', f'Keyboards_{file[:-6]}.tar.gz')
-    send_file(f'../../Yandex.Disk/backups/keyboards_telegram/{file}.tar.gz', f'keyboards_telegram_{file[:-6]}.tar.gz')
-    send_file(f'../../Yandex.Disk/backups/messages_backup/{file}.tar.gz', f'messages_backup_{file[:-6]}.tar.gz')
+    send_file(f'../../backups/databases/{file}.tar.gz', f'Databases_{file[:-6]}.tar.gz')
+    send_file(f'../../backups/keyboards/{file}.tar.gz', f'Keyboards_{file[:-6]}.tar.gz')
+    send_file(f'../../backups/keyboards_telegram/{file}.tar.gz', f'keyboards_telegram_{file[:-6]}.tar.gz')
+    send_file(f'../../backups/messages_backup/{file}.tar.gz', f'messages_backup_{file[:-6]}.tar.gz')
