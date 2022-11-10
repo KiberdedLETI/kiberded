@@ -3,9 +3,10 @@
 Бывший "обновляющий дед"
 """
 import random
+import traceback
 from typing import Optional, Union
 
-from fastapi import Depends, FastAPI, Request, HTTPException
+from fastapi import Depends, FastAPI, Request, HTTPException, Header
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -224,6 +225,122 @@ async def register_user(request: Request, user: User = Depends(current_user), it
 @app.get("/verify")
 async def verify_user(request: Request, token=''):
     return templates.TemplateResponse("verify.html", {"request": request, "token": token})
+
+
+async def get_webhook_info(x_github_event: str, payload):
+    if x_github_event == 'ping':
+        hook_type = payload['hook']['type']
+        sender_login = payload['sender']['login']
+        hook_config_url = payload['hook']['config']['url']
+
+        if hook_type == 'Repository':
+            repository_full_name = payload['repository']['full_name']
+            message = f'[github] Пользователь {sender_login} создал новый webhook в репозитории ' \
+                      f'{repository_full_name} на адрес {hook_config_url}'
+        elif hook_type == 'Organization':
+            organization_login = payload['organization']['login']
+            message = f'[github] Пользователь {sender_login} создал новый webhook в организации ' \
+                      f'{organization_login} на адрес {hook_config_url}'
+        else:
+            message = f'[github] Пользователь {sender_login} создал новый webhook на адрес {hook_config_url}' \
+                      f'\nhook_type={hook_type}'
+        return message
+
+    elif x_github_event == 'push':
+        pusher_name = payload['pusher']['name']
+        repository_full_name = payload['repository']['full_name']
+        commits = payload['commits']
+        message = f'[github] Пользователь {pusher_name} сделал push репозитория {repository_full_name}\n\n'
+
+        for commit in commits:
+            commit_author_name = commit['author']['name']
+            commit_message = commit['message']
+            message += f'\t{commit_author_name}: {commit_message}\n\n'
+
+        return message
+
+    elif x_github_event == 'commit_comment':
+        message = f'[github] Кто-то прокомментировал коммент'
+        return message
+    elif x_github_event == 'create':
+        message = f'[github] Кто-то создал репозиторий'
+        return message
+    elif x_github_event == 'delete':
+        message = f'[github] Кто-то удалил репозиторий'
+        return message
+    elif x_github_event == 'discussion':
+        message = f'[github] Кто-то сделал что-то с дискуссиями'
+        return message
+    elif x_github_event == 'discussion_comment':
+        message = f'[github] Кто-то прокомментировал дискуссии'
+        return message
+    elif x_github_event == 'fork':
+        message = f'[github] Кто-то что-то сделал с форком'
+        return message
+    elif x_github_event == 'issue_comment':
+        message = f'[github] Кто-то прокомментировал issue'
+        return message
+    elif x_github_event == 'issues':
+        message = f'[github] Кто-то что-то сделал с issue'
+        return message
+    elif x_github_event == 'member':
+        message = f'[github] Кто-то что-то сделал с memvers'
+        return message
+    elif x_github_event == 'meta':
+        action = payload['action']
+        hook_type = payload['hook']['type']
+        sender_login = payload['sender']['login']
+        hook_config_url = payload['hook']['config']['url']
+
+        if hook_type == 'Repository':
+            repository_full_name = payload['repository']['full_name']
+            addition = f'в репозитории {repository_full_name}'
+        elif hook_type == 'Organization':
+            organization_login = payload['organization']['login']
+            addition = f'в организации {organization_login}'
+        else:
+            addition = f'непонятно где'
+        if action == 'deleted':
+            message = f'[github] Пользователь {sender_login} удалил вебхук {addition} по адресу {hook_config_url}'
+        else:
+            message = f'[githib] Пользователь {sender_login} сделал что-то непонятное с вебхуком {addition} по ' \
+                      f'адресу {hook_config_url}\npayload: {payload}'
+        return message
+    elif x_github_event == 'organization':
+        message = f'[github] Кто-то что-то сделал с организацией'
+        return message
+    elif x_github_event == 'pull_request':
+        message = f'[github] Кто-то сделал что-то с pull request'
+        return message
+    elif x_github_event == 'pull_request_review':
+        message = f'[github] Кто-то сделал что-то с pull request'
+        return message
+    elif x_github_event == 'pull_request_review_comment':
+        message = f'[github] Кто-то сделал что-то с pull request'
+        return message
+    elif x_github_event == 'pull_request_review_thread':
+        message = f'[github] Кто-то сделал что-то с pull request'
+        return message
+    elif x_github_event == 'repository':
+        message = f'[github] Кто-то сделал что-то глобальное с репозиторием'
+        return message
+    else:
+        return ''
+
+
+@app.post("/webhook")
+async def webhook(request: Request,  x_github_event: str = Header(...),):
+    payload = await request.json()
+    try:
+        message = await get_webhook_info(x_github_event, payload)
+        if message == '':
+            return {'detail': '400 BAD REQUEST'}
+        else:
+            send_telegram_message(message)
+            return {'message': 'ok'}
+    except Exception as e:
+        message = f'[github] Произошла ошибка при парсинге webhook: \n{traceback.format_exc()}\n\npayload: {payload}'
+        send_telegram_message(message)
 
 
 @app.on_event("startup")
