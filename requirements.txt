@@ -22,3 +22,8 @@ html5lib
 transliterate
 fuzzywuzzy
 python-Levenshtein
+fastapi-users[sqlalchemy]
+sqlalchemy
+aiosqlite
+aiohttp
+jinja2

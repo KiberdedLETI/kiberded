@@ -5,6 +5,7 @@ venv/
 /bot_functions/__pycache__/
 /shiza/__pycache__/
 /keyboards_telegram/__pycache__/
+/update/__pycache__/
 /test.py
 /base/
 /cache/
