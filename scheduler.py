@@ -523,6 +523,7 @@ def send_personal_tables(table_time=None):
                 elif is_study:  # если обычный учебный день
                     if table_type == 'daily':  # соотношение настроек пользователя и предложенного расписания
                         day_today = tomorrow_weekday
+                        pin_msg = False
                     elif table_type == 'weekly' and day_today == tomorrow_weekday and not exam_notification:
                         continue  # если у пользователя только еженедельное, не отправляем ему ежедневное
 
