@@ -463,7 +463,7 @@ def get_custom_personal_tables_time() -> list:
     return list(set(res + res2))
 
 
-def send_personal_tables(table_time=None):
+def send_personal_tables(table_time='None'):
     """
     Отправка расписаний в ЛС подписавшимся пользователям (копия обычного ежедневного расписания
 
@@ -501,64 +501,65 @@ def send_personal_tables(table_time=None):
         if table_time not in table_types_ids.keys():
             continue
         table_types_ids = table_types_ids[table_time]
-        for table_type, id in table_types_ids.items():
-            group = None  # чтобы не ругался на неинициализированную переменную
-            try:
-                group = get_group(id[0], source=source)
-                if group == '0000':
-                    continue  # нелепый фикс непонятно чего из телеграма
+        for table_type, ids in table_types_ids.items():
+            for user_id in ids:
+                group = None  # чтобы не ругался на неинициализированную переменную
+                try:
+                    group = get_group(user_id, source=source)
+                    if group == '0000':
+                        continue  # нелепый фикс непонятно чего из телеграма
 
-                is_exam, is_study, daily_str = daily_cron(group)  # состояние группы (семестр/сессия)
+                    is_exam, is_study, daily_str = daily_cron(group)  # состояние группы (семестр/сессия)
 
-                if is_exam and is_study:  # is_exam может =1 пораньше, для открытия расписона сессии
-                    is_exam = 0
-                table_message = daily_str
+                    if is_exam and is_study:  # is_exam может =1 пораньше, для открытия расписона сессии
+                        is_exam = 0
+                    table_message = daily_str
 
-                exam_notification = None
-                if is_exam:  # если идут экзамены, добавляем экзамен на сегодня в сообщение
-                    exam_notification = get_exam_notification(group, day=date.today() + timedelta(days=1))
-                    if exam_notification:
-                        table_message += exam_notification
+                    exam_notification = None
+                    if is_exam:  # если идут экзамены, добавляем экзамен на сегодня в сообщение
+                        exam_notification = get_exam_notification(group, day=date.today() + timedelta(days=1))
+                        if exam_notification:
+                            table_message += exam_notification
 
-                elif is_study:  # если обычный учебный день
-                    if table_type == 'daily':  # соотношение настроек пользователя и предложенного расписания
-                        day_today = tomorrow_weekday
-                        pin_msg = False
-                    elif table_type == 'weekly' and day_today == tomorrow_weekday and not exam_notification:
-                        continue  # если у пользователя только еженедельное, не отправляем ему ежедневное
+                    elif is_study:  # если обычный учебный день
+                        if table_type == 'daily':  # соотношение настроек пользователя и предложенного расписания
+                            day_today = tomorrow_weekday
+                            pin_msg = False
+                        elif table_type == 'weekly' and day_today == tomorrow_weekday and not exam_notification:
+                            continue  # если у пользователя только еженедельное, не отправляем ему ежедневное
 
-                    table_message += read_table(group, day=day_today)
+                        table_message += read_table(group, day=day_today)
 
-                if table_message:  # если есть хоть что-то в сообщении на день
-                    if table_message.split()[-1] != 'Пусто':
+                    if table_message:  # если есть хоть что-то в сообщении на день
+                        if table_message.split()[-1] != 'Пусто':
 
-                        if day_today.split()[0] == 'full':
-                            split_idx = table_message.find(':') + 4
-                            table_message = table_message[split_idx:]
+                            if day_today.split()[0] == 'full':
+                                split_idx = table_message.find(':') + 4
+                                table_message = table_message[split_idx:]
 
-                            message = f"Расписание {group} на следующую неделю {day_today.split()[-1]}:\n" \
-                                      f"{table_message}"
-                        else:
-                            message = f'Ежедневное расписание на завтра:\n{table_message}'
+                                message = f"Расписание {group} на следующую неделю {day_today.split()[-1]}:\n" \
+                                          f"{table_message}"
+                            else:
+                                message = f'Ежедневное расписание на завтра:\n{table_message}'
 
-                        if source == 'tg':
-                            msgg = send_tg_message(id[0], message)
+                            if source == 'tg':
+                                msgg = send_tg_message(user_id, message)
 
-                            if id[0] in tg_last_messages.keys():  # открепляем предыдущее сообщение на неделю
-                                unpin_tg_message(id[0], tg_last_messages[id[0]])
-                            if pin_msg:  # В воскресенье закрепляем расписание на всю след. неделю
-                                pin_tg_message(msgg, chat_type='private')
+                                if user_id in tg_last_messages.keys():  # открепляем предыдущее сообщение на неделю
+                                    unpin_tg_message(user_id, tg_last_messages[user_id])
+                                if pin_msg:  # В воскресенье закрепляем расписание на всю след. неделю
+                                    pin_tg_message(msgg, chat_type='private')
 
-                        else:
-                            send_message(message, id[0])
+                            else:
+                                send_message(message, user_id)
 
-                        logger.warning(f'Расписание отправлено юзеру {id[0]} из гр. {group}')
+                            logger.warning(f'Расписание отправлено юзеру {user_id} из гр. {group}')
 
-            except Exception:
-                error_message = f'Произошла ошибка при отправке расписания: {traceback.format_exc()}\n' \
-                                f'Юзер {[id[0]]}, группа {group}'
-                send_message(error_message, 2000000001)
-                send_tg_message(tg_admin_chat, error_message)
+                except Exception:
+                    error_message = f'Произошла ошибка при отправке расписания: {traceback.format_exc()}\n' \
+                                    f'Юзер {user_id}, группа {group}'
+                    send_message(error_message, 2000000001)
+                    send_tg_message(tg_admin_chat, error_message)
 
 
 def check_toast():
