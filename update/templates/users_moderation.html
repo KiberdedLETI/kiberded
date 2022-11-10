@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <title>Киберадминка</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.min.js" integrity="sha384-IDwe1+LCz02ROU9k972gdyvl+AESN10+x7tBKgc9I5HFtuNz0wWnPclzo6p9vxnk" crossorigin="anonymous"></script>
+    <script src="/public/js/auth.js"></script>
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+      .b-example-divider {
+        height: 3rem;
+        background-color: rgba(0, 0, 0, .1);
+        border: solid rgba(0, 0, 0, .15);
+        border-width: 1px 0;
+        box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
+      }
+
+      .b-example-vr {
+        flex-shrink: 0;
+        width: 1.5rem;
+        height: 100vh;
+      }
+
+      .bi {
+        vertical-align: -.125em;
+        fill: currentColor;
+      }
+
+      .nav-scroller {
+        position: relative;
+        z-index: 2;
+        height: 2.75rem;
+        overflow-y: hidden;
+      }
+
+      .nav-scroller .nav {
+        display: flex;
+        flex-wrap: nowrap;
+        padding-bottom: 1rem;
+        margin-top: -1px;
+        overflow-x: auto;
+        text-align: center;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+      }
+    </style>
+
+    <link href="public/css/navbar-top-fixed.css" rel="stylesheet">
+  </head>
+  <body>
+
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            Киберадминка
+            <img src="/public/logo.png" alt="" width="30" height="30" class="d-inline-block align-text-top">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+          <ul class="navbar-nav me-auto mb-2 mb-md-0">
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+  <main class="px-md-4">
+      <h5>Создание пользователя:</h5>
+      <div class="table-responsive">
+        <table class="table table-striped table-sm">
+        {% set keys = ['username', 'group', 'telegram_username', 'vk_username'] %}
+        <thead>
+          <tr>
+            {% for key in keys %}
+            <th scope="col">{{ key }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tr>
+          {% for key in keys %}
+            {% if key == 'is_superuser' %}
+              <td><input id="create-input-is_superuser" type="checkbox" class="form-check-input"></input></td>
+            {% else %}
+              <td><input id="create-input-{{ key }}" class="form-control"></input></td>
+            {% endif %}
+          {% endfor %}
+          <td><button class="btn btn-outline-success" onclick="create_user()">Создать</button></td>
+        </tr>
+        </table>
+      </div>
+    <p id="status"></p>
+    </main>
+
+    <main class="px-md-4">
+      <h5>Список пользователей:</h5>
+      <div class="table-responsive">
+        <table class="table table-striped table-sm table-hover">
+        {% set keys = ['username', 'group', 'telegram_username', 'vk_username', 'is_superuser', 'is_verified'] %}
+        <thead>
+          <tr>
+            {% for key in keys %}
+            <th scope="col">{{ key }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        {% for user in users %}
+        <tr>
+            {% for key in keys %}
+            <td>{{ user[key] }}</td>
+            {% endfor %}
+            <td>
+              <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Редактировать
+              </button>
+              <ul class="dropdown-menu">
+                {% set user_id = user['id'] %}
+                <li><a class="dropdown-item" href="#" onclick="a_user_verification('{{ user_id }}')">Верификация</a></li>
+                <li><a class="dropdown-item" href="#" onclick="a_user-reset_password('{{ user_id }}')">Запросить токен пароля</a></li>
+                <li><a class="dropdown-item" href="#" onclick="a_user-change_other_data('{{ user_id }}'')">Изменение других данных</a></li>
+              </ul>
+            </td>
+        </tr>
+        {% endfor %}
+        </table>
+      </div>
+    </main>
+
+  </body>
+</html>
