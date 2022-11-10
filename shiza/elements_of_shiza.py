@@ -737,6 +737,7 @@ def change_additional_group_func(user_id):  # смена/установка но
     """
 
     initialization()
+
     user_group = str(get_group(path=path_db, user_id=user_id)[0])
     group = get_common_additional_group(path=path_db, user_id=user_id)
     logger.warning(f'Запущена шиза change_additional_group юзером @id{str(user_id)} из группы {group}')
@@ -848,3 +849,38 @@ def add_chat(group, chat_id, freedom):  # добавление чата в group
 
 def empty_thread():  # пустой поток на случай ошибки в пэйлоаде или где-то еще
     return 0
+
+
+def set_tables_time_vk(user_id):
+    """
+    Настройка подписки на расписания (время рассылки)
+    """
+    initialization()
+
+    logger.warning(f'Запущена шиза set_tables_time юзером @id{str(user_id)}')
+    longpoll = VkBotLongPoll(vk_session, group_id)
+    send_message(peer_id=user_id, message='Напиши время отправки сообщения в формате ЧЧ:ММ')
+
+    for event in longpoll.listen():
+        if event.type == VkBotEventType.MESSAGE_NEW and event.obj.message["peer_id"] == user_id:
+            time_ = str(event.obj.message['text'])
+
+            if len(time_) != 5:  # Дополняем нулями, если необходимо
+                time_ = time_.zfill(5)
+
+            try:  # Проверка формата времени
+                time_check = time.strptime(time_, '%H:%M')
+            except ValueError:
+                msg = 'Ошибка - проверь формат сообщения (ЧЧ:ММ), нажми кнопку и попробуй еще раз'
+                send_message(peer_id=user_id, message=msg)
+                return False
+
+            with sqlite3.connect(f'{path_db}admindb/databases/table_ids.db') as con:
+                cur = con.cursor()
+                upd_query = f'UPDATE `vk_users` SET time=? WHERE id=?'
+                cur.execute(upd_query, (time_, user_id))
+                con.commit()
+
+            msg = f'Время рассылки расписания установлено: {time_}. Изменения вступят в силу со следующего дня'
+            send_message(peer_id=user_id, message=msg)
+            return True

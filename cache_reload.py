@@ -25,6 +25,7 @@ from shiza.databases_shiza_helper import edit_gcal, create_database, load_teache
     generate_main_keyboard, generate_links_keyboard, add_preset_books, generate_departments_keyboards, \
     generate_prepods_keyboards
 import keyboards_telegram.create_keyboards
+import keyboards.create_keyboards
 from shiza.daily_functions import daily_cron
 from bot_functions.bots_common_funcs import get_day, read_table
 

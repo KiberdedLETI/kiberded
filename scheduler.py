@@ -448,7 +448,7 @@ def anekdots():
                 send_anekdot(id[0], random.randint(0, num_of_base), target=source)
 
 
-def get_custom_personal_tables_time(source='tg') -> list:
+def get_custom_personal_tables_time() -> list:
     """
     Возвращает список уникальных времен отправки расписаний
 
@@ -458,8 +458,9 @@ def get_custom_personal_tables_time(source='tg') -> list:
     with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
         con.row_factory = lambda cursor, row: row[0]  # чтобы возвращать list, а не list of tuples
         cursor = con.cursor()
-        res = cursor.execute(f'SELECT DISTINCT time FROM `{source}_users` WHERE time IS NOT NULL').fetchall()
-    return res
+        res = cursor.execute(f'SELECT DISTINCT time FROM `tg_users` WHERE time IS NOT NULL').fetchall()
+        res2 = cursor.execute(f'SELECT DISTINCT time FROM `vk_users` WHERE time IS NOT NULL').fetchall()
+    return list(set(res + res2))
 
 
 def send_personal_tables(table_time=None):
@@ -493,7 +494,7 @@ def send_personal_tables(table_time=None):
     else:
         day_today = tomorrow_weekday
 
-    all_ids = {'vk': get_user_table_ids(source='vk'),  # для ВК пока не сделано настраиваемое время отправки
+    all_ids = {'vk': get_user_table_ids(source='vk'),
                'tg': get_user_table_ids(source='tg')}
 
     for source, table_types_ids in all_ids.items():

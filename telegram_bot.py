@@ -607,7 +607,7 @@ def get_prepod_schedule(prepod_id, weekday):
     return schedule
 
 
-def set_tables_time(message, source='tg'):
+def set_tables_time(message):
     """
     Настройка подписки на расписания (время рассылки)
     """
@@ -625,7 +625,7 @@ def set_tables_time(message, source='tg'):
 
     with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
         cur = con.cursor()
-        upd_query = f'UPDATE `{source}_users` SET time=? WHERE id=?'
+        upd_query = f'UPDATE `tg_users` SET time=? WHERE id=?'
         cur.execute(upd_query, (time_, message.chat.id))
         con.commit()
 
