@@ -1,13 +1,13 @@
 # !!!!!!!!! THIS SHIT NEEDS TO БЫТЬ СКОПИРОВАНА В /lib/systemd/system/
 
 [Unit]
-Description=GitHub update daemon to DED
+Description=Веб-дед
 After=network-online.target
 
 [Service]
 Restart=always
-WorkingDirectory=/root/kiberded
-ExecStart=/usr/local/bin/node /root/kiberded/update/update_daemon.js
+WorkingDirectory=/root/kiberded/update
+ExecStart=/usr/bin/env python3 /root/kiberded/update/update_daemon_starter.py
 
 [Install]
 WantedBy=multi-user.target
