@@ -26,6 +26,7 @@ from telebot.async_telebot import AsyncTeleBot
 from bot_functions import send_telegram_message
 from users_function import create_user
 from pydantic import BaseModel
+import os
 
 logger = logging.getLogger(__name__)
 console_handler = logging.StreamHandler()
@@ -341,6 +342,9 @@ async def webhook(request: Request,  x_github_event: str = Header(...),):
     except Exception as e:
         message = f'[github] Произошла ошибка при парсинге webhook: \n{traceback.format_exc()}\n\npayload: {payload}'
         send_telegram_message(message)
+    finally:
+        if x_github_event == 'push':
+            os.system('/bin/bash /root/kiberded/server/update.sh')
 
 
 @app.on_event("startup")
