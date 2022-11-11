@@ -19,9 +19,7 @@ from users import current_user, fastapi_users, cookie_auth_backend
 
 from fastapi.templating import Jinja2Templates
 
-import toml
 import logging
-import sys
 from telebot.async_telebot import AsyncTeleBot
 from bot_functions import send_telegram_message
 from users_function import create_user
