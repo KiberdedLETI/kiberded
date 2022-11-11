@@ -4,7 +4,6 @@
 """
 import random
 import traceback
-from typing import Optional, Union
 
 from fastapi import Depends, FastAPI, Request, HTTPException, Header
 from fastapi.responses import RedirectResponse
@@ -14,13 +13,12 @@ from starlette import status
 from starlette.staticfiles import StaticFiles
 
 from db import User, create_db_and_tables, get_async_session
-from schemas import UserCreate, UserRead, UserUpdate
+from schemas import UserRead, UserUpdate
 from users import current_user, fastapi_users, cookie_auth_backend
 
 from fastapi.templating import Jinja2Templates
 
 import logging
-from telebot.async_telebot import AsyncTeleBot
 from bot_functions import send_telegram_message
 from users_function import create_user
 from pydantic import BaseModel
@@ -32,7 +30,7 @@ logger.setLevel(logging.INFO)
 logger.addHandler(console_handler)
 
 
-app = FastAPI()
+app = FastAPI(docs_url=None)
 
 
 class RegisterItem(BaseModel):
