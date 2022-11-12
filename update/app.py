@@ -7,6 +7,7 @@ import traceback
 
 from fastapi import Depends, FastAPI, Request, HTTPException, Header
 from fastapi.responses import RedirectResponse
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
@@ -31,6 +32,7 @@ logger.addHandler(console_handler)
 
 
 app = FastAPI(docs_url=None)
+app.add_middleware(HTTPSRedirectMiddleware)  # переадресация на https
 
 
 class RegisterItem(BaseModel):
