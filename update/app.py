@@ -24,6 +24,9 @@ from bot_functions import send_telegram_message, get_acme_flag
 from users_function import create_user
 from pydantic import BaseModel
 import os
+import sys
+sys.path.insert(0, '../')
+from deds_schemas import main as get_all_dependencies
 
 logger = logging.getLogger(__name__)
 console_handler = logging.StreamHandler()
@@ -32,7 +35,7 @@ logger.addHandler(console_handler)
 
 
 app = FastAPI(docs_url=None)
-app.add_middleware(HTTPSRedirectMiddleware)  # переадресация на https
+# app.add_middleware(HTTPSRedirectMiddleware)  # переадресация на https
 
 
 class RegisterItem(BaseModel):
@@ -245,48 +248,95 @@ async def get_webhook_info(x_github_event: str, payload):
         else:
             message = f'[github] Пользователь {sender_login} создал новый webhook на адрес {hook_config_url}' \
                       f'\nhook_type={hook_type}'
-        return message
+        return message, None
 
     elif x_github_event == 'push':
         pusher_name = payload['pusher']['name']
         repository_full_name = payload['repository']['full_name']
         commits = payload['commits']
         message = f'[github] Пользователь {pusher_name} сделал push репозитория {repository_full_name}\n\n'
+        global_added = []
+        global_removed = []
+        global_modified = []
 
         for commit in commits:
             commit_author_name = commit['author']['name']
             commit_message = commit['message']
+
+            commit_added = commit['added']
+            commit_removed = commit['removed']
+            commit_modified = commit['modified']
+
+            for file in commit_added:
+                global_added.append(file)
+            for file in commit_removed:
+                global_removed.append(file)
+            for file in commit_modified:
+                global_modified.append(file)
             message += f'\t{commit_author_name}: {commit_message}\n\n'
 
-        return message
+        all_files = []
+
+        if global_added:
+            message += f'Список добавленных файлов:\n'
+            for file in global_added:
+                all_files.append(file)
+                message += f'{file}\n'
+
+        if global_removed:
+            message += f'Список удаленных файлов:\n'
+            for file in global_removed:
+                all_files.append(file)
+                message += f'{file}\n'
+
+        if global_modified:
+            message += f'Список модифицированных файлов:\n'
+            for file in global_modified:
+                all_files.append(file)
+                message += f'{file}\n'
+
+        reboot_deds = {}
+        if repository_full_name == 'KiberdedLETI/kiberded':
+            all_dependencies = get_all_dependencies()
+            for file in all_files:
+                dependence = all_dependencies[file]
+                for dep in dependence:
+                    reboot_deds[dep] = True
+
+        reboot_deds = list(reboot_deds.keys())
+        if reboot_deds:
+            message += f'\nНужно перезагрузить дедов:'
+            for ded in reboot_deds:
+                message += f'{ded}\n'
+        return message, reboot_deds
 
     elif x_github_event == 'commit_comment':
         message = f'[github] Кто-то прокомментировал коммент'
-        return message
+        return message, None
     elif x_github_event == 'create':
         message = f'[github] Кто-то создал репозиторий'
-        return message
+        return message, None
     elif x_github_event == 'delete':
         message = f'[github] Кто-то удалил репозиторий'
-        return message
+        return message, None
     elif x_github_event == 'discussion':
         message = f'[github] Кто-то сделал что-то с дискуссиями'
-        return message
+        return message, None
     elif x_github_event == 'discussion_comment':
         message = f'[github] Кто-то прокомментировал дискуссии'
-        return message
+        return message, None
     elif x_github_event == 'fork':
         message = f'[github] Кто-то что-то сделал с форком'
-        return message
+        return message, None
     elif x_github_event == 'issue_comment':
         message = f'[github] Кто-то прокомментировал issue'
-        return message
+        return message, None
     elif x_github_event == 'issues':
         message = f'[github] Кто-то что-то сделал с issue'
-        return message
+        return message, None
     elif x_github_event == 'member':
         message = f'[github] Кто-то что-то сделал с memvers'
-        return message
+        return message, None
     elif x_github_event == 'meta':
         action = payload['action']
         hook_type = payload['hook']['type']
@@ -306,45 +356,47 @@ async def get_webhook_info(x_github_event: str, payload):
         else:
             message = f'[githib] Пользователь {sender_login} сделал что-то непонятное с вебхуком {addition} по ' \
                       f'адресу {hook_config_url}\npayload: {payload}'
-        return message
+        return message, None
     elif x_github_event == 'organization':
         message = f'[github] Кто-то что-то сделал с организацией'
-        return message
+        return message, None
     elif x_github_event == 'pull_request':
         message = f'[github] Кто-то сделал что-то с pull request'
-        return message
+        return message, None
     elif x_github_event == 'pull_request_review':
         message = f'[github] Кто-то сделал что-то с pull request'
-        return message
+        return message, None
     elif x_github_event == 'pull_request_review_comment':
         message = f'[github] Кто-то сделал что-то с pull request'
-        return message
+        return message, None
     elif x_github_event == 'pull_request_review_thread':
         message = f'[github] Кто-то сделал что-то с pull request'
-        return message
+        return message, None
     elif x_github_event == 'repository':
         message = f'[github] Кто-то сделал что-то глобальное с репозиторием'
-        return message
+        return message, None
     else:
-        return ''
+        return '', None
 
 
 @app.post("/webhook")
 async def webhook(request: Request,  x_github_event: str = Header(...),):
     payload = await request.json()
     try:
-        message = await get_webhook_info(x_github_event, payload)
+        message, files = await get_webhook_info(x_github_event, payload)
         if message == '':
             return {'detail': '400 BAD REQUEST'}
         else:
+            if x_github_event == 'push':
+                all_dependencies = get_deds_to_restart()
+                os.system('/bin/bash /root/kiberded/server/update.sh')
             send_telegram_message(message)
+
             return {'message': 'ok'}
     except Exception as e:
         message = f'[github] Произошла ошибка при парсинге webhook: \n{traceback.format_exc()}\n\npayload: {payload}'
         send_telegram_message(message)
-    finally:
-        if x_github_event == 'push':
-            os.system('/bin/bash /root/kiberded/server/update.sh')
+
 
 
 @app.on_event("startup")

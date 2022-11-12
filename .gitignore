@@ -15,3 +15,6 @@
 *.db
 *.log
 /configuration.toml
+/databases
+/admindb
+
