@@ -397,7 +397,6 @@ async def webhook(request: Request,  x_github_event: str = Header(...),):
             return {'detail': '400 BAD REQUEST'}
         else:
             if x_github_event == 'push':
-                all_dependencies = get_deds_to_restart()
                 os.system('/bin/bash /root/kiberded/server/update.sh')
             send_telegram_message(message)
 
