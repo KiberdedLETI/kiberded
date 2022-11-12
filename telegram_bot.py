@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+# dependencies: [telegram_bot]
 
 """
 Основная функция телеграмного чат-бота

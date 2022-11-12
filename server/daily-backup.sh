@@ -1,4 +1,6 @@
 #!/bin/bash
+# dependencies: []
+
 datetime_name=`date +"%Y-%m-%d_%H-%M"`
 bk_dir='/root/backups'
 main_dir='/root/kiberded/'
