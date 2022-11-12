@@ -195,7 +195,7 @@
                 {% set user_id = user['id'] %}
                 <li><a class="dropdown-item" href="#" onclick="a_user_verification('{{ user_id }}')">Верификация</a></li>
                 <li><a class="dropdown-item" href="#" onclick="a_user-reset_password('{{ user_id }}')">Запросить токен пароля</a></li>
-                <li><a class="dropdown-item" href="/users_moderation?id='{{ user_id }}'">Изменение других данных</a></li>
+                <li><a class="dropdown-item" href="/users_moderation?id={{ user_id }}">Изменение других данных</a></li>
               </ul>
             </td>
         </tr>
