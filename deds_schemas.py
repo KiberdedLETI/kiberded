@@ -67,7 +67,9 @@ def get_file_dependencies(file_path):
                         if line.startswith('# dependencies'):
                             exec(f'dependencies = {line[16:]}')
                             break
-            except:
+            except FileNotFoundError:
+                pass
+            except Exception as e:
                 raise ValueError(f'Не найдены зависимости в файле')
     return dependencies
 
