@@ -22,3 +22,5 @@ telegram_dayofdaypics_chat = -1001758218447 # chat.id чата с картино
 vk_ded_page_login = ""  # "Длюдеда" - страница-пользователь для Кибердеда
 vk_ded_page_password = ""
 web_secret = ''  # ключ для генерации токенов в веб-админке
+enable_acme_challenge = 0  # флаг монтирования директории /.well-known для получения ssl-сертификата через certbot
+

@@ -33,6 +33,7 @@ token_telegram = config.get('Kiberded').get('token_telegram')
 token_vk = config.get('Kiberded').get('token')
 telegram_admin_chat = config.get('Kiberded').get('telegram_admin_chat')
 web_secret = config.get('Kiberded').get('web_secret')  # не хочется засорять users.py огромным куском кода ради этого
+enable_acme_challenge = config.get('Kiberded').get('enable_acme_challenge')  # флаг монтирования директории /.well-known
 
 bot = telebot.TeleBot(token_telegram)
 
@@ -95,6 +96,10 @@ def send_vk_message(message, peer_id=2000000001):
 
 
 def get_web_secret():
+    return web_secret
+
+
+def get_acme_flag():
     return web_secret
 
 create_backup_dir()

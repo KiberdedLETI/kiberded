@@ -7,6 +7,7 @@ import traceback
 
 from fastapi import Depends, FastAPI, Request, HTTPException, Header
 from fastapi.responses import RedirectResponse
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
@@ -19,7 +20,7 @@ from users import current_user, fastapi_users, cookie_auth_backend
 from fastapi.templating import Jinja2Templates
 
 import logging
-from bot_functions import send_telegram_message
+from bot_functions import send_telegram_message, get_acme_flag
 from users_function import create_user
 from pydantic import BaseModel
 import os
@@ -31,6 +32,7 @@ logger.addHandler(console_handler)
 
 
 app = FastAPI(docs_url=None)
+app.add_middleware(HTTPSRedirectMiddleware)  # переадресация на https
 
 
 class RegisterItem(BaseModel):
@@ -64,6 +66,8 @@ app.include_router(
 
 templates = Jinja2Templates(directory="./templates")
 app.mount("/public", StaticFiles(directory="public"), name="public")
+if get_acme_flag():
+    app.mount("/.well-known", StaticFiles(directory=".well-known"), name=".well-known")
 
 
 @app.get("/")
