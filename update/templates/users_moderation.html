@@ -142,7 +142,7 @@
     {% if id %}
 
     <main class="px-md-4">
-      <h5>Редактирование пользователя {{ edit_user.username }}:</h5>
+      <h5>Редактирование пользователя {{ edit_user['username'] }}:</h5>
       <div class="table-responsive">
         <table class="table table-striped table-sm">
         {% set keys = ['username', 'group', 'telegram_username', 'vk_username'] %}
@@ -156,12 +156,12 @@
         <tr>
           {% for key in keys %}
             {% if key == 'is_superuser' %}
-              <td><input id="create-input-is_superuser" type="checkbox" class="form-check-input"></input></td>
+              <td><input id="create-input-is_superuser" type="checkbox" class="form-check-input">{{ edit_user[key] }}</input></td>
             {% else %}
-              <td><input id="create-input-{{ key }}" class="form-control"></input></td>
+              <td><input id="create-input-{{ key }}" class="form-control">{{ edit_user[key] }}</input></td>
             {% endif %}
           {% endfor %}
-          <td><button class="btn btn-outline-success" onclick="edit_user()">Редактировать</button></td>
+          <td><button class="btn btn-outline-success" onclick="edit_user('{{ edit_user['id'] }}')">Редактировать</button></td>
         </tr>
         </table>
       </div>
