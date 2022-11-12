@@ -299,7 +299,16 @@ async def get_webhook_info(x_github_event: str, payload):
         if repository_full_name == 'KiberdedLETI/kiberded':
             all_dependencies = get_all_dependencies()
             for file in all_files:
-                dependence = all_dependencies[file]
+                try:
+                    dependence = all_dependencies[file]
+                except Exception as e:
+                    message += f'\nПроизошла ошибка при обработке зависимостей: {str(e)}. Перезагружаем всех дедов.\n'
+                    dependence = {1: 'chat_bot',
+                                  2: 'telegram_bot',
+                                  3: 'scheduler',
+                                  4: 'watcher',
+                                  5: 'main_bot',
+                                  6: 'update_daemon'}
                 for dep in dependence:
                     reboot_deds[dep] = True
 

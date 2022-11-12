@@ -28,7 +28,7 @@ with open('../.gitignore') as f:
 def recursion_scan(path, files_arr=[]):
     with os.scandir(path) as files:
         for file in files:
-            if file.path[1:] + '\n' in gitignore_data:
+            if file.path[14:] + '\n' in gitignore_data:
                 continue
             if os.path.isfile(file.path):
                 if file.path.endswith('.db') or \
@@ -61,11 +61,16 @@ def get_file_dependencies(file_path):
             dependencies = []
         else:
             try:
-                with open(split[0] + '/__init__.py', encoding='utf-8') as f2:
+                path_init = '/root/kiberded/' + split[3] + '/__init__.py'
+                with open(path_init, encoding='utf-8') as f2:
                     for i in range(3):  # проверяем первые 3 строчки:
                         line = f2.readline()
                         if line.startswith('# dependencies'):
-                            exec(f'dependencies = {line[16:]}')
+                            dep_line = line[17:-2]
+                            splitted_dep = dep_line.split(', ')
+                            dependencies = []
+                            for dep in splitted_dep:
+                                dependencies.append(dep)
                             break
             except Exception as e:
                 raise ValueError(f'Не найдены зависимости в файле')
@@ -79,11 +84,11 @@ def main():
     for file in files:
         try:
             dependencies = get_file_dependencies(file)
-            all_files[file[2:]] = dependencies
+            all_files[file[15:]] = dependencies
         except FileNotFoundError:
             pass
         except UnicodeDecodeError:
-            print(f'Произошла ошибка UnicodeDecodeError в файле {file}')
+            pass
         except Exception as e:
             raise ValueError(f'Произошла ошибка {str(e)} в файле {file}')
     return all_files
