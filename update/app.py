@@ -124,6 +124,18 @@ async def database(request: Request, user: User = Depends(current_user)):
             return {"detail": "403 Forbidden"}
 
 
+@app.get("/backups")
+async def backups(request: Request, user: User = Depends(current_user)):
+    if not user:
+        return RedirectResponse("/login", status_code=302)
+    else:
+        is_verified = user.is_verified
+        if is_verified:
+            return templates.TemplateResponse("backups.html", {"request": request, "user": user})
+        else:
+            return {"detail": "403 Forbidden"}
+
+
 @app.get("/stop_all")
 async def stop_all(request: Request, user: User = Depends(current_user)):
     if not user:
