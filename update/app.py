@@ -318,12 +318,12 @@ async def get_webhook_info(x_github_event: str, payload):
                     dependence = all_dependencies[file]
                 except Exception as e:
                     message += f'\nПроизошла ошибка при обработке зависимостей: {str(e)}. Перезагружаем всех дедов.\n'
-                    dependence = {1: 'chat_bot',
-                                  2: 'telegram_bot',
-                                  3: 'scheduler',
-                                  4: 'watcher',
-                                  5: 'main_bot',
-                                  6: 'update_daemon'}
+                    dependence = {'chat_bot': True,
+                                  'telegram_bot': True,
+                                  'scheduler': True,
+                                  'watcher': True,
+                                  'main_bot': True,
+                                  'update_daemon': True}
                 for dep in dependence:
                     reboot_deds[dep] = True
 
