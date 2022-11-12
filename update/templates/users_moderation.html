@@ -139,6 +139,37 @@
     <p id="status"></p>
     </main>
 
+    {% if id %}
+
+    <main class="px-md-4">
+      <h5>Редактирование пользователя {{ edit_user.username }}:</h5>
+      <div class="table-responsive">
+        <table class="table table-striped table-sm">
+        {% set keys = ['username', 'group', 'telegram_username', 'vk_username'] %}
+        <thead>
+          <tr>
+            {% for key in keys %}
+            <th scope="col">{{ key }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tr>
+          {% for key in keys %}
+            {% if key == 'is_superuser' %}
+              <td><input id="create-input-is_superuser" type="checkbox" class="form-check-input"></input></td>
+            {% else %}
+              <td><input id="create-input-{{ key }}" class="form-control"></input></td>
+            {% endif %}
+          {% endfor %}
+          <td><button class="btn btn-outline-success" onclick="edit_user()">Редактировать</button></td>
+        </tr>
+        </table>
+      </div>
+    <p id="status"></p>
+    </main>
+
+    {% endif %}
+
     <main class="px-md-4">
       <h5>Список пользователей:</h5>
       <div class="table-responsive">
@@ -164,7 +195,7 @@
                 {% set user_id = user['id'] %}
                 <li><a class="dropdown-item" href="#" onclick="a_user_verification('{{ user_id }}')">Верификация</a></li>
                 <li><a class="dropdown-item" href="#" onclick="a_user-reset_password('{{ user_id }}')">Запросить токен пароля</a></li>
-                <li><a class="dropdown-item" href="#" onclick="a_user-change_other_data('{{ user_id }}'')">Изменение других данных</a></li>
+                <li><a class="dropdown-item" href="/users_moderation?id='{{ user_id }}'">Изменение других данных</a></li>
               </ul>
             </td>
         </tr>

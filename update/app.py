@@ -189,7 +189,8 @@ async def databases_all(request: Request, user: User = Depends(current_user)):
 
 
 @app.get("/users_moderation")
-async def users_moderation(request: Request, user: User = Depends(current_user), session: AsyncSession = Depends(get_async_session)):
+async def users_moderation(request: Request, user: User = Depends(current_user),
+                           session: AsyncSession = Depends(get_async_session), id: str = ''):
     if not user:
         return RedirectResponse("/login", status_code=302)
     else:
@@ -197,7 +198,18 @@ async def users_moderation(request: Request, user: User = Depends(current_user),
             statement = select(User)
             result = await session.execute(statement)
             all_users = result.scalars().all()
-            return templates.TemplateResponse("users_moderation.html", {"request": request, "user": user, "users": all_users})
+
+            if id:
+                result = await session.execute(statement.where(User.id == id))
+                edit_user = result.scalars().all
+            else:
+                edit_user = {}
+            return templates.TemplateResponse("users_moderation.html",
+                                                  {"request": request,
+                                                   "user": user,
+                                                   "users": all_users,
+                                                   "id": id,
+                                                   "edit_user": edit_user})
         else:
             return {"detail": "403 Forbidden"}
 
