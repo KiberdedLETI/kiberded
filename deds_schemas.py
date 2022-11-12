@@ -86,7 +86,7 @@ def main():
             dependencies = get_file_dependencies(file)
             all_files[file[15:]] = dependencies
         except FileNotFoundError:
-            pass
+            raise FileNotFoundError(f'Не найден файл {file}')
         except UnicodeDecodeError:
             pass
         except Exception as e:
