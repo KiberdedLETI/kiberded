@@ -68,7 +68,7 @@ today = datetime.now(pytz.timezone('Europe/Moscow')).date()  # необходи�
 # с учетом перезагрузки в 00:00
 list_registered_users = set()  # список зарегистрированных chat.id из group_ids.db для допуска к боту
 list_unauthorized_users = set() # список зарегистрированных ТОЛЬКО в ТГ пользователей/групп
-list_prepods = []  # список преподов из базы, нужно для поиска todo replace with set
+list_prepods = []  # список преподов из базы, нужно для поиска
 # list_registered_groups = []  # список зарегистрированных chat.id из group_ids.db для допуска к боту
 moderators = set()  # лист админов и модераторов для добавления книжек и редактирования баз
 admins = set()  # лист только админов
@@ -189,7 +189,7 @@ def update_list_registered_users():  # ее нужно вызывать кажд
     :return: 0 если все ок, иначе ошибка RuntimeError (для отправки в админскую беседу)
     """
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
-        con.row_factory = lambda cur, row: row[0]
+        con.row_factory = lambda cur, row: int(row[0])
         cur = con.cursor()
         cur.execute(f'SELECT telegram_id FROM user_ids WHERE telegram_id IS NOT NULL')
         users = set(cur.fetchall())

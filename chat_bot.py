@@ -71,20 +71,20 @@ def update_users_data():
                 study_status = 'study'
             elif isExam:
                 study_status = 'exam'
-            status_data[v] = study_status
+            status_data[k] = study_status
+        status_data[None] = None
 
         # Получаем все остальные данные
-        cur.execute("SELECT user_id, group_id, additional_group_id, answer_false_commands, freedom FROM user_ids")
+        cur.execute("SELECT user_id, group_id, additional_group_id, answer_false_commands FROM user_ids")
         for row in cur.fetchall():
-            user_id, group_id, additional_group_id, answer_false_commands, freedom = row
+            user_id, group_id, additional_group_id, answer_false_commands = row
 
             users[user_id] = {'group': group_id,
                               'additional_group': additional_group_id,
                               'err_notifications': bool(answer_false_commands),
-                              'freedom': freedom,  # Не используется - безопаснее напрямую чекать БД
                               'study_status': status_data[group_id],
                               'additional_study_status': status_data[additional_group_id]
-                              }
+                              }  # Freedom не добавлять! - безопаснее напрямую чекать БД
 
 
 update_users_data()
@@ -371,6 +371,7 @@ def main(vk_session, group_token):
             try:  # потому что не везде есть payload
                 payload = json.loads(message["payload"])
 
+                user_id = str(message['from_id'])
                 group = users[user_id]['group']
                 additional_group = users[user_id]['additional_group']
 
