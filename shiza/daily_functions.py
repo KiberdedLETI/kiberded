@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+# dependencies: [scheduler]
+
 import random
 from datetime import date, datetime, timedelta
 from bot_functions.bots_common_funcs import day_of_day_toggle, weekly_toast_toggle

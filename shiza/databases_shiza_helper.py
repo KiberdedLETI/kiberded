@@ -1,3 +1,4 @@
+# dependencies: [chat_bot, telegram_bot, scheduler]
 """
 Большой скрипт с кучей вспомогательных функций редактора БД
 """
