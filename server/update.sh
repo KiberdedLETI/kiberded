@@ -1,4 +1,6 @@
 #!/bin/bash
+# dependencies: []
+
 cd /root/kiberded
 git reset --hard
 git fetch
