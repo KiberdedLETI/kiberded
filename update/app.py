@@ -414,9 +414,8 @@ async def webhook(request: Request,  x_github_event: str = Header(...),):
         send_telegram_message(message)
 
 
-
 @app.on_event("startup")
 async def on_startup():
     await create_db_and_tables()
+    send_telegram_message(f'Веб-обновляющий дед активирован')
 
-send_telegram_message(f'Веб-обновляющий дед активирован')
