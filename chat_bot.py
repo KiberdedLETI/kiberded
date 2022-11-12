@@ -46,9 +46,49 @@ token = config.get('Kiberded').get('token')
 tg_deeplink_token = config.get('Kiberded').get('deeplink_token_key')
 days = [['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'], [' (чёт)', ' (нечёт)']]
 timetable = config.get('Kiberded').get('timetable')
-
+str_day_today = get_day()
 
 # /init
+
+
+# Массивы данных для оптимизации работы бота
+users = {}
+# groups = {}
+
+def update_users_data():
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        cur = con.cursor()
+
+        # достаем StudyStatus
+        cur.execute("SELECT group_id, isStudy, isExam FROM group_gcals")
+        status_data = {v[0]: {'isStudy':v[1], 'isExam':v[2]} for v in cur.fetchall()}
+        for k, v in status_data.items():
+            isStudy, isExam = v.values()
+            study_status = ""
+            if isExam and isStudy:
+                study_status = 'mixed'
+            elif isStudy:
+                study_status = 'study'
+            elif isExam:
+                study_status = 'exam'
+            status_data[v] = study_status
+
+        # Получаем все остальные данные
+        cur.execute("SELECT user_id, group_id, additional_group_id, answer_false_commands, freedom FROM user_ids")
+        for row in cur.fetchall():
+            user_id, group_id, additional_group_id, answer_false_commands, freedom = row
+
+            users[user_id] = {'group': group_id,
+                              'additional_group': additional_group_id,
+                              'err_notifications': bool(answer_false_commands),
+                              'freedom': freedom,  # Не используется - безопаснее напрямую чекать БД
+                              'study_status': status_data[group_id],
+                              'additional_study_status': status_data[additional_group_id]
+                              }
+
+
+update_users_data()
+
 
 global vk
 global vk_session
@@ -248,6 +288,8 @@ def disable_err_message_notifications(user_id) -> str:
         cursor.execute(f'UPDATE user_ids SET answer_false_commands = 0 WHERE user_id = {user_id}')
     con.close()
 
+    users[user_id]['err_notifications'] = False
+
     return 'Тебе больше не будут приходить сообщения об ошибочной команде.' \
            '\nЕсть вероятность, что из-за этого какие-то ошибки могут пройти незамеченными. ' \
            'Если заметишь что-то странное - можешь написать админам.' \
@@ -315,19 +357,24 @@ def main(vk_session, group_token):
     shiza_user = ''  # пользователь шизы, для проверки статуса шизы
 
     message_ans = ''  # на случай какой-нибудь ошибки. Такое сообщение не отправится, т.к. есть проверка if True:
-    # group = get_group(message["from_id"]) переехал ниже из-за ошибок при настройке группы
 
     for event in longpoll.listen():
         if event.type == VkBotEventType.MESSAGE_NEW:
             message = event.obj.message
-            try:  # потому что не везде есть payload
 
+            # Проверка, зарегистрирован ли пользователь
+            if message['from_id'] not in users.keys():
+                update_users_data()  # Повторяем проверку - вдруг мы только-только добавили пользователя
+                if message['from_id'] not in users.keys():
+                    raise UserGroupError(message['from_id'], message["text"])
+
+            try:  # потому что не везде есть payload
                 payload = json.loads(message["payload"])
 
-                if payload["type"] == "navigation":  # навигация по клавиатурам
+                group = users[user_id]['group']
+                additional_group = users[user_id]['additional_group']
 
-                    group = get_group(message["from_id"], message["text"])
-                    additional_group = get_additional_group(message["from_id"])
+                if payload["type"] == "navigation":  # навигация по клавиатурам
 
                     # endpoint-ы навигации
                     endpoint = payload["place"]
@@ -337,23 +384,23 @@ def main(vk_session, group_token):
                         kb_message = 'Дед на связи'
 
                     elif endpoint == 'table':
-                        kb_message = f'Сегодня у нас: {get_day()}'  # get_day() по умолчанию today
+                        kb_message = f'Сегодня у нас: {str_day_today}'  # вызов get_day() в init
                         if additional_group:
-                            if group_study_status(additional_group):  # additional только если они тоже учатся
-                                kb = f'keyboard_table_{group_study_status(group)}_additional'
+                            if users[user_id]['additional_study_status']:  # additional только если они тоже учатся
+                                kb = f'keyboard_table_{users[user_id]["study_status"]}_additional'
                             else:
-                                kb = f'keyboard_table_{group_study_status(group)}'
+                                kb = f'keyboard_table_{users[user_id]["study_status"]}'
                                 kb_message += f'\nРасписание для доп. группы {additional_group} пока недоступно'
                         else:
-                            kb = f'keyboard_table_{group_study_status(group)}'
+                            kb = f'keyboard_table_{users[user_id]["study_status"]}'
 
                     elif endpoint == 'table_other':
-                        kb = f'kb_table_other_{"even" if get_day().split()[1] == "(чёт)" else "odd"}'
-                        kb_message = f'Если что, сегодня {get_day()}'
+                        kb = f'kb_table_other_{"even" if str_day_today.split()[1] == "(чёт)" else "odd"}'
+                        kb_message = f'Если что, сегодня {str_day_today}'
 
                     elif endpoint == 'table_other_2':
-                        kb = f'kb_table_other_{"even" if get_day().split()[1] == "(чёт)" else "odd"}_2'
-                        kb_message = f'Расписание группы {additional_group}\nЕсли что, сегодня {get_day()}'
+                        kb = f'kb_table_other_{"even" if str_day_today.split()[1] == "(чёт)" else "odd"}_2'
+                        kb_message = f'Расписание группы {additional_group}\nЕсли что, сегодня {str_day_today}'
 
                     elif endpoint == 'books':
                         if vk.groups.isMember(group_id=group_token, user_id=message["from_id"]):
@@ -381,7 +428,7 @@ def main(vk_session, group_token):
 
                     elif endpoint == 'calendar':
                         kb = 'keyboard_calendar'
-                        kb_message = f'Что нам готовит день грядущий? \nСегодня {today} - {get_day()}'
+                        kb_message = f'Что нам готовит день грядущий? \nСегодня {today} - {str_day_today}'
 
                     elif endpoint == 'other':
                         kb = 'keyboard_other'
@@ -444,8 +491,6 @@ def main(vk_session, group_token):
                     # тип действия
                     if payload["action_type"] == 'message':  # ответ сообщением (пережиток callback, зато удобно с шизой отличать)
 
-                        group = get_group(message["from_id"], message["text"])
-                        additional_group = get_additional_group(message["from_id"])
                         command = payload["command"]
 
                         if command == 'table_today':
@@ -544,7 +589,7 @@ def main(vk_session, group_token):
                             send_to_vk(message_send=message_ans, event=event)
 
                     elif payload["action_type"] == 'shiza':  # шизоидные приколы
-                        freedom = get_freedom(message["from_id"])
+                        freedom = get_freedom(message["from_id"])  # freedom пусть остается с доступом из БД
                         shiza_message = ''
                         shiza_user = message["from_id"]
 
@@ -644,13 +689,21 @@ def main(vk_session, group_token):
                                                  f'{" ".join(add_chat_message.split()[:4])}'  # если там ошибка
                                 send_to_vk(event=None, message_send=add_chat_notif, chat_id_send=2000000001,
                                            is_to_user=False)
+
                         except UserGroupError as e:
+                            update_users_data()  # Повторяем проверку - вдруг мы только-только добавили пользователя
+                            if e.user_id not in users.keys():
+                                add_chat_message = 'Ошибка добавления беседы - скорее всего у тебя не выбран номер' \
+                                                   ' группы в ЛС с ботом.\n' \
+                                                   'Удали меня из беседы, напиши в ЛС и потом попробуй еще раз.'
+                            else:
+                                add_chat_message = 'Повторная ошибка добавления беседы - id пользователя не ' \
+                                                   'инициирован в боте. Просто удали меня из беседы и добавь еще раз.'
+
                             new_chat_id = message["peer_id"]
-                            add_chat_message = 'Ошибка добавления беседы - скорее всего у тебя не выбран номер' \
-                                               ' группы в ЛС с ботом.\n' \
-                                               'Удали меня из беседы, напиши в ЛС и потом попробуй еще раз.'
                             send_to_vk(event=None, message_send=f'Беседодед обосран @id{e.user_id}',
                                        chat_id_send=2000000001, is_to_user=False)
+
                         except KeyError:
                             pass
                         except Exception as e:
@@ -719,10 +772,8 @@ def main(vk_session, group_token):
                         try:
                             payload = json.loads(message["payload"])
                         except KeyError:
-                            try:
-                                get_group(message["from_id"], '')
-                            except UserGroupError:
-                                kb_message = 'Ошибка автозапуска редактора. Тыкни кнопку "изменить группу"'
+                            if message['from_id'] not in users.keys():
+                                kb_message = 'Ошибка автозапуска. Тыкни кнопку "изменить группу"'
                                 send_to_vk(keyboard_send=open_keyboard('keyboard_change_group'),
                                            message_send=kb_message, event=event)
                             continue
@@ -738,12 +789,17 @@ def main(vk_session, group_token):
                                            chat_id_send=2000000001, is_to_user=False)
                             continue
 
+                    elif message['from_id'] not in users.keys():
+                        kb_message = 'Ошибка - нет номера группы. Тыкни кнопку "изменить группу"'
+                        send_to_vk(keyboard_send=open_keyboard('keyboard_change_group'),
+                                   message_send=kb_message, event=event)
+
                     # костыль, если пользователь потеряет клавиатуру как-то..
                     elif message_splitted in ('Клавиатура', 'клавиатура'):
                         send_to_vk(message_send='А вот и клавиатура\nДед на связи.', event=event,
                                    keyboard_send=open_keyboard(f'keyboard_other'))
 
-                    elif check_err_notification_status(message['from_id']):
+                    elif users[message['from_id']]['err_notifications'] is True:
                         if len(message["text"]) == 4 and message["text"].isdecimal():
                             pass  # от шизы выбора группы
                         else:
@@ -777,9 +833,17 @@ def infinity_main():
         if len(e.message) == 4 and e.message.isdecimal():
             infinity_main()
         else:
-            start_message = 'Ошибка: нет информации о группе пользователя.'
+            update_users_data()
+            if e.user_id not in users.keys():
+                start_message = 'Ошибка: нет информации о группе пользователя.'
+                start_kb = 'keyboard_change_group'
+            else:
+                start_message = 'Завершаем настройку - можешь взаимодействовать с ботом кнопками на клавиатуре:'
+                start_kb = 'keyboard_other'
+
             send_to_vk(event=None, message_send=start_message, is_to_user=False,
-                       chat_id_send=e.user_id, keyboard_send=open_keyboard('keyboard_change_group'))
+                       chat_id_send=e.user_id, keyboard_send=open_keyboard(start_kb))
+
             infinity_main()
 
     except Exception as e:
