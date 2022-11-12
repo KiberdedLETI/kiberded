@@ -35,7 +35,7 @@ logger.addHandler(console_handler)
 
 
 app = FastAPI(docs_url=None)
-# app.add_middleware(HTTPSRedirectMiddleware)  # переадресация на https
+app.add_middleware(HTTPSRedirectMiddleware)  # переадресация на https
 
 
 class RegisterItem(BaseModel):

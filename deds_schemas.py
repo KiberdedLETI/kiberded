@@ -21,7 +21,7 @@ update_daemon = 'update_daemon'
 
 watcher = 'watcher'
 
-with open('.gitignore') as f:
+with open('../gitignore') as f:
     gitignore_data = f.readlines()
 
 
