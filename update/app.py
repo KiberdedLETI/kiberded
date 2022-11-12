@@ -415,7 +415,7 @@ async def webhook(request: Request,  x_github_event: str = Header(...),):
             result = subprocess.run(['/bin/bash', '/root/kiberded/server/update.sh'], stdout=subprocess.PIPE)
             message, reboot_deds = await get_webhook_info(x_github_event, payload)
             send_telegram_message(message)
-            send_telegram_message(f'Репозиторий обновлен, перезагрузка дедов...')
+            # send_telegram_message(f'Репозиторий обновлен, перезагрузка дедов...')
             for ded in reboot_deds:
                 os.system(f'systemctl restart {ded}')
         return {'message': 'ok'}
