@@ -313,8 +313,12 @@ async def get_webhook_info(x_github_event: str, payload):
                     reboot_deds[dep] = True
 
         reboot_deds = list(reboot_deds.keys())
+        if 'update_daemon' in reboot_deds:  # сам себя должен перезагружать последним
+            index_update_daemon = reboot_deds.index('update_daemon')
+            reboot_deds.pop(index_update_daemon)
+            reboot_deds.append('update_daemon')
         if reboot_deds:
-            message += f'\nНужно перезагрузить дедов:'
+            message += f'\nНужно перезагрузить дедов :'
             for ded in reboot_deds:
                 message += f'{ded}\n'
         return message, reboot_deds
@@ -392,12 +396,14 @@ async def get_webhook_info(x_github_event: str, payload):
 async def webhook(request: Request,  x_github_event: str = Header(...),):
     payload = await request.json()
     try:
-        message, files = await get_webhook_info(x_github_event, payload)
+        message, reboot_deds = await get_webhook_info(x_github_event, payload)
         if message == '':
             return {'detail': '400 BAD REQUEST'}
         else:
             if x_github_event == 'push':
                 os.system('/bin/bash /root/kiberded/server/update.sh')
+                for ded in reboot_deds:
+                    os.system(f'systemctl restart {ded}')
             send_telegram_message(message)
 
             return {'message': 'ok'}
@@ -410,3 +416,5 @@ async def webhook(request: Request,  x_github_event: str = Header(...),):
 @app.on_event("startup")
 async def on_startup():
     await create_db_and_tables()
+
+send_telegram_message(f'Веб-обновляющий дед активирован')
