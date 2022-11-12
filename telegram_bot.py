@@ -65,12 +65,12 @@ bot = telebot.TeleBot(token)
 now_date = datetime.now().strftime('%Y-%m-%d')  # необходимо для бэкапов сообщений
 today = datetime.now(pytz.timezone('Europe/Moscow')).date()  # необходимо для всяких расписаний,
 # с учетом перезагрузки в 00:00
-list_registered_users = []  # список зарегистрированных chat.id из group_ids.db для допуска к боту
-list_unauthorized_users = []  # список зарегистрированных ТОЛЬКО в ТГ пользователей/групп
-list_prepods = []  # список преподов из базы, нужно для поиска
-# list_registered_groups = []  # список зарегистрированных chat.id из group_ids.db для допуска к боту TODO или отдельно?
-moderators = []  # лист админов и модераторов для добавления книжек и редактирования баз
-admins = []  # лист только админов
+list_registered_users = set()  # список зарегистрированных chat.id из group_ids.db для допуска к боту
+list_unauthorized_users = set() # список зарегистрированных ТОЛЬКО в ТГ пользователей/групп
+list_prepods = []  # список преподов из базы, нужно для поиска todo replace with set
+# list_registered_groups = []  # список зарегистрированных chat.id из group_ids.db для допуска к боту
+moderators = set()  # лист админов и модераторов для добавления книжек и редактирования баз
+admins = set()  # лист только админов
 
 
 class IsRegistered(custom_filters.SimpleCustomFilter):  # фильтр для проверки регистрации юзера
@@ -188,28 +188,26 @@ def update_list_registered_users():  # ее нужно вызывать кажд
     :return: 0 если все ок, иначе ошибка RuntimeError (для отправки в админскую беседу)
     """
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        con.row_factory = lambda cur, row: row[0]
         cur = con.cursor()
         cur.execute(f'SELECT telegram_id FROM user_ids WHERE telegram_id IS NOT NULL')
-        users = [int(el[0]) for el in cur.fetchall() if el not in list_registered_users]
+        users = set(cur.fetchall())
 
         cur.execute(f'SELECT tg_chat_id FROM group_gcals WHERE tg_chat_id IS NOT NULL')  # беседы
-        groups = cur.fetchall()
-        groups = [int(el[0]) for el in groups if el not in list_registered_users]
+        groups = set(cur.fetchall())
 
-        unauth_users = cur.execute(f'SELECT telegram_id FROM user_ids '
-                                   f'WHERE user_id IS NULL AND telegram_id IS NOT NULL').fetchall()
-        unauth_users = [int(el[0]) for el in unauth_users if el not in list_unauthorized_users]
-        list_unauthorized_users.extend(unauth_users)
+        cur.execute(f'SELECT telegram_id FROM user_ids WHERE user_id IS NULL AND telegram_id IS NOT NULL')
+        unauth_users = set(cur.fetchall())
+        list_unauthorized_users.update(unauth_users)
 
-        auth_users = cur.execute(f'SELECT telegram_id FROM user_ids '
-                                 f'WHERE user_id IS NOT NULL AND telegram_id IS NOT NULL').fetchall()
-        auth_users = [int(el[0]) for el in auth_users]
-        new_auth_users = [el for el in auth_users if el in list_unauthorized_users]  # убираем авторизовавшихся
+        cur.execute(f'SELECT telegram_id FROM user_ids WHERE user_id IS NOT NULL AND telegram_id IS NOT NULL')
+        auth_users = set(cur.fetchall())
+        new_auth_users = auth_users & list_unauthorized_users  # убираем авторизовавшихся
 
     con.close()
 
-    list_registered_users.extend(users)
-    list_registered_users.extend(groups)
+    list_registered_users.update(users)
+    list_registered_users.update(groups)
 
     for el in new_auth_users:
         list_unauthorized_users.remove(el)
@@ -228,7 +226,7 @@ def update_moderators():  # ее нужно вызывать каждый раз
     con.close()
 
     for user in users:
-        moderators.append(int(user[0]))  # теоретически тут уязвимое место для ошибки, но либо тут добавлять
+        moderators.add(int(user[0]))  # теоретически тут уязвимое место для ошибки, но либо тут добавлять
         # int, либо же в классе с фильтром добавлять str, т.к. cursor возвращает строки
     return 0
 
@@ -246,7 +244,7 @@ def update_admins():  # ее нужно вызывать каждый раз п�
     con.close()
 
     for user in users:
-        admins.append(int(user[0]))  # теоретически тут уязвимое место для ошибки, но либо тут добавлять
+        admins.add(int(user[0]))  # теоретически тут уязвимое место для ошибки, но либо тут добавлять
         # int, либо же в классе с фильтром добавлять str, т.к. cursor возвращает строки
     return 0
 
