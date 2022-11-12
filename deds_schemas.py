@@ -67,8 +67,6 @@ def get_file_dependencies(file_path):
                         if line.startswith('# dependencies'):
                             exec(f'dependencies = {line[16:]}')
                             break
-            except FileNotFoundError:
-                pass
             except Exception as e:
                 raise ValueError(f'Не найдены зависимости в файле')
     return dependencies
@@ -82,6 +80,10 @@ def main():
         try:
             dependencies = get_file_dependencies(file)
             all_files[file[2:]] = dependencies
+        except FileNotFoundError:
+            pass
+        except UnicodeDecodeError:
+            print(f'Произошла ошибка UnicodeDecodeError в файле {file}')
         except Exception as e:
             raise ValueError(f'Произошла ошибка {str(e)} в файле {file}')
     return all_files
