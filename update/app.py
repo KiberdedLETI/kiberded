@@ -3,6 +3,7 @@
 Бывший "обновляющий дед"
 """
 import random
+import subprocess
 import traceback
 
 from fastapi import Depends, FastAPI, Request, HTTPException, Header
@@ -402,12 +403,12 @@ async def webhook(request: Request,  x_github_event: str = Header(...),):
         if message == '':
             return {'detail': '400 BAD REQUEST'}
         else:
+            send_telegram_message(message)
             if x_github_event == 'push':
-                os.system('/bin/bash /root/kiberded/server/update.sh')
+                result = subprocess.run(['/bin/bash', '/root/kiberded/server/update.sh'], stdout=subprocess.PIPE)
+                send_telegram_message(f'Репозиторий обновлен, перезагрузка дедов...')
                 for ded in reboot_deds:
                     os.system(f'systemctl restart {ded}')
-            send_telegram_message(message)
-
             return {'message': 'ok'}
     except Exception as e:
         message = f'[github] Произошла ошибка при парсинге webhook: \n{traceback.format_exc()}\n\npayload: {payload}'
