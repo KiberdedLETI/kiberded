@@ -74,7 +74,7 @@ def get_file_dependencies(file_path):
 
 def main():
     all_files = {}
-    path = './'
+    path = '/root/kiberded'
     files = recursion_scan(path)
     for file in files:
         try:
@@ -83,7 +83,3 @@ def main():
         except Exception as e:
             raise ValueError(f'Произошла ошибка {str(e)} в файле {file}')
     return all_files
-
-
-if __name__ == '__main__':
-    print(main())
