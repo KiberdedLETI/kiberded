@@ -1,3 +1,4 @@
+# dependencies: [chat_bot, telegram_bot, scheduler]
 """
 Составление сообщений из icalendar / обычного расписания пользователю/в беседу
 """

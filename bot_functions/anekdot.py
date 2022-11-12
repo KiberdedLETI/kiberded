@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
+# dependencies: [chat_bot, telegram_bot]
 
 import random
 import hashlib

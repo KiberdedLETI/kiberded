@@ -1,4 +1,5 @@
 #!/bin/bash
+# dependencies: []
 
 # атрибуты для echo:
 NORMAL='\033[0m'

@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+# dependencies: []
 
 """
 Рассылка сообщений пользователям/в беседы (команда send_message)

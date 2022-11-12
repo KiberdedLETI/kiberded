@@ -1,3 +1,4 @@
+# dependencies: []
 """
 Скрипт для создания БД из файлов в папке messages_backup
 """
