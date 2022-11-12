@@ -19,7 +19,7 @@ from users import current_user, fastapi_users, cookie_auth_backend
 from fastapi.templating import Jinja2Templates
 
 import logging
-from bot_functions import send_telegram_message
+from bot_functions import send_telegram_message, get_acme_flag
 from users_function import create_user
 from pydantic import BaseModel
 import os
@@ -64,6 +64,8 @@ app.include_router(
 
 templates = Jinja2Templates(directory="./templates")
 app.mount("/public", StaticFiles(directory="public"), name="public")
+if get_acme_flag():
+    app.mount("/.well-known", StaticFiles(directory=".well-known"), name=".well-known")
 
 
 @app.get("/")
