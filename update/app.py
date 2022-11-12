@@ -411,17 +411,14 @@ async def get_webhook_info(x_github_event: str, payload):
 async def webhook(request: Request,  x_github_event: str = Header(...),):
     payload = await request.json()
     try:
-        message, reboot_deds = await get_webhook_info(x_github_event, payload)
-        if message == '':
-            return {'detail': '400 BAD REQUEST'}
-        else:
+        if x_github_event == 'push':
+            result = subprocess.run(['/bin/bash', '/root/kiberded/server/update.sh'], stdout=subprocess.PIPE)
+            message, reboot_deds = await get_webhook_info(x_github_event, payload)
             send_telegram_message(message)
-            if x_github_event == 'push':
-                result = subprocess.run(['/bin/bash', '/root/kiberded/server/update.sh'], stdout=subprocess.PIPE)
-                send_telegram_message(f'Репозиторий обновлен, перезагрузка дедов...')
-                for ded in reboot_deds:
-                    os.system(f'systemctl restart {ded}')
-            return {'message': 'ok'}
+            send_telegram_message(f'Репозиторий обновлен, перезагрузка дедов...')
+            for ded in reboot_deds:
+                os.system(f'systemctl restart {ded}')
+        return {'message': 'ok'}
     except Exception as e:
         message = f'[github] Произошла ошибка при парсинге webhook: \n{traceback.format_exc()}\n\npayload: {payload}'
         send_telegram_message(message)
