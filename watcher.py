@@ -13,13 +13,12 @@ logger.setLevel(logging.INFO)
 logger.addHandler(console_handler)
 
 
-def proxy_ded(enable=True):
-    pass
-
 subprocess.Popen(["python3", "/root/kiberded/server/send.py", "Наблюдающий дед", "активирован"], stdout=subprocess.PIPE)
 logger.warning('Наблюдающий дед активирован')
 count = 0
 timer = 5
+timer_start = 20
+time.sleep(timer_start)  # отсрочка запуска, дабы update_daemon успел перезагрузиться
 while True:
     prompt = subprocess.Popen(["ded", "status", "-a"], stdout=subprocess.PIPE).stdout.read().decode('utf-8')
     if prompt == "ok\n":
