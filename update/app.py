@@ -79,11 +79,11 @@ async def root(request: Request, user: User = Depends(current_user)):
         is_verified = user.is_verified
         is_superuser = user.is_superuser
         if is_superuser:
-            return templates.TemplateResponse("admin_panel.html", {"request": request})
+            return templates.TemplateResponse("admin_panel.html", {"request": request, "user": user})
         if is_verified:
-            return templates.TemplateResponse("moderator_panel.html", {"request": request})
+            return templates.TemplateResponse("moderator_panel.html", {"request": request, "user": user})
         else:
-            return templates.TemplateResponse("unverified.html", {"request": request})
+            return templates.TemplateResponse("unverified.html", {"request": request, "user": user})
     else:
         return RedirectResponse("/login", status_code=302)
 
@@ -94,11 +94,11 @@ async def panel(request: Request, user: User = Depends(current_user)):
         is_verified = user.is_verified
         is_superuser = user.is_superuser
         if is_superuser:
-            return templates.TemplateResponse("admin_panel.html", {"request": request})
+            return templates.TemplateResponse("admin_panel.html", {"request": request, "user": user})
         if is_verified:
-            return templates.TemplateResponse("moderator_panel.html", {"request": request})
+            return templates.TemplateResponse("moderator_panel.html", {"request": request, "user": user})
         else:
-            return templates.TemplateResponse("unverified.html", {"request": request})
+            return templates.TemplateResponse("unverified.html", {"request": request, "user": user})
     else:
         return RedirectResponse("/login", status_code=302)
 
@@ -118,7 +118,7 @@ async def database(request: Request, user: User = Depends(current_user)):
     else:
         is_verified = user.is_verified
         if is_verified:
-            return templates.TemplateResponse("database.html", {"request": request})
+            return templates.TemplateResponse("database.html", {"request": request, "user": user})
         else:
             return {"detail": "403 Forbidden"}
 
@@ -170,7 +170,7 @@ async def databases_all(request: Request, user: User = Depends(current_user)):
     else:
         is_superuser = user.is_superuser
         if is_superuser:
-            return templates.TemplateResponse("databases_all.html", {"request": request})
+            return templates.TemplateResponse("databases_all.html", {"request": request, "user": user})
         else:
             return {"detail": "403 Forbidden"}
 
@@ -184,7 +184,7 @@ async def users_moderation(request: Request, user: User = Depends(current_user),
             statement = select(User)
             result = await session.execute(statement)
             all_users = result.scalars().all()
-            return templates.TemplateResponse("users_moderation.html", {"request": request, "users": all_users})
+            return templates.TemplateResponse("users_moderation.html", {"request": request, "user": user, "users": all_users})
         else:
             return {"detail": "403 Forbidden"}
 
@@ -192,7 +192,7 @@ async def users_moderation(request: Request, user: User = Depends(current_user),
 @app.get("/change_password")
 async def change_password(request: Request, user: User = Depends(current_user), token: str = ''):
     if token:
-        return templates.TemplateResponse("change_password.html", {"request": request, "token": token})
+        return templates.TemplateResponse("change_password.html", {"request": request, "user": user, "token": token})
     else:
         return RedirectResponse("/generate_password_token", status_code=302)
 
@@ -202,7 +202,7 @@ async def generate_password_token(request: Request, user: User = Depends(current
     if not user:
         return RedirectResponse("/login", status_code=302)
     else:
-        return templates.TemplateResponse("generate_password_token.html", {"request": request, "email": user.email})
+        return templates.TemplateResponse("generate_password_token.html", {"request": request, "user": user, "email": user.email})
 
 
 @app.post("/auth/register")
@@ -227,8 +227,10 @@ async def register_user(request: Request, user: User = Depends(current_user), it
 
 
 @app.get("/verify")
-async def verify_user(request: Request, token=''):
-    return templates.TemplateResponse("verify.html", {"request": request, "token": token})
+async def verify_user(request: Request, token='', user: User = Depends(current_user)):
+    if not user:
+        return RedirectResponse("/login", status_code=302)
+    return templates.TemplateResponse("verify.html", {"request": request, "user": user, "token": token})
 
 
 async def get_webhook_info(x_github_event: str, payload):
