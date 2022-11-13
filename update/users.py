@@ -53,6 +53,9 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
     async def on_after_verify(self, user: User, request: Optional[Request] = None):
         send_telegram_message(f'[web] Пользователь {user.username} из группы {user.group} успешно верифицирован.')
 
+    async def on_after_delete(self, user: User, request: Optional[Request] = None):
+        send_telegram_message(f'[web] Пользователь {user.username} из группы {user.group} был удален.')
+
 
 async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db)):
     yield UserManager(user_db)

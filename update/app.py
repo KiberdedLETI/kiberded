@@ -198,18 +198,21 @@ async def users_moderation(request: Request, user: User = Depends(current_user),
             statement = select(User)
             result = await session.execute(statement)
             all_users = result.scalars().all()
-
-            if id:
+            try:
                 result = await session.execute(statement.where(User.id == id))
-                edit_user = result.scalars().all
-            else:
-                edit_user = {}
+                edit_user = result.scalars().all()
+            except Exception:
+                id = ''
+                edit_user = ['']
+            if not edit_user:
+                id = ''
+                edit_user = ['']
             return templates.TemplateResponse("users_moderation.html",
                                                   {"request": request,
                                                    "user": user,
                                                    "users": all_users,
                                                    "id": id,
-                                                   "edit_user": edit_user})
+                                                   "edit_user": edit_user[0]})
         else:
             return {"detail": "403 Forbidden"}
 
