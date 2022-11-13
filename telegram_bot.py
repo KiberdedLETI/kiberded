@@ -1209,7 +1209,14 @@ def text_query(message):
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     dump_callback(call)
-    payload = callback_to_json(call.data)
+    try:
+        payload = callback_to_json(call.data)
+    except KeyError:
+        group = get_group(call.from_user.id)
+        markup = open_keyboard(f'{group}_main')
+        kb_message = f'Ошибка навигации - скорее всего, старая клавиатура. Открой новую с главной страницы:'
+        send_message(call.from_user.id, text=kb_message, reply_markup=markup)
+        return 0
     # bot.answer_callback_query(call.id, 'Будет доступно позже', show_alert=True)
     if payload['type'] == 'navigation':
         group = get_group(call.from_user.id)
@@ -1219,6 +1226,7 @@ def callback_query(call):
             markup = open_keyboard(f'{group}_main')
             kb_message = f'Ошибка навигации - скорее всего, старая клавиатура. Открой новую с главной страницы:'
             send_message(call.from_user.id, text=kb_message, reply_markup=markup)
+            return 0
 
         # endpoint-ы навигации
         endpoint = payload["place"]
