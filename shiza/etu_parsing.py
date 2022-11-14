@@ -302,7 +302,11 @@ def get_calendar(group_id, day=today) -> str:
     for event in clean_gcal:
         dtstart = event["DTSTART"]  # время начала ивента
         summary = event['SUMMARY']  # название
-        description = event['DESCRIPTION']  # описание
+        try:
+            description = event['DESCRIPTION']  # описание
+        except KeyError:
+            description = ''
+
         answer += '\n' + '\n' + summary
 
         if 'https' in description:  # обработка ссылок в сообщении (нормально работает только с одной ссылкой)
