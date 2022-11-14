@@ -21,14 +21,14 @@ update_daemon = 'update_daemon'
 
 watcher = 'watcher'
 
-with open('.gitignore') as f:
+with open('../.gitignore') as f:
     gitignore_data = f.readlines()
 
 
 def recursion_scan(path, files_arr=[]):
     with os.scandir(path) as files:
         for file in files:
-            if file.path[1:] + '\n' in gitignore_data:
+            if file.path[14:] + '\n' in gitignore_data:
                 continue
             if os.path.isfile(file.path):
                 if file.path.endswith('.db') or \
@@ -42,42 +42,53 @@ def recursion_scan(path, files_arr=[]):
     return files_arr
 
 
-def main():
-    all_files = {}
-    path = './'
-    files = recursion_scan(path)
-    for file in files:
-        if file.endswith('.png') or \
-                file.endswith('.txt') or \
-                file.endswith('.md'):
+def get_file_dependencies(file_path):
+    if file_path.endswith('.png') or \
+            file_path.endswith('.txt') or \
+            file_path.endswith('.md'):
+        dependencies = []
+    else:
+        with open(file_path, encoding='utf-8') as f:
+            dependencies = 'None'
+            for i in range(3):  # проверяем первые 3 строчки:
+                line = f.readline()
+                if line.startswith('# dependencies'):
+                    dependencies = line[17:-2].split(',')
+                    break
+    split = file_path.split("/")
+    if dependencies == 'None':
+        if split[-1].endswith('__init__.py'):
             dependencies = []
         else:
-            with open(file, encoding='utf-8') as f:
-                dependencies = 'None'
-                for i in range(3):  # проверяем первые 3 строчки:
-                    line = f.readline()
-                    if line.startswith('# dependencies'):
-                        exec(f'dependencies = {line[16:]}')
-                        break
-        split = file.split("\\")
-        if dependencies == 'None':
-            if split[-1].endswith('__init__.py'):
-                dependencies = []
-            else:
-                try:
-                    with open(split[0] + '\\__init__.py', encoding='utf-8') as f2:
-                        for i in range(3):  # проверяем первые 3 строчки:
-                            line = f2.readline()
-                            if line.startswith('# dependencies'):
-                                exec(f'dependencies = {line[16:]}')
-                                break
-                except:
-                    dependencies = 'None'
-        if dependencies == 'None':
-            raise ValueError(f'Не обнаружены необходимые зависимости в файле {file}')
-        all_files[file] = dependencies
-    print(all_files)
+            try:
+                path_init = '/root/kiberded/' + split[3] + '/__init__.py'
+                with open(path_init, encoding='utf-8') as f2:
+                    for i in range(3):  # проверяем первые 3 строчки:
+                        line = f2.readline()
+                        if line.startswith('# dependencies'):
+                            dep_line = line[17:-2]
+                            splitted_dep = dep_line.split(', ')
+                            dependencies = []
+                            for dep in splitted_dep:
+                                dependencies.append(dep)
+                            break
+            except Exception as e:
+                raise ValueError(f'Не найдены зависимости в файле')
+    return dependencies
 
 
-if __name__ == '__main__':
-    print(main())
+def main():
+    all_files = {}
+    path = '/root/kiberded'
+    files = recursion_scan(path)
+    for file in files:
+        try:
+            dependencies = get_file_dependencies(file)
+            all_files[file[15:]] = dependencies
+        except FileNotFoundError:
+            raise FileNotFoundError(f'Не найден файл {file}')
+        except UnicodeDecodeError:
+            pass
+        except Exception as e:
+            raise ValueError(f'Произошла ошибка {str(e)} в файле {file}')
+    return all_files

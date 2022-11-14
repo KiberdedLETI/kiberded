@@ -81,7 +81,7 @@
           <ul class="navbar-nav me-auto mb-2 mb-md-0">
             {% if user.is_verified %}
                 <li class="nav-item">
-                  <a class="nav-link active" aria-current="page" href="/#">Панель</a>
+                  <a class="nav-link" href="/#">Панель</a>
                 </li>
             {% endif %}
             {% if user.is_superuser %}
@@ -101,7 +101,7 @@
             {% endif %}
             {% if user.is_verified %}
             <li class="nav-item">
-              <a class="nav-link" href='/backups'>Бэкапы</a>
+              <a class="nav-link active" aria-current="page" href='/backups'>Бэкапы</a>
             </li>
             {% endif %}
             <li class="nav-item">
@@ -113,8 +113,7 @@
     </nav>
 
     <main class="px-md-4">
-      <h5>Твоя учетная запись не верифицирована. Для верификации напиши админам.</h5>
-        <p><a class="btn btn-outline-secondary" href="/generate_password_token">Изменить пароль</a></p>
+      <h5>Будет доступно позднее.</h5>
     </main>
   </body>
 </html>

@@ -79,18 +79,31 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
           <ul class="navbar-nav me-auto mb-2 mb-md-0">
-            <li class="nav-item">
-              <a class="nav-link" href="/#">Панель</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link active" aria-current="page" href="/databases_all">Базы данных</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/database">База группы</a>
-            </li>
+            {% if user.is_verified %}
+                <li class="nav-item">
+                  <a class="nav-link active" aria-current="page" href="/#">Панель</a>
+                </li>
+            {% endif %}
+            {% if user.is_superuser %}
+                <li class="nav-item">
+                  <a class="nav-link" href="/databases_all">Базы данных</a>
+                </li>
+            {% endif %}
+            {% if user.is_verified %}
+                <li class="nav-item">
+                  <a class="nav-link" href="/database">База группы</a>
+                </li>
+            {% endif %}
+            {% if user.is_superuser %}
             <li class="nav-item">
               <a class="nav-link" href='/users_moderation'>Юзеры</a>
             </li>
+            {% endif %}
+            {% if user.is_verified %}
+            <li class="nav-item">
+              <a class="nav-link" href='/backups'>Бэкапы</a>
+            </li>
+            {% endif %}
             <li class="nav-item">
               <a class="nav-link" aria-current="page" href='#' onclick="logout()">Выйти</a>
             </li>

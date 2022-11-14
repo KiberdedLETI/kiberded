@@ -176,9 +176,9 @@ async function verify_user(token) {
                 'Content-type': 'application/json',
                 'accept': 'application/json'
                 }
-            })
-    status = response.status;
-    json = await response.json();
+            });
+    let status = response.status;
+    let json = await response.json();
     if (status === 200) {
         document.getElementById('status').innerHTML = 'Верификация пройдена успешно';
     } else if (status === 400) {
@@ -187,3 +187,58 @@ async function verify_user(token) {
         document.getElementById('status').innerHTML = 'Ошибка 422';
     }
 }
+async function edit_user(id) {
+    let username = document.getElementById('edit-input-username').value;
+    let group = document.getElementById('edit-input-group').value;
+    let telegram_username = document.getElementById('edit-input-telegram_username').value;
+    let vk_username = document.getElementById('edit-input-vk_username').value;
+    let is_verified = document.getElementById('edit-input-is_verified').checked;
+    let is_superuser = document.getElementById('edit-input-is_superuser').checked;
+
+    if (telegram_username === '' && vk_username === '') {
+        document.getElementById('status').innerHTML = 'Не задан ни один идентификатор соцсети.';
+    } else {
+        let email = username + '@example.com';
+        let response = await fetch('/users/'+id, {
+            method: 'PATCH',
+            body: JSON.stringify({
+                email: email,
+                username: username,
+                group: group,
+                telegram_username: telegram_username,
+                vk_username: vk_username,
+                is_verified: is_verified,
+                is_superuser: is_superuser
+            }),
+            headers: {
+                'Content-type': 'application/json',
+                'accept': 'application/json'
+                }
+            });
+        let status = response.status;
+        let json = await response.json();
+        if (status === 200) {
+            document.getElementById('status').innerHTML = 'Успешно';
+        } else if (status === 401) {
+            document.getElementById('status').innerHTML = 'Сессия устарела. Обновите страницу';
+        }
+    }
+}
+async function delete_user(id) {
+    let response = await fetch('/users/'+id, {
+            method: 'DELETE',
+            headers: {
+                'Content-type': 'application/json',
+                'accept': 'application/json'
+                }
+            });
+    let status = response.status;
+    if (status === 204) {
+            document.getElementById('status').innerHTML = 'Успешно';
+        } else if (status === 401) {
+            document.getElementById('status').innerHTML = 'Сессия устарела. Обновите страницу';
+        } else if (status === 404) {
+            document.getElementById('status').innerHTML = 'Пользователь не найден';
+        }
+}
+

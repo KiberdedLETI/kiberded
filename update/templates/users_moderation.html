@@ -79,6 +79,34 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
           <ul class="navbar-nav me-auto mb-2 mb-md-0">
+              {% if user.is_verified %}
+                <li class="nav-item">
+                  <a class="nav-link" href="/#">Панель</a>
+                </li>
+            {% endif %}
+            {% if user.is_superuser %}
+                <li class="nav-item">
+                  <a class="nav-link" href="/databases_all">Базы данных</a>
+                </li>
+            {% endif %}
+            {% if user.is_verified %}
+                <li class="nav-item">
+                  <a class="nav-link" href="/database">База группы</a>
+                </li>
+            {% endif %}
+            {% if user.is_superuser %}
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href='/users_moderation'>Юзеры</a>
+            </li>
+            {% endif %}
+            {% if user.is_verified %}
+            <li class="nav-item">
+              <a class="nav-link" href='/backups'>Бэкапы</a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+              <a class="nav-link" aria-current="page" href='#' onclick="logout()">Выйти</a>
+            </li>
           </ul>
         </div>
       </div>
@@ -99,9 +127,9 @@
         <tr>
           {% for key in keys %}
             {% if key == 'is_superuser' %}
-              <td><input id="create-input-is_superuser" type="checkbox" class="form-check-input"></input></td>
+              <td><input id="create-input-is_superuser" type="checkbox" class="form-check-input"> </input></td>
             {% else %}
-              <td><input id="create-input-{{ key }}" class="form-control"></input></td>
+              <td><input id="create-input-{{ key }}" class="form-control"> </input></td>
             {% endif %}
           {% endfor %}
           <td><button class="btn btn-outline-success" onclick="create_user()">Создать</button></td>
@@ -110,6 +138,38 @@
       </div>
     <p id="status"></p>
     </main>
+
+    {% if id != '' %}
+
+    <main class="px-md-4">
+      <h5>Редактирование пользователя {{ edit_user['username'] }}:</h5>
+      <div class="table-responsive">
+        <table class="table table-striped table-sm">
+        {% set keys = ['username', 'group', 'telegram_username', 'vk_username', 'is_verified', 'is_superuser'] %}
+        <thead>
+          <tr>
+            {% for key in keys %}
+            <th scope="col">{{ key }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tr>
+          {% for key in keys %}
+            {% if key == 'is_superuser' or key == 'is_verified' %}
+              <td><input id="edit-input-{{ key }}" type="checkbox" class="form-check-input" {{ "checked" if edit_user[key] }}> </input></td>
+            {% else %}
+              <td><input id="edit-input-{{ key }}" class="form-control" value="{{ edit_user[key] }}"> </input></td>
+            {% endif %}
+          {% endfor %}
+          <td><button class="btn btn-outline-success" onclick="edit_user('{{ edit_user.id }}')">Редактировать</button></td>
+          <td><button class="btn btn-outline-danger" onclick="delete_user('{{ edit_user.id }}')">Удалить</button></td>
+        </tr>
+        </table>
+      </div>
+    <p id="status"></p>
+    </main>
+
+    {% endif %}
 
     <main class="px-md-4">
       <h5>Список пользователей:</h5>
@@ -134,9 +194,10 @@
               </button>
               <ul class="dropdown-menu">
                 {% set user_id = user['id'] %}
+                {% set user_email = user['email'] %}
                 <li><a class="dropdown-item" href="#" onclick="a_user_verification('{{ user_id }}')">Верификация</a></li>
-                <li><a class="dropdown-item" href="#" onclick="a_user-reset_password('{{ user_id }}')">Запросить токен пароля</a></li>
-                <li><a class="dropdown-item" href="#" onclick="a_user-change_other_data('{{ user_id }}'')">Изменение других данных</a></li>
+                <li><a class="dropdown-item" href="#" onclick="generate_password_token('{{ user_email }}')">Запросить токен пароля</a></li>
+                <li><a class="dropdown-item" href="/users_moderation?id={{ user_id }}">Изменение других данных</a></li>
               </ul>
             </td>
         </tr>
