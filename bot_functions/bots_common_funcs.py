@@ -290,7 +290,10 @@ def get_tables_settings(user_id, source='tg'):
             if type_ is None:
                 type_ = 'ежедневный и еженедельный'
             else:
-                mode_names = {'daily': 'ежедневный', 'weekly': 'еженедельный', 'both': 'ежедневный и еженедельный'}
+                mode_names = {'calendar': 'календарь',
+                              'daily': 'ежедневный',
+                              'weekly': 'еженедельный',
+                              'both': 'ежедневный и еженедельный'}
                 type_ = mode_names[type_]
 
             ret_str = f'Текущие настройки рассылки:\n' \
@@ -343,7 +346,10 @@ def set_table_mode(user_id, mode, source='tg'):
         cur.execute(upd_query, (mode, user_id))
         con.commit()
 
-    mode_names = {'daily': 'ежедневный', 'weekly': 'еженедельный', 'both': 'ежедневный и еженедельный'}
+    mode_names = {'calendar': 'календарь',
+                  'daily': 'ежедневный',
+                  'weekly': 'еженедельный',
+                  'both': 'ежедневный и еженедельный'}
     msg = f'Режим рассылки изменен на {mode_names[mode]}. Изменения вступят в силу со следующего дня'
     return msg
 
