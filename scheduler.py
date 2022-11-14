@@ -531,6 +531,9 @@ def send_personal_tables(table_time='None'):
 
                         table_message += read_table(group, day=day_today)
 
+                    if table_type == 'calendar':
+                        table_message = read_calendar(group, date='tomorrow')
+
                     if table_message:  # если есть хоть что-то в сообщении на день
                         if table_message.split()[-1] != 'Пусто':
 
