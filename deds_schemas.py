@@ -53,7 +53,7 @@ def get_file_dependencies(file_path):
             for i in range(3):  # проверяем первые 3 строчки:
                 line = f.readline()
                 if line.startswith('# dependencies'):
-                    dependencies = line[17:-2].split(',')
+                    dependencies = line[17:-2].split(', ')
                     break
     split = file_path.split("/")
     if dependencies == 'None':
