@@ -615,7 +615,8 @@ def edit_gcal(group, gcal=''):  # добавление календаря (пр�
     """
 
     if gcal:
-        if not gcal.startswith('https://calendar.google.com/calendar/ical/'):
+        if not (gcal.startswith('https://calendar.google.com/calendar/ical/')
+                or gcal.startswith('https://calendar.yandex.ru/export/ics.xml?private_token=')):
             return 'Неверная ссылка на календарь. Сейчас поддерживаются только goole-календари.'
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
