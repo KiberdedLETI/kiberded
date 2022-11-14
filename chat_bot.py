@@ -53,17 +53,17 @@ str_day_today = get_day()
 
 # Массивы данных для оптимизации работы бота
 users = {}
-# groups = {}
+groups = {}
 
 def update_users_data():
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
 
         # достаем StudyStatus
-        cur.execute("SELECT group_id, isStudy, isExam FROM group_gcals")
-        status_data = {v[0]: {'isStudy':v[1], 'isExam':v[2]} for v in cur.fetchall()}
+        cur.execute("SELECT group_id, isStudy, isExam, gcal_link FROM group_gcals")
+        status_data = {v[0]: {'isStudy':v[1], 'isExam':v[2], 'gcal': v[3]} for v in cur.fetchall()}
         for k, v in status_data.items():
-            isStudy, isExam = v.values()
+            isStudy, isExam, gcal = v.values()
             study_status = ""
             if isExam and isStudy:
                 study_status = 'mixed'
@@ -71,8 +71,11 @@ def update_users_data():
                 study_status = 'study'
             elif isExam:
                 study_status = 'exam'
-            status_data[k] = study_status
-        status_data[None] = None
+            groups[k] = {'calendar': True if gcal else False,
+                         'status': study_status}
+
+        groups[None] = {'calendar': None,
+                        'status': None}
 
         # Получаем все остальные данные
         cur.execute("SELECT user_id, group_id, additional_group_id, answer_false_commands "
@@ -83,8 +86,8 @@ def update_users_data():
             users[int(user_id)] = {'group': group_id,
                               'additional_group': additional_group_id,
                               'err_notifications': bool(answer_false_commands),
-                              'study_status': status_data[group_id],
-                              'additional_study_status': status_data[additional_group_id]
+                              'study_status': groups[group_id]['status'],
+                              'additional_study_status': groups[additional_group_id]['status'] if additional_group_id else None
                               }  # Freedom не добавлять! - безопаснее напрямую чекать БД
 
 
@@ -449,11 +452,14 @@ def main(vk_session, group_token):
                         kb = 'keyboard_table_settings'
 
                     elif endpoint == 'table_settings_type':
-                        kb = 'keyboard_table_settings_type'
-                        kb_message = 'Доступные режимы рассылки расписания:' \
-                                     '\nЕжедневное - каждый день расписание на завтра (если завтра есть пары)' \
-                                     '\nЕженедельное - каждое воскресенье на всю следующую неделю' \
-                                     '\nОба - собственно, оба варианта.'
+                        kb = 'keyboard_table_settings_type_cal' if groups[group]['calendar'] \
+                            else 'keyboard_table_settings_type'
+
+                        kb_message = f'Доступные режимы рассылки расписания:' \
+                                     f'\n{"Календарь - расписание из календаря" if groups[group]["calendar"] else ""}' \
+                                     f'\nЕжедневное - каждый день расписание на завтра (если завтра есть пары)' \
+                                     f'\nЕженедельное - каждое воскресенье на всю следующую неделю' \
+                                     f'\nОба - собственно, оба варианта.'
 
                     elif endpoint == 'settings':
                         kb = f'keyboard_settings_{get_freedom(message["from_id"])}'

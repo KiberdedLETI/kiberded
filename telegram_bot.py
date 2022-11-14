@@ -72,6 +72,7 @@ list_prepods = []  # список преподов из базы, нужно д�
 # list_registered_groups = []  # список зарегистрированных chat.id из group_ids.db для допуска к боту
 moderators = set()  # лист админов и модераторов для добавления книжек и редактирования баз
 admins = set()  # лист только админов
+groups = {}
 
 
 class IsRegistered(custom_filters.SimpleCustomFilter):  # фильтр для проверки регистрации юзера
@@ -262,6 +263,36 @@ def update_prepods():  # ее нужно вызывать каждый раз п
         cur = con.cursor()
         query = 'SELECT surname FROM prepods'
         list_prepods = cur.execute(query).fetchall()
+    return 0
+
+
+def update_groups_data():  # ее нужно вызывать каждый раз при запуске и добавлении преподов (то есть никогда лол)
+    """
+    Обновляет dict с данными групп
+
+    :return: 0 если все ок
+    """
+
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        cur = con.cursor()
+
+        # достаем StudyStatus
+        cur.execute("SELECT group_id, isStudy, isExam, gcal_link FROM group_gcals")
+        status_data = {v[0]: {'isStudy':v[1], 'isExam':v[2], 'gcal': v[3]} for v in cur.fetchall()}
+        for k, v in status_data.items():
+            isStudy, isExam, gcal = v.values()
+            study_status = ""
+            if isExam and isStudy:
+                study_status = 'mixed'
+            elif isStudy:
+                study_status = 'study'
+            elif isExam:
+                study_status = 'exam'
+            groups[k] = {'calendar': True if gcal else False,
+                         'status': study_status}
+
+        groups[None] = {'calendar': None,
+                        'status': None}
     return 0
 
 
@@ -1422,7 +1453,7 @@ def callback_query(call):
             kb = 'keyboard_other'
             message_ans = add_user_to_anekdot(call.from_user.id, '-1', source='tg')
 
-        elif command == 'table_subscribe':  # todo
+        elif command == 'table_subscribe':
             kb = 'keyboard_table_settings'
             message_ans = add_user_to_table(call.from_user.id, '1', source='tg')
 
@@ -1431,11 +1462,12 @@ def callback_query(call):
             message_ans = add_user_to_table(call.from_user.id, '-1', source='tg')
 
         elif command == 'set_tables_mode':
-            kb = 'keyboard_set_tables_mode'
-            message_ans = 'Доступные режимы рассылки расписания:' \
-                          '\nЕжедневное - каждый день расписание на завтра (если завтра есть пары)' \
-                          '\nЕженедельное - каждое воскресенье на всю следующую неделю' \
-                          '\nОба - собственно, оба варианта.'  # todo текущий статус
+            kb = 'keyboard_set_tables_mode_cal' if groups[group]['calendar'] else 'keyboard_set_tables_mode'
+            message_ans = f'Доступные режимы рассылки расписания:' \
+                          f'\n{"Календарь - расписание из календаря" if groups[group]["calendar"] else ""}' \
+                          f'\nЕжедневное - каждый день расписание на завтра (если завтра есть пары)' \
+                          f'\nЕженедельное - каждое воскресенье на всю следующую неделю' \
+                          f'\nОба - собственно, оба варианта.'
 
         elif command == 't_mode_set':
             mode = payload['mode']
@@ -1607,6 +1639,7 @@ update_list_registered_users()  # обновление переменной list
 update_moderators()  # обновление переменной moderators
 update_admins()  # обновление переменной admins
 update_prepods()
+update_groups_data()
 
 
 def main(after_crash=False, log=True):
