@@ -19,7 +19,7 @@ import telebot
 import logging
 import traceback
 from bot_functions.anekdot import get_random_toast
-from bot_functions.bots_common_funcs import get_last_lesson, read_calendar, read_table, get_day
+from bot_functions.bots_common_funcs import get_last_lesson, read_calendar, read_table, get_day, set_table_mode
 from shiza.etu_parsing import parse_etu_ids, load_calendar_cache, load_table_cache, \
     parse_prepods_schedule, load_prepods_table_cache
 from shiza.daily_functions import daily_cron, donator_daily_cron, get_exam_notification, get_groups, \
@@ -532,7 +532,13 @@ def send_personal_tables(table_time='None'):
                         table_message += read_table(group, day=day_today)
 
                     if table_type == 'calendar':
-                        table_message = read_calendar(group, date='tomorrow')
+                        cal_message = read_calendar(group, date='tomorrow')
+                        if cal_message:
+                            table_message = str(cal_message)
+                        else:
+                            set_table_mode(user_id, source=source, mode='daily')
+                            table_message += '\nПроизошла ошибка рассылки расписания - тип рассылки "Календарь", но ' \
+                                             'календарь не найден.\nУстановлен тип рассылки по умолчанию - "Ежедневный"'
 
                     if table_message:  # если есть хоть что-то в сообщении на день
                         if table_message.split()[-1] != 'Пусто':

@@ -362,6 +362,8 @@ def main(vk_session, group_token):
 
     message_ans = ''  # на случай какой-нибудь ошибки. Такое сообщение не отправится, т.к. есть проверка if True:
 
+    update_users_data()
+
     for event in longpoll.listen():
         if event.type == VkBotEventType.MESSAGE_NEW:
             message = event.obj.message

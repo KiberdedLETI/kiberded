@@ -41,9 +41,10 @@ def read_calendar(group, date='today') -> str:
 
     with sqlite3.connect(f'{path}cache/calendar_cache.db') as con:
         cur = con.cursor()
-        cal = cur.execute(f"SELECT {date} FROM calendar_cache WHERE group_id='{group}'").fetchone()[0]
-    con.close()
-    return cal
+        cal = cur.execute(f"SELECT {date} FROM calendar_cache WHERE group_id='{group}'").fetchone()
+    if cal:
+        return cal[0]
+    return None
 
 
 def get_day(now_date=today):  #
