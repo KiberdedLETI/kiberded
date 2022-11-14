@@ -354,6 +354,36 @@ kb_table_settings_type.add_button('Назад', color=VkKeyboardColor.NEGATIVE,
                                         payload={"type": "navigation",
                                                  "place": "kb_table_settings"})
 
+# Клавиатура "Настройки типа рассылки расписания" С КАЛЕНДАРЕМ; кнопки - ежедневно, еженедельно, обе, назад
+kb_table_settings_type_cal = VkKeyboard(one_time=False)
+kb_table_settings_type_cal.add_button('Календарь', color=VkKeyboardColor.PRIMARY,
+                                      payload={"type": "action",
+                                               "action_type": "message",
+                                               "command": "table_set_type",
+                                               "arg": "calendar"})
+kb_table_settings_type_cal.add_line()
+kb_table_settings_type_cal.add_button('Ежедневно', color=VkKeyboardColor.PRIMARY,
+                                      payload={"type": "action",
+                                               "action_type": "message",
+                                               "command": "table_set_type",
+                                               "arg": "daily"})
+kb_table_settings_type_cal.add_line()
+kb_table_settings_type_cal.add_button('Еженедельно', color=VkKeyboardColor.PRIMARY,
+                                      payload={"type": "action",
+                                               "action_type": "message",
+                                               "command": "table_set_type",
+                                               "arg": "weekly"})
+kb_table_settings_type_cal.add_line()
+kb_table_settings_type_cal.add_button('Оба', color=VkKeyboardColor.PRIMARY,
+                                      payload={"type": "action",
+                                               "action_type": "message",
+                                               "command": "table_set_type",
+                                               "arg": "both"})
+kb_table_settings_type_cal.add_line()
+kb_table_settings_type_cal.add_button('Назад', color=VkKeyboardColor.NEGATIVE,
+                                        payload={"type": "navigation",
+                                                 "place": "kb_table_settings"})
+
 # Клавиатура "Расписания на другие дни"; even - чёт, odd - нечёт
 # Четная неделя - "главная"
 kb_table_other_even = VkKeyboard(one_time=False)
@@ -763,6 +793,9 @@ with open('keyboard_table_settings.json', 'w', encoding='utf-8') as f:
 
 with open('keyboard_table_settings_type.json', 'w', encoding='utf-8') as f:
     f.write(kb_table_settings_type.get_keyboard())
+
+with open('keyboard_table_settings_type_cal.json', 'w', encoding='utf-8') as f:
+    f.write(kb_table_settings_type_cal.get_keyboard())
 
 # ШИЗА
 with open('keyboard_change_group.json', 'w', encoding='utf-8') as f:
