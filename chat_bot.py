@@ -372,7 +372,31 @@ def main(vk_session, group_token):
             if message['from_id'] not in users.keys():
                 update_users_data()  # Повторяем проверку - вдруг мы только-только добавили пользователя
                 if message['from_id'] not in users.keys():
-                    raise UserGroupError(message['from_id'], message["text"])
+                    try:  # Проверяем, не находится ли пользователь в процессе регистрации
+                        payload = json.loads(message["payload"])
+                        if 'command' in payload.keys():  # чтобы избежать KeyError
+                            if payload['command'] == 'start':
+                                start_message = 'Для начала, нужно настроить бота под тебя'
+                                send_to_vk(message_send=start_message, event=event)
+                        elif payload == {"type": "action", "action_type": "shiza", "target": "change_group"}:
+                            pass
+                        else:
+                            raise UserGroupError(message['from_id'], message["text"])
+
+                        shiza_start = threading.Thread(target=elements_of_shiza.change_group_func,
+                                                       args=[message['from_id']])
+                        try:
+                            shiza_start.start()
+                        except Exception as e:
+                            send_to_vk(event=False, message_send=f'Ошибка стартовой шизы: {e}',
+                                       chat_id_send=2000000001, is_to_user=False)
+
+                    except KeyError:
+                        values_check = str(event.obj.message['text']).strip()  # Ввод номера группы для регистрации
+                        if len(values_check) == 4 and values_check.isdecimal():
+                            continue
+                        else:
+                            raise UserGroupError(message['from_id'], message["text"])
 
             try:  # потому что не везде есть payload
                 payload = json.loads(message["payload"])
@@ -800,9 +824,12 @@ def main(vk_session, group_token):
                             continue
 
                     elif message['from_id'] not in users.keys():
-                        kb_message = 'Ошибка - нет номера группы. Тыкни кнопку "изменить группу"'
-                        send_to_vk(keyboard_send=open_keyboard('keyboard_change_group'),
-                                   message_send=kb_message, event=event)
+                        if event.obj.message['text'] == 'Изменить группу':  # обработка ошибки при регистрации
+                            pass
+                        else:
+                            kb_message = 'Ошибка - нет номера группы. Тыкни кнопку "изменить группу"'
+                            send_to_vk(keyboard_send=open_keyboard('keyboard_change_group'),
+                                       message_send=kb_message, event=event)
 
                     # костыль, если пользователь потеряет клавиатуру как-то..
                     elif message_splitted in ('Клавиатура', 'клавиатура'):
