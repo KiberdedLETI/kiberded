@@ -374,11 +374,8 @@ def main(vk_session, group_token):
                 if message['from_id'] not in users.keys():
                     try:  # Проверяем, не находится ли пользователь в процессе регистрации
                         payload = json.loads(message["payload"])
-                        if 'command' in payload.keys():  # чтобы избежать KeyError
-                            if payload['command'] == 'start':
-                                start_message = 'Для начала, нужно настроить бота под тебя'
-                                send_to_vk(message_send=start_message, event=event)
-                        elif payload == {"type": "action", "action_type": "shiza", "target": "change_group"}:
+                        if payload == {'command': 'start'} or \
+                                payload == {"type": "action", "action_type": "shiza", "target": "change_group"}:
                             pass
                         else:
                             raise UserGroupError(message['from_id'], message["text"])
