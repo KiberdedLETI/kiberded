@@ -387,7 +387,7 @@ def main(vk_session, group_token):
                         except Exception as e:
                             send_to_vk(event=False, message_send=f'Ошибка стартовой шизы: {e}',
                                        chat_id_send=2000000001, is_to_user=False)
-
+                        continue
                     except KeyError:
                         values_check = str(event.obj.message['text']).strip()  # Ввод номера группы для регистрации
                         if len(values_check) == 4 and values_check.isdecimal():
