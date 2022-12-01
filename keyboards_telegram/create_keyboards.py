@@ -458,7 +458,7 @@ def keyboard_links_mail():
     lnk_lk = InlineKeyboardButton('Личный кабинет', url='https://lk.etu.ru/')
     lnk_vec = InlineKeyboardButton('Мудл', url='https://vec.etu.ru/')
     lnk_lib = InlineKeyboardButton('Библиотека ЛЭТИ', url='http://library.etu.ru/')
-    lnk_nexus = InlineKeyboardButton('Поиск научной лит-ры', url='https://t.me/libgen_scihub_3_bot')
+    lnk_nexus = InlineKeyboardButton('Поиск научной лит-ры', url='https://t.me/libgen_scihub_5_bot')
 
     markup.row(lnk_etu, lnk_mail)
     markup.row(lnk_lk, lnk_vec)
@@ -477,7 +477,7 @@ def keyboard_links():
     lnk_lk = InlineKeyboardButton('Личный кабинет', url='https://lk.etu.ru/')
     lnk_vec = InlineKeyboardButton('Мудл', url='https://vec.etu.ru/')
     lnk_lib = InlineKeyboardButton('Библиотека ЛЭТИ', url='http://library.etu.ru/')
-    lnk_nexus = InlineKeyboardButton('Поиск научной лит-ры', url='https://t.me/libgen_scihub_3_bot')
+    lnk_nexus = InlineKeyboardButton('Поиск научной лит-ры', url='https://t.me/libgen_scihub_5_bot')
 
     markup.row(lnk_etu)
     markup.row(lnk_lk, lnk_vec)
