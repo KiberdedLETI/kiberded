@@ -106,11 +106,12 @@ def get_groups():
     return groups, gcal_links, chat_ids, tg_chat_ids, tg_last_messages
 
 
-def daily_cron(group):
+def daily_cron(group, parse_exams_flag=False):
     """
     Ежедневная проверка состояния группы (is_Study, is_Exam) с сопутствующим запуском разных функций парсинга данных
 
     :param group: группа
+    :param bool parse_exams_flag: из конфига - флаг, парсить ли расписание сессии.
     :return: is_exam, is_study (bool 0/1), сообщение с оповещением об изменении
     """
 
@@ -137,7 +138,8 @@ def daily_cron(group):
         is_exam = 1 if semester_end <= today <= exam_end else 0  # обновляем данные
 
         # если семестр скоро закончится, пробуем подтянуть данные сессии
-        if today+timedelta(days=30) >= semester_end and today <= exam_end:
+        # if today+timedelta(days=30) >= semester_end and today <= exam_end:  # Старый вариант флага парсинга сесси
+        if parse_exams_flag:
             exam_data = get_exam_data(group)
             if exam_data:
                 is_exam = 1
