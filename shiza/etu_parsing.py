@@ -640,7 +640,7 @@ def load_prepods_table_cache():
 def get_exam_data(group) -> dict:
     """
     Заглядывает в раздел с расписанием сессии, возвращает его данные если там что-то есть
-    :param group: номер группы
+    :param str group: номер группы
     :return: JSON с данными или {}
     """
 
@@ -654,8 +654,8 @@ def get_exam_data(group) -> dict:
 
     url = f'https://digital.etu.ru/api/exams/objects?' \
           f'groupfacultyId={group[1]}&courses={course}&studyingType={study_type}' \
-          f'&examId=publicated&withConsult=true&departmentId=all'
-    all_exams = requests.get(url).json()
+          f'&examId=publicated&withConsult=true&departmentId=all'  # group[1] - вторая цифра номера группы - факультет
+    all_exams = requests.get(url, headers=headers).json()
     
     if not all_exams:  # возможно стоит сделать вторую попытку получения данных либо лог об ошибке
         return 0
@@ -873,7 +873,7 @@ def parse_etu_ids() -> str:
     """
 
     url = 'https://digital.etu.ru/api/general/dicts/groups?scheduleId=publicated&withSemesterSeasons=true'
-    all_data = requests.get(url).json()
+    all_data = requests.get(url, headers=headers).json()
     all_groups = []
     for i in range(len(all_data)):
         all_groups.append((str(all_data[i]["fullNumber"]), str(all_data[i]["id"]), int(all_data[i]["course"]),
