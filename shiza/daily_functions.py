@@ -166,7 +166,7 @@ def daily_cron(group, parse_exams_flag=False):
             session_str = parse_exams(group)
             daily_return_str = f'Скоро сессия! Выживут не все, но будет весело.\n{session_str}\n' \
                                f'Расписание экзаменов всегда можно посмотреть во вкладке "Расписание" ' \
-                               f'чат-бота.\nОбычное расписание отключено до следующего семестра\n\nУдачи!\n'
+                               f'чат-бота.\n\nУдачи!\n'
         else:  # если кончились экзамены
             parse_exams(group, set_default_next_sem=True)  # удаляем расписон экзаменов
             parse_group_params(group, set_default_next_sem=True)  # ставим датой начала сема дефолтный следующий
