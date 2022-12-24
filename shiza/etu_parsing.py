@@ -648,8 +648,12 @@ def get_exam_data(group) -> dict:
 
     with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:
         cur = con.cursor()
-        etu_id, course, study_type = \
-            cur.execute("SELECT etu_id, course, studyingType FROM all_groups WHERE fullNumber=?", [group]).fetchall()[0]
+        try:
+            etu_id, course, study_type = \
+                cur.execute("SELECT etu_id, course, studyingType FROM all_groups WHERE fullNumber=?", [group]).fetchall()[0]
+        except IndexError:
+
+            return {}
     con.close()
 
     url = f'https://digital.etu.ru/api/exams/objects?' \
