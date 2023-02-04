@@ -215,7 +215,7 @@ def load_teacher_ids(group):
     # Получение всех teacher_id
     with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
         cur = con.cursor()
-        fios = cur.execute('SELECT id, substring(surname || " " || name || " " || midname, 0) '
+        fios = cur.execute('SELECT id, substr(surname || " " || name || " " || midname, 0) '
                            'FROM prepods').fetchall()
     con.close()
     fios = {fio[1]: fio[0] for fio in fios}
