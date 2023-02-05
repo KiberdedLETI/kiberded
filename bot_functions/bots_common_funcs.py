@@ -55,7 +55,7 @@ def get_day(now_date=today):  #
     :return: дата в формате 'День + (чет/нечет)'
     """
 
-    weeknumfix = 0  # Поправочка на случай несовпадения четности с календарной
+    weeknumfix = 1  # Поправочка на случай несовпадения четности с календарной
     weekday = days[0][now_date.weekday()]
     parity = days[1][((weeknumfix + now_date.isocalendar()[1]) % 2)]
     return weekday + parity
