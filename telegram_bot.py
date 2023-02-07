@@ -14,6 +14,7 @@ import time
 import traceback
 import telebot
 from telebot import custom_filters
+from telebot import types
 import sqlite3
 from datetime import datetime, date, timedelta
 import pytz
@@ -1601,6 +1602,23 @@ def callback_query(call):
 #     dump_message(message)
 #     msg = send_message(message.chat.id, 'Введи номер группы в формате ХХХХ, например 9281')
 #     bot.register_next_step_handler(msg, change_group_step)
+
+
+# обработка inline-запросов
+@bot.inline_handler(lambda query: (len(query.query) == 4) and query.query.isdecimal())
+def query_text(inline_query):
+    text = inline_query.query
+    if not check_group_exists(text):
+        r = types.InlineQueryResultArticle('1', f'Группы {text} не найдено', types.InputTextMessageContent(f'Группы {text} не найдено'))
+        bot.answer_inline_query(inline_query.id, [r])
+    else:
+        r = types.InlineQueryResultArticle('1', 'Расписание на сегодня', types.InputTextMessageContent(
+            f'Группа {text}. {read_table(text)}'))
+        r2 = types.InlineQueryResultArticle('2', 'Расписание на завтра', types.InputTextMessageContent(
+            f'Группа {text}. {read_table(text, get_day(today + timedelta(days=1)))}'))
+        r3 = types.InlineQueryResultArticle('3', 'Расписание на все дни', types.InputTextMessageContent(
+            f'{read_table(text, "full (нечёт)")}\n\n{read_table(text, "full (чёт)")}'))
+        bot.answer_inline_query(inline_query.id, [r, r2, r3])
 
 
 # Обработка миграций в супергруппу
