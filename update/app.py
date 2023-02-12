@@ -21,13 +21,14 @@ from users import current_user, fastapi_users, cookie_auth_backend
 from fastapi.templating import Jinja2Templates
 
 import logging
-from bot_functions import send_telegram_message, get_acme_flag
+from bot_functions import send_telegram_message, get_acme_flag, get_path
 from users_function import create_user
 from pydantic import BaseModel
 import os
 import sys
 sys.path.insert(0, '../')
 from deds_schemas import main as get_all_dependencies
+import sqlite3
 
 logger = logging.getLogger(__name__)
 console_handler = logging.StreamHandler()
@@ -119,7 +120,60 @@ async def database(request: Request, user: User = Depends(current_user)):
     else:
         is_verified = user.is_verified
         if is_verified:
-            return templates.TemplateResponse("database.html", {"request": request, "user": user})
+
+            with sqlite3.connect(f'{get_path()}databases/{user.group}.db') as con:
+                cur = con.cursor()
+
+                cur.execute("PRAGMA table_info(books)")
+                books_columns = cur.fetchall()
+
+                cur.execute("PRAGMA table_info(books_old)")
+                books_old_columns = cur.fetchall()
+
+                cur.execute("PRAGMA table_info(prepods)")
+                prepods_columns = cur.fetchall()
+
+                cur.execute("PRAGMA table_info(prepods_old)")
+                prepods_old_columns = cur.fetchall()
+
+                cur.execute("PRAGMA table_info(schedule)")
+                schedule_columns = cur.fetchall()
+
+                cur.execute("PRAGMA table_info(exam_schedule)")
+                exam_schedule_columns = cur.fetchall()
+
+                cur.execute("SELECT * FROM books")
+                books = cur.fetchall()
+
+                cur.execute("SELECT * FROM books_old")
+                books_old = cur.fetchall()
+
+                cur.execute("SELECT * FROM prepods")
+                prepods = cur.fetchall()
+
+                cur.execute("SELECT * FROM prepods_old")
+                prepods_old = cur.fetchall()
+
+                cur.execute("SELECT * FROM schedule")
+                schedule = cur.fetchall()
+
+                cur.execute("SELECT * FROM exam_schedule")
+                exam_schedule = cur.fetchall()
+
+            return templates.TemplateResponse("database.html", {"request": request,
+                                                                "user": user,
+                                                                "books_columns": books_columns,
+                                                                "books_old_columns": books_old_columns,
+                                                                "prepods_columns": prepods_columns,
+                                                                "prepods_old_columns": prepods_old_columns,
+                                                                "schedule_columns": schedule_columns,
+                                                                "exam_schedule_columns": exam_schedule_columns,
+                                                                "books": books,
+                                                                "books_old": books_old,
+                                                                "prepods": prepods,
+                                                                "prepods_old": prepods_old,
+                                                                "schedule": schedule,
+                                                                "exam_schedule": exam_schedule})
         else:
             return {"detail": "403 Forbidden"}
 
@@ -131,7 +185,14 @@ async def backups(request: Request, user: User = Depends(current_user)):
     else:
         is_verified = user.is_verified
         if is_verified:
-            return templates.TemplateResponse("backups.html", {"request": request, "user": user})
+            with sqlite3.connect(f'{get_path()}admindb/backups.db') as con:
+                cur = con.cursor()
+                cur.execute("SELECT * FROM backups")
+                all_backups = cur.fetchall()
+            return templates.TemplateResponse("backups.html", {"request": request,
+                                                               "user": user,
+                                                               "years": ['2022', '2023'],
+                                                                "backups": all_backups},)
         else:
             return {"detail": "403 Forbidden"}
 
@@ -259,6 +320,16 @@ async def verify_user(request: Request, token='', user: User = Depends(current_u
     if not user:
         return RedirectResponse("/login", status_code=302)
     return templates.TemplateResponse("verify.html", {"request": request, "user": user, "token": token})
+
+@app.get("/getFileFromTelegram")
+async def download_file_from_telegram(request: Request, file_id='', backup=False, user: User = Depends(current_user)):
+    if not user:
+        return RedirectResponse("/login", status_code=302)
+    else:
+        if user.is_superuser:
+            return templates.TemplateResponse("download_file_from_telegram.html", {"request": request, "user": user})
+        else:
+            return {"detail": "403 Forbidden"}
 
 
 async def get_webhook_info(x_github_event: str, payload):

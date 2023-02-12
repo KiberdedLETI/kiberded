@@ -113,7 +113,157 @@
     </nav>
 
     <main class="px-md-4">
-      <h5>Будет доступно позднее.</h5>
+        <h5>Редактирование пока недоступно.</h5>
+        <h5>База литературы:</h5>
+
+        <table class="table table-striped table-sm table-hover">
+        <thead>
+          <tr>
+            {% for col in books_columns %}
+            <th scope="col">{{ col[1] }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        {% for book in books %}
+        <tr>
+            {% for i in range(books_columns|length) %}
+            <td>{{ book[i] }}</td>
+            {% endfor %}
+            <td>
+              <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Редактировать
+              </button>
+
+            </td>
+        </tr>
+        {% endfor %}
+        </table>
+
+        <h5>База литературы (прошлый семестр):</h5>
+
+        <table class="table table-striped table-sm table-hover">
+        <thead>
+          <tr>
+            {% for col in books_old_columns %}
+            <th scope="col">{{ col[1] }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        {% for book in books_old %}
+        <tr>
+            {% for i in range(books_old_columns|length) %}
+            <td>{{ book[i] }}</td>
+            {% endfor %}
+            <td>
+              <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Редактировать
+              </button>
+
+            </td>
+        </tr>
+        {% endfor %}
+        </table>
+
+        <h5>База расписания экзаменов:</h5>
+
+        <table class="table table-striped table-sm table-hover">
+        <thead>
+          <tr>
+            {% for col in exam_schedule_columns %}
+            <th scope="col">{{ col[1] }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        {% for exam in exam_schedule %}
+        <tr>
+            {% for i in range(exam_schedule_columns|length) %}
+            <td>{{ exam[i] }}</td>
+            {% endfor %}
+            <td>
+              <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Редактировать
+              </button>
+
+            </td>
+        </tr>
+        {% endfor %}
+        </table>
+
+        <h5>База преподов:</h5>
+
+        <table class="table table-striped table-sm table-hover">
+        <thead>
+          <tr>
+            {% for col in prepods_columns %}
+            <th scope="col">{{ col[1] }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        {% for prep in prepods %}
+        <tr>
+            {% for i in range(prepods_columns|length) %}
+            <td>{{ prep[i] }}</td>
+            {% endfor %}
+            <td>
+              <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Редактировать
+              </button>
+
+            </td>
+        </tr>
+        {% endfor %}
+        </table>
+
+        <h5>База преподов (прошлый семестр):</h5>
+
+        <table class="table table-striped table-sm table-hover">
+        <thead>
+          <tr>
+            {% for col in prepods_old_columns %}
+            <th scope="col">{{ col[1] }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        {% for prep in prepods_old %}
+        <tr>
+            {% for i in range(prepods_old_columns|length) %}
+            <td>{{ prep[i] }}</td>
+            {% endfor %}
+            <td>
+              <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Редактировать
+              </button>
+
+            </td>
+        </tr>
+        {% endfor %}
+        </table>
+
+        <h5>Расписание:</h5>
+
+        <table class="table table-striped table-sm table-hover">
+        <thead>
+          <tr>
+            {% for col in schedule_columns %}
+            <th scope="col">{{ col[1] }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        {% for sched in schedule %}
+        <tr>
+            {% for i in range(schedule_columns|length) %}
+            <td>{{ sched[i] }}</td>
+            {% endfor %}
+            <td>
+              <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Редактировать
+              </button>
+
+            </td>
+        </tr>
+        {% endfor %}
+        </table>
+
     </main>
   </body>
 </html>

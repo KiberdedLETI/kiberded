@@ -34,6 +34,7 @@ token_vk = config.get('Kiberded').get('token')
 telegram_admin_chat = config.get('Kiberded').get('telegram_admin_chat')
 web_secret = config.get('Kiberded').get('web_secret')  # не хочется засорять users.py огромным куском кода ради этого
 enable_acme_challenge = config.get('Kiberded').get('enable_acme_challenge')  # флаг монтирования директории /.well-known
+path = config.get('Kiberded').get('path')
 
 bot = telebot.TeleBot(token_telegram)
 
@@ -101,5 +102,13 @@ def get_web_secret():
 
 def get_acme_flag():
     return web_secret
+
+def get_path():
+    return path
+
+
+def create_backups_db_from_backup_chat():
+    # Создание базы databases/admindb/backups с найденными бэкапами из конфы и данными о сообщениях
+    pass
 
 create_backup_dir()
