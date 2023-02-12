@@ -26,7 +26,7 @@ import logging
 import toml
 import sys
 import pickle
-from requests.exceptions import ReadTimeout
+from requests.exceptions import ReadTimeout, ConnectionError
 
 from bot_functions.bots_common_funcs import read_calendar, day_of_day_toggle, read_table, get_day, \
     compile_group_stats, add_user_to_table, get_exams, get_prepods, get_subjects, group_is_donator, \
@@ -1669,6 +1669,8 @@ def main(after_crash=False, log=True):
 
         bot.polling(non_stop=True)
     except ReadTimeout:
+        log = False
+    except ConnectionError:
         log = False
     except Exception as e:
         send_message(admin_chat, f'Произошла ошибка тележного: {str(e)}\n{traceback.format_exc()}')
