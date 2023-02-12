@@ -634,7 +634,7 @@ def get_prepod_schedule(prepod_id, weekday):
     if schedule:
         schedule = schedule[0]
     else:
-        schedule = 'У преподавателя нет расписания на этот семестр.'
+        schedule = 'У преподавателя пока нет расписания на этот семестр.'
     return schedule
 
 
