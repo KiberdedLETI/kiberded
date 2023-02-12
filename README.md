@@ -127,3 +127,24 @@
       + ~ сервера каждую неделю по воскресеньям: `crontab -e`, добавляем `0 0 * * 0 reboot`
     + Приветствие в виде ascii-сан-саныча при подключении по ssh
     + Максимальный объем журнала: `journalctl --vacuum-size=500M`
+
+13. Обновление сертификата:
+    Надо бы потом сделать нормально, а не через такое кол-во костылей, но пока как есть..
+
+    + поменять флаг ``enable_acme_challenge`` в конфиге деда, чтобы монтировалась директория ``/root/kiberded/update/.well-known``
+
+    + вручную закомментировать ``app.add_middleware(HTTPSRedirectMiddleware)`` в ``app.py``
+
+    + остановить сервис через ``ded stop`` или ``systemctl stop update_daemon``
+
+    + поменять порт с ``443`` на ``80`` в ``update_daemon_starter.py`` и закомментировать параметры ``ssl_keyfile`` и ``ssl_certfile``
+
+    + запустить update_daemon (``ded restart``)
+
+    + в новом сеансе: ``certbot certonly`` -> `2` (Place files in webroot directory (webroot)) -> Please enter the domain name: ``domain`` -> Input the webroot for kiberded.ga: `/root/kiberded/update`
+
+    + если все ок, то остановить деда
+
+    + вернуть в app.py и update_daemon_starter все на место
+
+    + ``ded restart``
