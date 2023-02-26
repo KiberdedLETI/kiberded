@@ -55,10 +55,10 @@ str_day_today = get_day()
 users = {}
 groups = {}
 
-def update_users_data():
+
+def update_full_users_data():
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-
         # достаем StudyStatus
         cur.execute("SELECT group_id, isStudy, isExam, gcal_link FROM group_gcals")
         status_data = {v[0]: {'isStudy':v[1], 'isExam':v[2], 'gcal': v[3]} for v in cur.fetchall()}
@@ -83,15 +83,36 @@ def update_users_data():
         for row in cur.fetchall():
             user_id, group_id, additional_group_id, answer_false_commands = row
 
-            users[int(user_id)] = {'group': group_id,
-                              'additional_group': additional_group_id,
-                              'err_notifications': bool(answer_false_commands),
-                              'study_status': groups[group_id]['status'],
-                              'additional_study_status': groups[additional_group_id]['status'] if additional_group_id else None
-                              }  # Freedom не добавлять! - безопаснее напрямую чекать БД
+            users[int(user_id)] = {
+                'group': group_id,
+                'additional_group': additional_group_id,
+                'err_notifications': bool(answer_false_commands),
+                'study_status': groups[group_id]['status'],
+                'additional_study_status': groups[additional_group_id]['status'] if additional_group_id else None
+            }  # Freedom не добавлять! - безопаснее напрямую чекать БД
 
 
-update_users_data()
+def update_user_data(user_id=None):
+    """
+    Обновление данных одного пользователя, после смены им настроек и т.д.
+    Отдельный метод т.к. это быстрее
+    """
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        cur = con.cursor()
+        # Получаем все остальные данные
+        cur.execute("SELECT user_id, group_id, additional_group_id, answer_false_commands "
+                    "FROM user_ids WHERE user_id=?", (user_id,))
+        user_id, group_id, additional_group_id, answer_false_commands = cur.fetchone()
+        users[int(user_id)] = {
+            'group': group_id,
+            'additional_group': additional_group_id,
+            'err_notifications': bool(answer_false_commands),
+            'study_status': groups[group_id]['status'],
+            'additional_study_status': groups[additional_group_id]['status'] if additional_group_id else None
+        }  # Freedom не добавлять! - безопаснее напрямую чекать БД
+
+
+update_full_users_data()
 
 
 global vk
@@ -362,7 +383,7 @@ def main(vk_session, group_token):
 
     message_ans = ''  # на случай какой-нибудь ошибки. Такое сообщение не отправится, т.к. есть проверка if True:
 
-    update_users_data()
+    update_full_users_data()
 
     for event in longpoll.listen():
         if event.type == VkBotEventType.MESSAGE_NEW:
@@ -370,7 +391,7 @@ def main(vk_session, group_token):
 
             # Проверка, зарегистрирован ли пользователь
             if message['from_id'] not in users.keys():
-                update_users_data()  # Повторяем проверку - вдруг мы только-только добавили пользователя
+                update_full_users_data()  # Повторяем проверку - вдруг мы только-только добавили пользователя
                 if message['from_id'] not in users.keys():
                     try:  # Проверяем, не находится ли пользователь в процессе регистрации
                         payload = json.loads(message["payload"])
@@ -410,6 +431,7 @@ def main(vk_session, group_token):
                     if endpoint == 'main':
                         kb = f'{group}_main'
                         kb_message = 'Дед на связи'
+                        update_user_data(user_id)
 
                     elif endpoint == 'table':
                         kb_message = f'Сегодня у нас: {str_day_today}'  # вызов get_day() в init
@@ -686,6 +708,9 @@ def main(vk_session, group_token):
 
                 # Текстовые сообщения от чата группы
                 if message_source == 'chat':
+                    if '@all' in message['text'] or '@online' in message['text']:  # Простой фикс тегов
+                        continue
+
                     if message_splitted in ('[club201485931|@kiberded_bot] инфо', '[club201485931|@kiberded_bot], инфо'):
                         group_stats = compile_group_stats(message["peer_id"])
                         send_to_vk(event=None, message_send=group_stats, chat_id_send=message["peer_id"], is_to_user=False)
@@ -722,7 +747,7 @@ def main(vk_session, group_token):
                                            is_to_user=False)
 
                         except UserGroupError as e:
-                            update_users_data()  # Повторяем проверку - вдруг мы только-только добавили пользователя
+                            update_full_users_data()  # Повторяем проверку - вдруг мы только что добавили пользователя
                             if e.user_id not in users.keys():
                                 add_chat_message = 'Ошибка добавления беседы - скорее всего у тебя не выбран номер' \
                                                    ' группы в ЛС с ботом.\n' \
@@ -867,7 +892,7 @@ def infinity_main():
         if len(e.message) == 4 and e.message.isdecimal():
             infinity_main()
         else:
-            update_users_data()
+            update_full_users_data()
             if e.user_id not in users.keys():
                 start_message = 'Ошибка: нет информации о группе пользователя.'
                 start_kb = 'keyboard_change_group'
