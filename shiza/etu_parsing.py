@@ -684,10 +684,13 @@ def parse_exams(group, exam_json_data=None, set_default_next_sem=False) -> str:
     :return: сообщение с оповещением об изменениях в беседу группы
     """
 
+    return_data = ''  # для крона, оповещения об изменениях в расписоне сессии
+
     if exam_json_data is None:
         exam_json_data = get_exam_data(group)
+        if not exam_json_data:
+            return return_data
 
-    return_data = ''  # для крона, оповещения об изменениях в расписоне сессии
     if set_default_next_sem:  # если кончилась сессия, стираем таблицу
         with sqlite3.connect(f'{path}databases/{group}.db') as con:
             cur = con.cursor()
