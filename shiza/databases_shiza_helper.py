@@ -6,6 +6,8 @@ import hashlib
 import os
 import time
 import traceback
+from typing import Tuple, Any
+
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from keyboards_telegram.create_keyboards import payload_to_callback
@@ -249,7 +251,7 @@ def load_teacher_ids(group):
     return 0
 
 
-def create_database(group, is_global_parsing=False, keep_old_data_override=False, override_bool=False) -> str:
+def create_database(group, is_global_parsing=False, keep_old_data_override=False, override_bool=False) -> tuple[str, str]:
     """
     Создание БД для группы и все сопутствующие операции
 
@@ -286,7 +288,7 @@ def create_database(group, is_global_parsing=False, keep_old_data_override=False
             data_ics = data_from_url.decode('utf-8').replace('\\r\\', '')
             full_cal = Calendar.from_ical(data_ics)
         except ValueError:
-            return f'Отсутствует расписание {group}', f'Отсутствует расписание {group}'
+            return f'Отсутствует расписание {group}\n', f'Отсутствует расписание {group}\n'
 
         parity_count = []  # костыль для проверки четности, сравнение с первой неделей (первой парой) сема
         for component in full_cal.walk():
