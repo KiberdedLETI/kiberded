@@ -251,7 +251,7 @@ def load_teacher_ids(group):
     return 0
 
 
-def create_database(group, is_global_parsing=False, keep_old_data_override=False, override_bool=False) -> tuple[str, str]:
+def create_database(group, is_global_parsing=False, keep_old_data_override=False, override_bool=False) -> str:
     """
     Создание БД для группы и все сопутствующие операции
 
