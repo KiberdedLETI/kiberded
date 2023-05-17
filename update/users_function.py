@@ -36,7 +36,7 @@ async def create_user(username: str, password: str, group: str, telegram_usernam
                             telegram_username=telegram_username, vk_username=vk_username, is_superuser=is_superuser
                         )
                     )
-                    message_user = f'Ты был зарегистрирован на сайте https://kiberded.ga как модератор.\n' \
+                    message_user = f'Ты был зарегистрирован на сайте https://kiberded.tech как модератор.\n' \
                                    f'Логин: {username}, пароль: {password}. ' \
                                    f'Пароль можно поменять, зайдя в личный кабинет'
                     if telegram_username != '':

@@ -6,6 +6,6 @@ if __name__ == "__main__":
                 port=443,
                 reload=False,
                 log_level="info",
-                ssl_keyfile='/etc/letsencrypt/live/kiberded.ga/privkey.pem',
-                ssl_certfile='/etc/letsencrypt/live/kiberded.ga/fullchain.pem'
+                ssl_keyfile='/etc/letsencrypt/live/kiberded.tech/privkey.pem',
+                ssl_certfile='/etc/letsencrypt/live/kiberded.tech/fullchain.pem'
                 )

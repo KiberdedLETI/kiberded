@@ -48,7 +48,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
 
     async def on_after_request_verify(self, user: User, token: str, request: Optional[Request] = None):
         send_telegram_message(f'[web] Пользователю {user.username} из группы {user.group} нужна аудиенция: \n'
-                              f'https://kiberded.ga/verify?token={token}')
+                              f'https://kiberded.tech/verify?token={token}')
 
     async def on_after_verify(self, user: User, request: Optional[Request] = None):
         send_telegram_message(f'[web] Пользователь {user.username} из группы {user.group} успешно верифицирован.')
