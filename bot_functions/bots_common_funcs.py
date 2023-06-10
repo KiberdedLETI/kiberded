@@ -201,6 +201,8 @@ def get_exams(group) -> str:
 
     dk_date = datetime.strptime(f'{dk_day}-{time.strftime("%Y")}', '%d-%m-%Y').date()
     days_left = (dk_date - today).days
+    if days_left < 0:
+        dk_date = None  # Обработка ошибочной даты ДК
 
     if not str_to_vk:  # Если экзамены закончились, присылаем инфу о ДК, чтобы не отправлять пустое сообщение
         if dk_date:
