@@ -52,7 +52,6 @@ num_of_base = config.get('Kiberded').get('num_of_base')  # количество 
 path = config.get('Kiberded').get('path')
 cron_time = config.get('Kiberded').get('cron_time')
 tables_time = config.get('Kiberded').get('tables_time')
-parse_exams_flag = config.get('Kiberded').get('parse_exams_flag')
 is_sendCron = config.get('Kiberded').get('is_sendCron')
 is_sendToast = config.get('Kiberded').get('is_sendToast')
 tg_admin_chat = config.get('Kiberded').get('telegram_admin_chat')
@@ -322,7 +321,7 @@ def cron():
         try:
             # Если нет беседы группы, то просто обновляем бд и пропускаем составление сообщения ей
             if not chat_ids[k] and not tg_chat_ids[k]:
-                daily_cron(group, parse_exams_flag=parse_exams_flag)
+                daily_cron(group)
                 continue
 
             # иначе собираем данные для сообщений - изменения в параметрах группы
@@ -332,7 +331,7 @@ def cron():
                 tg_chat = int(tg_chat_ids[k])
 
             # обновление данных - изменения в учебном состоянии (семестр/сессия)
-            is_exam, is_study, daily_str = daily_cron(group, parse_exams_flag=parse_exams_flag)
+            is_exam, is_study, daily_str = daily_cron(group)
 
             # если и то и то =True -> есть расписание сессии, но семестр еще идет (заканчивается, скорее всего)
             if is_exam and is_study:
@@ -512,7 +511,7 @@ def send_personal_tables(table_time='None'):
                         continue  # нелепый фикс непонятно чего из телеграма
 
                     # состояние группы (семестр/сессия)
-                    is_exam, is_study, daily_str = daily_cron(group, parse_exams_flag=parse_exams_flag)
+                    is_exam, is_study, daily_str = daily_cron(group)
 
                     if is_exam and is_study:  # is_exam может =1 пораньше, для открытия расписона сессии
                         is_exam = 0
