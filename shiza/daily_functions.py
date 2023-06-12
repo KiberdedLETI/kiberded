@@ -200,40 +200,44 @@ def daily_cron(group):
 
 def get_exam_notification(group, day=date.today()) -> str:
     """
-    Достает экзамен на заданный день из таблицы с ними (при наличии оной)
+    Сообщение с экзаменом/консультацией на заданный день из таблицы exam_schedule (при наличии)
 
-    :param group: группа
-    :param day: datetime.date
+    :param str group: группа
+    :param date day: день
     :return: сообщение с расписанием
     """
 
     exam_day = str(day)
-    if day == date.today():
-        str_to_vk = 'Сегодня'
-    elif day == date.today()+timedelta(days=1):
-        str_to_vk = 'Завтра'
-    else:
-        str_to_vk = exam_day
+    exam_msg = ''
+
     with sqlite3.connect(f'{path}databases/{group}.db') as con:
         cur = con.cursor()
         if cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='exam_schedule'").fetchone() is None:
-            return ''  # если нету таблицы с экзаменами, то ничего не присылаем
+            return ''  # если нет таблицы с экзаменами, то ничего не присылаем
         else:
-            exam = cur.execute('SELECT * FROM exam_schedule WHERE date=?', [exam_day]).fetchone()
+            exam = cur.execute('SELECT time, subject, name, classroom '
+                               'FROM exam_schedule '
+                               'WHERE date=?', [exam_day]).fetchone()
             if exam is not None:
-                str_to_vk += f' в {exam[1]} экзамен по {exam[2]}\nПреподаватель - {exam[3]}' \
-                             f'\nАудитория {exam[4]}\nУдачи!'
+                exam_msg = f'в {exam[0]} экзамен по {exam[1]}\nПреподаватель - {exam[2]}\nАудитория {exam[3]}\nУдачи!'
 
             else:  # консультации
-                consult = cur.execute('SELECT * FROM exam_schedule WHERE consult_date=?', [exam_day]).fetchone()
+                consult = cur.execute('SELECT subject, name, consult_date, consult_time, consult_classroom '
+                                      'FROM exam_schedule '
+                                      'WHERE consult_date=?', [exam_day]).fetchone()
                 if consult is not None:
-                    str_to_vk += f' в {consult[6]} консультация по {consult[2]}\nПреподаватель - {consult[3]}'
-                    if consult[7] != '':
-                        str_to_vk += f'\nАудитория {consult[7]}'
+                    exam_msg = f'в {consult[3]} консультация по {consult[0]}\nПреподаватель - {consult[1]}'
+                    if consult[4] != '':
+                        exam_msg += f'\nАудитория {consult[4]}'
 
-        if str_to_vk not in ['Сегодня', 'Завтра']:
-            return str_to_vk
-    return ''
+    if exam_msg:
+        if day == date.today():
+            exam_msg = 'Сегодня' + exam_msg
+        elif day == date.today() + timedelta(days=1):
+            exam_msg = 'Завтра' + exam_msg
+        else:
+            exam_msg = exam_day + exam_msg
+    return exam_msg
 
 
 def donator_daily_cron(group) -> str:  # все, что относится к донатам и особому, донатному функционалу
