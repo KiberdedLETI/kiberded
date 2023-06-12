@@ -547,26 +547,22 @@ def get_prepod_info(prepod_id):
     """
     Получает информацию о преподе из БД
     :param int prepod_id: id препода
-    :return: лист с информацией о преподе как в БД + читабельное название кафедры
+    :return: кортеж с информацией [id, department_id, initials, name, surname, midname, roles], название кафедры
     """
+
     with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
         cur = con.cursor()
         query = f"SELECT * FROM prepods WHERE id=?"
         prepod_info = cur.execute(query, [prepod_id]).fetchall()
-        print(f'Запрос {prepod_id}: {prepod_info}')
+
     if prepod_info:
-        departments = []
-        for element in prepod_info:
-            departments.append(element[1])
+        departments = [str(e[1]) for e in prepod_info]
         prepod_info = prepod_info[0]
-        readable_department = ''
-        for department in departments:
-            with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
-                cur = con.cursor()
-                query = f"SELECT title FROM departments WHERE id=?"
-                readable_department += cur.execute(query, [department]).fetchone()[0] + ', '
-                print(f'Читабельная кафедра: {readable_department}')
-        readable_department = readable_department[:-2]
+
+        with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
+            cur = con.cursor()
+            query = "SELECT title FROM departments WHERE id IN ({})".format(','.join(departments))
+            readable_department = ', '.join([e[0] for e in cur.execute(query).fetchall()])
     return prepod_info, readable_department
 
 
