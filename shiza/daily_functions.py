@@ -217,13 +217,12 @@ def get_exam_notification(group, day=date.today()) -> str:
     with sqlite3.connect(f'{path}databases/{group}.db') as con:
         cur = con.cursor()
         if cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='exam_schedule'").fetchone() is None:
-            return str_to_vk  # если нету таблицы с экзаменами, то ничего не присылаем todo pass
+            return ''  # если нету таблицы с экзаменами, то ничего не присылаем
         else:
             exam = cur.execute('SELECT * FROM exam_schedule WHERE date=?', [exam_day]).fetchone()
             if exam is not None:
                 str_to_vk += f' в {exam[1]} экзамен по {exam[2]}\nПреподаватель - {exam[3]}' \
                              f'\nАудитория {exam[4]}\nУдачи!'
-                return str_to_vk
 
             else:  # консультации
                 consult = cur.execute('SELECT * FROM exam_schedule WHERE consult_date=?', [exam_day]).fetchone()
@@ -231,7 +230,9 @@ def get_exam_notification(group, day=date.today()) -> str:
                     str_to_vk += f' в {consult[6]} консультация по {consult[2]}\nПреподаватель - {consult[3]}'
                     if consult[7] != '':
                         str_to_vk += f'\nАудитория {consult[7]}'
-                    return str_to_vk
+
+        if str_to_vk not in ['Сегодня', 'Завтра']:
+            return str_to_vk
     return ''
 
 
