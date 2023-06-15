@@ -232,11 +232,11 @@ def get_exam_notification(group, day=date.today()) -> str:
 
     if exam_msg:
         if day == date.today():
-            exam_msg = 'Сегодня' + exam_msg
+            exam_msg = f"Сегодня {exam_msg}"
         elif day == date.today() + timedelta(days=1):
-            exam_msg = 'Завтра' + exam_msg
+            exam_msg = f"Завтра {exam_msg}"
         else:
-            exam_msg = exam_day + exam_msg
+            exam_msg = f"{exam_day} {exam_msg}"
     return exam_msg
 
 
