@@ -120,60 +120,20 @@ async def database(request: Request, user: User = Depends(current_user)):
     else:
         is_verified = user.is_verified
         if is_verified:
+            response = {"request": request,
+                        "user": user}
 
             with sqlite3.connect(f'{get_path()}databases/{user.group}.db') as con:
                 cur = con.cursor()
+                cur.execute("SELECT name FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'")
+                tables = [e[0] for e in cur.fetchall()]
+                for table in tables:
+                    cur.execute(f"PRAGMA table_info({table})")
+                    response[f"{table}_columns"] = cur.fetchall()
+                    cur.execute(f"SELECT * FROM {table}")
+                    response[table] = cur.fetchall()
 
-                cur.execute("PRAGMA table_info(books)")
-                books_columns = cur.fetchall()
-
-                cur.execute("PRAGMA table_info(books_old)")
-                books_old_columns = cur.fetchall()
-
-                cur.execute("PRAGMA table_info(prepods)")
-                prepods_columns = cur.fetchall()
-
-                cur.execute("PRAGMA table_info(prepods_old)")
-                prepods_old_columns = cur.fetchall()
-
-                cur.execute("PRAGMA table_info(schedule)")
-                schedule_columns = cur.fetchall()
-
-                cur.execute("PRAGMA table_info(exam_schedule)")
-                exam_schedule_columns = cur.fetchall()
-
-                cur.execute("SELECT * FROM books")
-                books = cur.fetchall()
-
-                cur.execute("SELECT * FROM books_old")
-                books_old = cur.fetchall()
-
-                cur.execute("SELECT * FROM prepods")
-                prepods = cur.fetchall()
-
-                cur.execute("SELECT * FROM prepods_old")
-                prepods_old = cur.fetchall()
-
-                cur.execute("SELECT * FROM schedule")
-                schedule = cur.fetchall()
-
-                cur.execute("SELECT * FROM exam_schedule")
-                exam_schedule = cur.fetchall()
-
-            return templates.TemplateResponse("database.html", {"request": request,
-                                                                "user": user,
-                                                                "books_columns": books_columns,
-                                                                "books_old_columns": books_old_columns,
-                                                                "prepods_columns": prepods_columns,
-                                                                "prepods_old_columns": prepods_old_columns,
-                                                                "schedule_columns": schedule_columns,
-                                                                "exam_schedule_columns": exam_schedule_columns,
-                                                                "books": books,
-                                                                "books_old": books_old,
-                                                                "prepods": prepods,
-                                                                "prepods_old": prepods_old,
-                                                                "schedule": schedule,
-                                                                "exam_schedule": exam_schedule})
+            return templates.TemplateResponse("database.html", response)
         else:
             return {"detail": "403 Forbidden"}
 
@@ -321,6 +281,7 @@ async def verify_user(request: Request, token='', user: User = Depends(current_u
         return RedirectResponse("/login", status_code=302)
     return templates.TemplateResponse("verify.html", {"request": request, "user": user, "token": token})
 
+
 @app.get("/getFileFromTelegram")
 async def download_file_from_telegram(request: Request, file_id='', backup=False, user: User = Depends(current_user)):
     if not user:
@@ -333,6 +294,11 @@ async def download_file_from_telegram(request: Request, file_id='', backup=False
 
 
 async def get_webhook_info(x_github_event: str, payload):
+    """
+    Обработка вебхуков с возвратом сообщения для оповещений.
+    Немного boilerplate, но это заготовка под более подробные логи, если они понадобятся
+    """
+
     if x_github_event == 'ping':
         hook_type = payload['hook']['type']
         sender_login = payload['sender']['login']
@@ -449,7 +415,7 @@ async def get_webhook_info(x_github_event: str, payload):
         message = f'[github] Кто-то что-то сделал с issue'
         return message, None
     elif x_github_event == 'member':
-        message = f'[github] Кто-то что-то сделал с memvers'
+        message = f'[github] Кто-то что-то сделал с members'
         return message, None
     elif x_github_event == 'meta':
         action = payload['action']
