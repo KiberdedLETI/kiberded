@@ -554,16 +554,15 @@ def get_prepod_info(prepod_id):
         cur = con.cursor()
         query = f"SELECT * FROM prepods WHERE id=?"
         prepod_info = cur.execute(query, [prepod_id]).fetchall()
+        readable_department = ""
+        # todo убрать это вообще - все норм в базе будет.
+        if prepod_info:
+            departments = [str(e[1]) for e in prepod_info]
+            prepod_info = prepod_info[0]
 
-    if prepod_info:
-        departments = [str(e[1]) for e in prepod_info]
-        prepod_info = prepod_info[0]
-
-        with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
-            cur = con.cursor()
             query = "SELECT title FROM departments WHERE id IN ({})".format(','.join(departments))
             readable_department = ', '.join([e[0] for e in cur.execute(query).fetchall()])
-    return prepod_info, readable_department
+        return prepod_info, readable_department
 
 
 def get_prepods_history(call):
