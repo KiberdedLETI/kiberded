@@ -190,19 +190,13 @@ def get_exams(group) -> str:
     con.close()
 
     # Также добавляем инфу про день качества (дата = exam_end), если дата имеется
-    # dk_date = ''
-    # with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
-    #     cur = con.cursor()
-    #     dk_date = cur.execute('SELECT exam_end FROM group_gcals WHERE group_id=?', [group]).fetchone()
-    #     if dk_date:
-    #         dk_date = datetime.strptime(dk_date[0], '%Y-%m-%d').date()
-    #         days_left = (dk_date - today).days
-    #         dk_date = f'{dk_date.day}.0{dk_date.month}'  # 0 потому что или 01 или 06...
-
-    dk_date = datetime.strptime(f'{dk_day}-{time.strftime("%Y")}', '%d-%m-%Y').date()
-    days_left = (dk_date - today).days
-    if days_left < 0:
-        dk_date = None  # Обработка ошибочной даты ДК
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        cur = con.cursor()
+        dk_date = cur.execute('SELECT exam_end FROM group_gcals WHERE group_id=?', [group]).fetchone()
+        if dk_date:
+            dk_date = datetime.strptime(dk_date[0], '%Y-%m-%d').date()
+            days_left = (dk_date - today).days
+            dk_date = f'{dk_date.day}.0{dk_date.month}'  # 0 потому что или 01 или 06...
 
     if not str_to_vk:  # Если экзамены закончились, присылаем инфу о ДК, чтобы не отправлять пустое сообщение
         if dk_date:
