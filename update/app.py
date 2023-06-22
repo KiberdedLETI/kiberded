@@ -125,7 +125,7 @@ async def database(request: Request, user: User = Depends(current_user)):
 
             with sqlite3.connect(f'{get_path()}databases/{user.group}.db') as con:
                 cur = con.cursor()
-                cur.execute("SELECT name FROM sqlite_schema WHERE type ='table' AND name NOT LIKE 'sqlite_%'")
+                cur.execute("SELECT name FROM sqlite_master WHERE type ='table' AND name NOT LIKE 'sqlite_%'")
                 tables = [e[0] for e in cur.fetchall()]
                 for table in tables:
                     cur.execute(f"PRAGMA table_info({table})")
