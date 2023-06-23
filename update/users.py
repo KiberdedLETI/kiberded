@@ -39,7 +39,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
 
         if user.telegram_username:  # todo https и поправить текст в принципе
             message = f'Кто-то запросил восстановление пароля твоей учетной записи на сайте. Если это был ты, ' \
-                      f'перейди по ссылке:\nhttp://evgen.tk:8000/change_password?token={token}'
+                      f'перейди по ссылке:\nhttps://kiberded.tech/change_password?token={token}'
             send_telegram_message(message, user.telegram_username)
             send_telegram_message(f'[web] Пользователь {user.username} запросил восстановление пароля')
 
