@@ -81,7 +81,7 @@
     </div>
     <div class="form-floating">
       <input type="password" class="form-control" id="floatingPassword" placeholder="password"
-             onclick="document.getElementById('ded_logo').src = 'logo.png'">
+             onbeforeinput="document.getElementById('ded_logo').src = '/public/logo.png'">
       <label for="floatingPassword">Пароль</label>
     </div>
     <button class="w-100 btn btn-lg btn-primary" onclick="login()">Войти</button>
