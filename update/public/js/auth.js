@@ -36,8 +36,10 @@ async function login() {
         window.location.href = '/';
     } else if (status === 400) {
         document.getElementById('status').innerHTML = 'Неверный логин или пароль';
+        document.getElementById('ded_logo').src = '/public/logo_ng.png';
     } else if (status === 422) {
         document.getElementById('status').innerHTML = 'Некорректные значения в полях.';
+        document.getElementById('ded_logo').src = '/public/logo_ng.png';
     }
 }
 async function change_password_button(token) {

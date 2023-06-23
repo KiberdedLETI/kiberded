@@ -72,7 +72,7 @@
 
 <main class="form-signin w-100 m-auto">
   <div>
-    <img class="mb-4" src="/public/logo.png" alt="" width="120" height="120">
+    <img id='ded_logo' class="mb-4" src="/public/logo_ng.png" alt="" width="120" height="120">
     <h1 class="h3 mb-3 fw-normal">Авторизация</h1>
 
     <div class="form-floating">
@@ -80,7 +80,8 @@
       <label for="floatingInput">Логин</label>
     </div>
     <div class="form-floating">
-      <input type="password" class="form-control" id="floatingPassword" placeholder="password">
+      <input type="password" class="form-control" id="floatingPassword" placeholder="password"
+             oninput="document.getElementById('ded_logo').src = '/public/logo.png'">
       <label for="floatingPassword">Пароль</label>
     </div>
     <button class="w-100 btn btn-lg btn-primary" onclick="login()">Войти</button>
