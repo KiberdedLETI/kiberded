@@ -179,7 +179,11 @@ def get_message(num, imap_url, login, password, vk):  # получает пос�
 def get_uid(imap_url, login, password, vk, group):
     try:
         mail = imaplib.IMAP4_SSL(imap_url)
-        mail.login(login, password)
+        try:  # Отдельная обработка неудачного входа на почту
+            mail.login(login, password)
+        except imaplib.IMAP4.error as auth_error:
+            logger.error(f"Ошибка аутентификации {group} {login} ({auth_error})")
+            return None
         mail.list()
         mail.select()
         result, data_ids = mail.uid('search', None, "ALL")
