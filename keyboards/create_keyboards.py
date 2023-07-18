@@ -1,3 +1,4 @@
+import json
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
 """
@@ -95,98 +96,6 @@ keyboard_main.add_button('Прочее', color=VkKeyboardColor.NEGATIVE,
                          payload={"type": "navigation",
                                   "place": "other"})
 
-# Те же клавиатуры, только для периода сессии TODO
-'''keyboard_main_mail_cal = VkKeyboard(one_time=False)
-keyboard_main_mail_cal.add_button('Расписание', color=VkKeyboardColor.NEGATIVE,
-                                  payload={"type": "navigation",
-                                           "place": "table"})
-keyboard_main_mail_cal.add_button('Методички', color=VkKeyboardColor.PRIMARY,
-                                  payload={"type": "navigation",
-                                           "place": "books"})
-keyboard_main_mail_cal.add_button('Преподы', color=VkKeyboardColor.POSITIVE,
-                                  payload={"type": "navigation",
-                                           "place": "prepods"})
-keyboard_main_mail_cal.add_line()
-keyboard_main_mail_cal.add_button('Календарь', color=VkKeyboardColor.SECONDARY,
-                                  payload={"type": "navigation",
-                                           "place": "calendar"})
-keyboard_main_mail_cal.add_openlink_button('Мудл', link='https://vec.etu.ru')
-keyboard_main_mail_cal.add_line()
-keyboard_main_mail_cal.add_openlink_button('Личный кабинет', link='https://lk.etu.ru')
-keyboard_main_mail_cal.add_openlink_button('Почта группы', link='mail_url_placeholder')
-keyboard_main_mail_cal.add_line()
-keyboard_main_mail_cal.add_button('Прочее', color=VkKeyboardColor.NEGATIVE,
-                                  payload={"type": "navigation",
-                                           "place": "other"})
-
-
-# Основная клавиатура без календаря и с почтой
-keyboard_main_mail = VkKeyboard(one_time=False)
-keyboard_main_mail.add_button('Расписание', color=VkKeyboardColor.NEGATIVE,
-                              payload={"type": "navigation",
-                                       "place": "table"})
-keyboard_main_mail.add_button('Методички', color=VkKeyboardColor.PRIMARY,
-                              payload={"type": "navigation",
-                                       "place": "books"})
-keyboard_main_mail.add_line()
-keyboard_main_mail.add_openlink_button('Почта группы', link='mail_url_placeholder')
-keyboard_main_mail.add_button('Преподы', color=VkKeyboardColor.POSITIVE,
-                              payload={"type": "navigation",
-                                       "place": "prepods"})
-keyboard_main_mail.add_line()
-keyboard_main_mail.add_openlink_button('Мудл', link='https://vec.etu.ru')
-keyboard_main_mail.add_openlink_button('Личный кабинет', link='https://lk.etu.ru')
-keyboard_main_mail.add_line()
-keyboard_main_mail.add_button('Прочее', color=VkKeyboardColor.NEGATIVE,
-                              payload={"type": "navigation",
-                                       "place": "other"})
-
-
-# Основная клавиатура без почты с календарем
-keyboard_main_cal = VkKeyboard(one_time=False)
-keyboard_main_cal.add_button('Расписание', color=VkKeyboardColor.NEGATIVE,
-                             payload={"type": "navigation",
-                                      "place": "table"})
-keyboard_main_cal.add_button('Календарь', color=VkKeyboardColor.SECONDARY,
-                             payload={"type": "navigation",
-                                      "place": "calendar"})
-keyboard_main_cal.add_line()
-keyboard_main_cal.add_button('Методички', color=VkKeyboardColor.PRIMARY,
-                             payload={"type": "navigation",
-                                      "place": "books"})
-keyboard_main_cal.add_button('Преподы', color=VkKeyboardColor.POSITIVE,
-                             payload={"type": "navigation",
-                                      "place": "prepods"})
-keyboard_main_cal.add_line()
-keyboard_main_cal.add_openlink_button('Мудл', link='https://vec.etu.ru')
-keyboard_main_cal.add_openlink_button('Личный кабинет', link='https://lk.etu.ru')
-keyboard_main_cal.add_line()
-keyboard_main_cal.add_button('Прочее', color=VkKeyboardColor.NEGATIVE,
-                             payload={"type": "navigation",
-                                      "place": "other"})
-
-
-# Основная клавиатура без почты и календаря
-keyboard_main = VkKeyboard(one_time=False)
-keyboard_main.add_button('Расписание', color=VkKeyboardColor.NEGATIVE,
-                         payload={"type": "navigation",
-                                  "place": "table"})
-keyboard_main.add_line()
-keyboard_main.add_button('Методички', color=VkKeyboardColor.PRIMARY,
-                         payload={"type": "navigation",
-                                  "place": "books"})
-keyboard_main.add_button('Преподы', color=VkKeyboardColor.POSITIVE,
-                         payload={"type": "navigation",
-                                  "place": "prepods"})
-
-keyboard_main.add_line()
-keyboard_main.add_openlink_button('Мудл', link='https://vec.etu.ru')
-keyboard_main.add_openlink_button('Личный кабинет', link='https://lk.etu.ru')
-keyboard_main.add_line()
-keyboard_main.add_button('Прочее', color=VkKeyboardColor.NEGATIVE,
-                         payload={"type": "navigation",
-                                  "place": "other"})'''
-
 # ВЛОЖЕННЫЕ КЛАВИАТУРЫ
 # Клавиатура "Расписания" пустая
 keyboard_table_ = VkKeyboard(one_time=False)
@@ -199,6 +108,63 @@ keyboard_table_.add_button('Вернуться в начало',
                            payload={"type": "navigation",
                                     "place": "main"})
 
+# Клавиатура "Расписания" СЕССИЯ
+keyboard_table_exam = VkKeyboard(one_time=False)
+keyboard_table_exam.add_button('Расписание экзаменов', color=VkKeyboardColor.NEGATIVE,
+                               payload={"type": "action",
+                                        "action_type": "message",
+                                        "command": "table_exam"})
+keyboard_table_exam.add_line()
+keyboard_table_exam.add_button('Вернуться в начало',
+                               payload={"type": "navigation",
+                                        "place": "main"})
+
+# Клавиатура "Расписания" обычная
+keyboard_table_study = VkKeyboard(one_time=False)
+keyboard_table_study.add_button('Расписание на сегодня', color=VkKeyboardColor.PRIMARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_today"})
+keyboard_table_study.add_line()
+keyboard_table_study.add_button('Расписание на завтра', color=VkKeyboardColor.SECONDARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_tomorrow"})
+keyboard_table_study.add_line()
+keyboard_table_study.add_button('На другие дни', color=VkKeyboardColor.NEGATIVE,
+                                payload={"type": "navigation",
+                                         "place": "table_other"})
+keyboard_table_study.add_line()
+keyboard_table_study.add_button('Вернуться в начало',
+                                payload={"type": "navigation",
+                                         "place": "main"})
+
+# Клавиатура "Расписания" смешанная (экзамены + расписание)
+keyboard_table_mixed = VkKeyboard(one_time=False)
+keyboard_table_mixed.add_button('Расписание экзаменов', color=VkKeyboardColor.NEGATIVE,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_exam"})
+keyboard_table_mixed.add_line()
+keyboard_table_mixed.add_button('Расписание на сегодня', color=VkKeyboardColor.PRIMARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_today"})
+keyboard_table_mixed.add_line()
+keyboard_table_mixed.add_button('Расписание на завтра', color=VkKeyboardColor.SECONDARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_tomorrow"})
+keyboard_table_mixed.add_line()
+keyboard_table_mixed.add_button('На другие дни', color=VkKeyboardColor.NEGATIVE,
+                                payload={"type": "navigation",
+                                         "place": "table_other"})
+keyboard_table_mixed.add_line()
+keyboard_table_mixed.add_button('Вернуться в начало',
+                                payload={"type": "navigation",
+                                         "place": "main"})
+
+# Аналогичные клавиатуры с доп.группой
 # Клавиатура "Расписания" СЕССИЯ
 keyboard_table_exam = VkKeyboard(one_time=False)
 keyboard_table_exam.add_button('Расписание экзаменов', color=VkKeyboardColor.NEGATIVE,
@@ -312,77 +278,77 @@ keyboard_other.add_button('Вернуться в начало',
                                    "place": "main"})
 
 # Клавиатура "Настройки рассылки расписания"; кнопки - тип, время, отписаться, назад
-kb_table_settings = VkKeyboard(one_time=False)
-kb_table_settings.add_button('Тип', color=VkKeyboardColor.PRIMARY,
-                                payload={"type": "navigation",
-                                         "place": "table_settings_type"})
-kb_table_settings.add_line()
-kb_table_settings.add_button('Время', color=VkKeyboardColor.PRIMARY,
-                                  payload={"type": "action",
-                                           "action_type": "shiza",
-                                           "target": "table_settings_time"})
-kb_table_settings.add_line()
-kb_table_settings.add_button('Отписаться', color=VkKeyboardColor.NEGATIVE,
-                                  payload={"type": "navigation",
-                                           "place": "kb_table_settings_unsub"})
-kb_table_settings.add_line()
-kb_table_settings.add_button('Назад', color=VkKeyboardColor.SECONDARY,
-                                        payload={"type": "navigation",
-                                                 "place": "other"})
+keyboard_table_settings = VkKeyboard(one_time=False)
+keyboard_table_settings.add_button('Тип', color=VkKeyboardColor.PRIMARY,
+                                   payload={"type": "navigation",
+                                            "place": "table_settings_type"})
+keyboard_table_settings.add_line()
+keyboard_table_settings.add_button('Время', color=VkKeyboardColor.PRIMARY,
+                                   payload={"type": "action",
+                                            "action_type": "shiza",
+                                            "target": "table_settings_time"})
+keyboard_table_settings.add_line()
+keyboard_table_settings.add_button('Отписаться', color=VkKeyboardColor.NEGATIVE,
+                                   payload={"type": "navigation",
+                                            "place": "kb_table_settings_unsub"})
+keyboard_table_settings.add_line()
+keyboard_table_settings.add_button('Назад', color=VkKeyboardColor.SECONDARY,
+                                   payload={"type": "navigation",
+                                            "place": "other"})
 
 # Клавиатура "Настройки типа рассылки расписания"; кнопки - ежедневно, еженедельно, обе, назад
-kb_table_settings_type = VkKeyboard(one_time=False)
-kb_table_settings_type.add_button('Ежедневно', color=VkKeyboardColor.PRIMARY,
-                                  payload={"type": "action",
-                                           "action_type": "message",
-                                           "command": "table_set_type",
-                                           "arg": "daily"})
-kb_table_settings_type.add_line()
-kb_table_settings_type.add_button('Еженедельно', color=VkKeyboardColor.PRIMARY,
-                                  payload={"type": "action",
-                                           "action_type": "message",
-                                           "command": "table_set_type",
-                                           "arg": "weekly"})
-kb_table_settings_type.add_line()
-kb_table_settings_type.add_button('Оба', color=VkKeyboardColor.PRIMARY,
-                                  payload={"type": "action",
-                                           "action_type": "message",
-                                           "command": "table_set_type",
-                                           "arg": "both"})
-kb_table_settings_type.add_line()
-kb_table_settings_type.add_button('Назад', color=VkKeyboardColor.NEGATIVE,
+keyboard_table_settings_type = VkKeyboard(one_time=False)
+keyboard_table_settings_type.add_button('Ежедневно', color=VkKeyboardColor.PRIMARY,
+                                        payload={"type": "action",
+                                                 "action_type": "message",
+                                                 "command": "table_set_type",
+                                                 "arg": "daily"})
+keyboard_table_settings_type.add_line()
+keyboard_table_settings_type.add_button('Еженедельно', color=VkKeyboardColor.PRIMARY,
+                                        payload={"type": "action",
+                                                 "action_type": "message",
+                                                 "command": "table_set_type",
+                                                 "arg": "weekly"})
+keyboard_table_settings_type.add_line()
+keyboard_table_settings_type.add_button('Оба', color=VkKeyboardColor.PRIMARY,
+                                        payload={"type": "action",
+                                                 "action_type": "message",
+                                                 "command": "table_set_type",
+                                                 "arg": "both"})
+keyboard_table_settings_type.add_line()
+keyboard_table_settings_type.add_button('Назад', color=VkKeyboardColor.NEGATIVE,
                                         payload={"type": "navigation",
                                                  "place": "kb_table_settings"})
 
 # Клавиатура "Настройки типа рассылки расписания" С КАЛЕНДАРЕМ; кнопки - ежедневно, еженедельно, обе, назад
-kb_table_settings_type_cal = VkKeyboard(one_time=False)
-kb_table_settings_type_cal.add_button('Календарь', color=VkKeyboardColor.PRIMARY,
-                                      payload={"type": "action",
-                                               "action_type": "message",
-                                               "command": "table_set_type",
-                                               "arg": "calendar"})
-kb_table_settings_type_cal.add_line()
-kb_table_settings_type_cal.add_button('Ежедневно', color=VkKeyboardColor.PRIMARY,
-                                      payload={"type": "action",
-                                               "action_type": "message",
-                                               "command": "table_set_type",
-                                               "arg": "daily"})
-kb_table_settings_type_cal.add_line()
-kb_table_settings_type_cal.add_button('Еженедельно', color=VkKeyboardColor.PRIMARY,
-                                      payload={"type": "action",
-                                               "action_type": "message",
-                                               "command": "table_set_type",
-                                               "arg": "weekly"})
-kb_table_settings_type_cal.add_line()
-kb_table_settings_type_cal.add_button('Оба', color=VkKeyboardColor.PRIMARY,
-                                      payload={"type": "action",
-                                               "action_type": "message",
-                                               "command": "table_set_type",
-                                               "arg": "both"})
-kb_table_settings_type_cal.add_line()
-kb_table_settings_type_cal.add_button('Назад', color=VkKeyboardColor.NEGATIVE,
-                                        payload={"type": "navigation",
-                                                 "place": "kb_table_settings"})
+keyboard_table_settings_type_cal = VkKeyboard(one_time=False)
+keyboard_table_settings_type_cal.add_button('Календарь', color=VkKeyboardColor.PRIMARY,
+                                            payload={"type": "action",
+                                                     "action_type": "message",
+                                                     "command": "table_set_type",
+                                                     "arg": "calendar"})
+keyboard_table_settings_type_cal.add_line()
+keyboard_table_settings_type_cal.add_button('Ежедневно', color=VkKeyboardColor.PRIMARY,
+                                            payload={"type": "action",
+                                                     "action_type": "message",
+                                                     "command": "table_set_type",
+                                                     "arg": "daily"})
+keyboard_table_settings_type_cal.add_line()
+keyboard_table_settings_type_cal.add_button('Еженедельно', color=VkKeyboardColor.PRIMARY,
+                                            payload={"type": "action",
+                                                     "action_type": "message",
+                                                     "command": "table_set_type",
+                                                     "arg": "weekly"})
+keyboard_table_settings_type_cal.add_line()
+keyboard_table_settings_type_cal.add_button('Оба', color=VkKeyboardColor.PRIMARY,
+                                            payload={"type": "action",
+                                                     "action_type": "message",
+                                                     "command": "table_set_type",
+                                                     "arg": "both"})
+keyboard_table_settings_type_cal.add_line()
+keyboard_table_settings_type_cal.add_button('Назад', color=VkKeyboardColor.NEGATIVE,
+                                            payload={"type": "navigation",
+                                                     "place": "kb_table_settings"})
 
 # Клавиатура "Расписания на другие дни"; even - чёт, odd - нечёт
 # Четная неделя - "главная"
@@ -534,6 +500,157 @@ kb_table_other_odd.add_button('Вернуться в расписания', colo
 kb_table_other_odd.add_button('Вернуться в начало',
                               payload={"type": "navigation",
                                        "place": "main"})
+
+# Аналогичные клавиатуры расписания по неделям, но для доп. группы пользователя
+# Четная неделя - "главная"
+kb_table_other_even_2 = VkKeyboard(one_time=False)
+kb_table_other_even_2.add_button('Понедельник (чёт)', color=VkKeyboardColor.PRIMARY,
+                                 payload={"type": "action",
+                                          "action_type": "message",
+                                          "command": "table_weekday_2",
+                                          "weekday": "Понедельник (чёт)"})
+kb_table_other_even_2.add_button('Понедельник (нечёт)', color=VkKeyboardColor.SECONDARY,
+                                 payload={"type": "action",
+                                          "action_type": "message",
+                                          "command": "table_weekday_2",
+                                          "weekday": "Понедельник (нечёт)"})
+kb_table_other_even_2.add_line()
+kb_table_other_even_2.add_button('Вторник (чёт)', color=VkKeyboardColor.PRIMARY,
+                                 payload={"type": "action",
+                                          "action_type": "message",
+                                          "command": "table_weekday_2",
+                                          "weekday": "Вторник (чёт)"})
+kb_table_other_even_2.add_button('Вторник (нечёт)', color=VkKeyboardColor.SECONDARY,
+                                 payload={"type": "action",
+                                          "action_type": "message",
+                                          "command": "table_weekday_2",
+                                          "weekday": "Вторник (нечёт)"})
+kb_table_other_even_2.add_line()
+kb_table_other_even_2.add_button('Среда (чёт)', color=VkKeyboardColor.PRIMARY,
+                                 payload={"type": "action",
+                                          "action_type": "message",
+                                          "command": "table_weekday_2",
+                                          "weekday": "Среда (чёт)"})
+kb_table_other_even_2.add_button('Среда (нечёт)', color=VkKeyboardColor.SECONDARY,
+                                 payload={"type": "action",
+                                          "action_type": "message",
+                                          "command": "table_weekday_2",
+                                          "weekday": "Среда (нечёт)"})
+kb_table_other_even_2.add_line()
+kb_table_other_even_2.add_button('Четверг (чёт)', color=VkKeyboardColor.PRIMARY,
+                                 payload={"type": "action",
+                                          "action_type": "message",
+                                          "command": "table_weekday_2",
+                                          "weekday": "Четверг (чёт)"})
+kb_table_other_even_2.add_button('Четверг (нечёт)', color=VkKeyboardColor.SECONDARY,
+                                 payload={"type": "action",
+                                          "action_type": "message",
+                                          "command": "table_weekday_2",
+                                          "weekday": "Четверг (нечёт)"})
+kb_table_other_even_2.add_line()
+kb_table_other_even_2.add_button('Пятница (чёт)', color=VkKeyboardColor.PRIMARY,
+                                 payload={"type": "action",
+                                          "action_type": "message",
+                                          "command": "table_weekday_2",
+                                          "weekday": "Пятница (чёт)"})
+kb_table_other_even_2.add_button('Пятница (нечёт)', color=VkKeyboardColor.SECONDARY,
+                                 payload={"type": "action",
+                                          "action_type": "message",
+                                          "command": "table_weekday_2",
+                                          "weekday": "Пятница (нечёт)"})
+kb_table_other_even_2.add_line()
+kb_table_other_even_2.add_button('Суббота (чёт)', color=VkKeyboardColor.PRIMARY,
+                                 payload={"type": "action",
+                                          "action_type": "message",
+                                          "command": "table_weekday_2",
+                                          "weekday": "Суббота (чёт)"})
+kb_table_other_even_2.add_button('Суббота (нечёт)', color=VkKeyboardColor.SECONDARY,
+                                 payload={"type": "action",
+                                          "action_type": "message",
+                                          "command": "table_weekday_2",
+                                          "weekday": "Суббота (нечёт)"})
+kb_table_other_even_2.add_line()
+kb_table_other_even_2.add_button('Вернуться в расписания', color=VkKeyboardColor.POSITIVE,
+                                 payload={"type": "navigation",
+                                          "place": "table"})
+kb_table_other_even_2.add_button('Вернуться в начало',
+                                 payload={"type": "navigation",
+                                          "place": "main"})
+
+# нечетная неделя - "главная"
+kb_table_other_odd_2 = VkKeyboard(one_time=False)
+kb_table_other_odd_2.add_button('Понедельник (чёт)', color=VkKeyboardColor.SECONDARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_weekday_2",
+                                         "weekday": "Понедельник (чёт)"})
+kb_table_other_odd_2.add_button('Понедельник (нечёт)', color=VkKeyboardColor.PRIMARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_weekday_2",
+                                         "weekday": "Понедельник (нечёт)"})
+kb_table_other_odd_2.add_line()
+kb_table_other_odd_2.add_button('Вторник (чёт)', color=VkKeyboardColor.SECONDARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_weekday_2",
+                                         "weekday": "Вторник (чёт)"})
+kb_table_other_odd_2.add_button('Вторник (нечёт)', color=VkKeyboardColor.PRIMARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_weekday_2",
+                                         "weekday": "Вторник (нечёт)"})
+kb_table_other_odd_2.add_line()
+kb_table_other_odd_2.add_button('Среда (чёт)', color=VkKeyboardColor.SECONDARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_weekday_2",
+                                         "weekday": "Среда (чёт)"})
+kb_table_other_odd_2.add_button('Среда (нечёт)', color=VkKeyboardColor.PRIMARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_weekday_2",
+                                         "weekday": "Среда (нечёт)"})
+kb_table_other_odd_2.add_line()
+kb_table_other_odd_2.add_button('Четверг (чёт)', color=VkKeyboardColor.SECONDARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_weekday_2",
+                                         "weekday": "Четверг (чёт)"})
+kb_table_other_odd_2.add_button('Четверг (нечёт)', color=VkKeyboardColor.PRIMARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_weekday_2",
+                                         "weekday": "Четверг (нечёт)"})
+kb_table_other_odd_2.add_line()
+kb_table_other_odd_2.add_button('Пятница (чёт)', color=VkKeyboardColor.SECONDARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_weekday_2",
+                                         "weekday": "Пятница (чёт)"})
+kb_table_other_odd_2.add_button('Пятница (нечёт)', color=VkKeyboardColor.PRIMARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_weekday_2",
+                                         "weekday": "Пятница (нечёт)"})
+kb_table_other_odd_2.add_line()
+kb_table_other_odd_2.add_button('Суббота (чёт)', color=VkKeyboardColor.SECONDARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_weekday_2",
+                                         "weekday": "Суббота (чёт)"})
+kb_table_other_odd_2.add_button('Суббота (нечёт)', color=VkKeyboardColor.PRIMARY,
+                                payload={"type": "action",
+                                         "action_type": "message",
+                                         "command": "table_weekday_2",
+                                         "weekday": "Суббота (нечёт)"})
+kb_table_other_odd_2.add_line()
+kb_table_other_odd_2.add_button('Вернуться в расписания', color=VkKeyboardColor.POSITIVE,
+                                payload={"type": "navigation",
+                                         "place": "table"})
+kb_table_other_odd_2.add_button('Вернуться в начало',
+                                payload={"type": "navigation",
+                                         "place": "main"})
 
 # КЛАВИАТУРЫ НАСТРОЕК
 
@@ -737,87 +854,39 @@ keyboard.add_button(label='Конец работы', color=VkKeyboardColor.NEGAT
 '''
 
 # ЗАПИСЬ КЛАВИАТУР
-# ГЛАВНЫЕ
-with open('keyboard_main.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_main.get_keyboard())
+kbs = ["keyboard_main",
+       "keyboard_main_mail",
+       "keyboard_main_cal",
+       "keyboard_main_mail_cal",
+       "keyboard_table_study",
+       "keyboard_table_exam",
+       "keyboard_table_mixed",
+       "keyboard_table_",
+       "kb_table_other_even",
+       "kb_table_other_even_2",
+       "kb_table_other_odd",
+       "kb_table_other_odd_2",
+       "keyboard_calendar",
+       "keyboard_other",
+       "keyboard_settings_admin",
+       "keyboard_settings_moderator",
+       "keyboard_settings_user",
+       "keyboard_settings_donator",
+       "keyboard_table_settings",
+       "keyboard_table_settings_type",
+       "keyboard_table_settings_type_cal",
+       "keyboard_change_group",
+       "false_command_keyboard",
+       "keyboard_shiza_moderator",
+       "keyboard_shiza_admin",
+       "keyboard_email",
+       "keyboard_gcal",
+       "keyboard_books",
+       "keyboard_end"]
 
-with open('keyboard_main_mail.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_main_mail.get_keyboard())
-
-with open('keyboard_main_cal.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_main_cal.get_keyboard())
-
-with open('keyboard_main_mail_cal.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_main_mail_cal.get_keyboard())
-
-# ВЛОЖЕННЫЕ
-with open('keyboard_table_study.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_table_study.get_keyboard())
-
-with open('keyboard_table_exam.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_table_exam.get_keyboard())
-
-with open('keyboard_table_mixed.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_table_mixed.get_keyboard())
-
-with open('keyboard_table_.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_table_.get_keyboard())
-
-with open('kb_table_other_even.json', 'w', encoding='utf-8') as f:
-    f.write(kb_table_other_even.get_keyboard())
-
-with open('kb_table_other_odd.json', 'w', encoding='utf-8') as f:
-    f.write(kb_table_other_odd.get_keyboard())
-
-with open('keyboard_calendar.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_calendar.get_keyboard())
-
-with open('keyboard_other.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_other.get_keyboard())
-
-# настройки
-with open('keyboard_settings_admin.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_settings_admin.get_keyboard())
-
-with open('keyboard_settings_moderator.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_settings_moderator.get_keyboard())
-
-with open('keyboard_settings_user.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_settings_user.get_keyboard())
-
-with open('keyboard_settings_donator.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_settings_donator.get_keyboard())
-
-with open('keyboard_table_settings.json', 'w', encoding='utf-8') as f:
-    f.write(kb_table_settings.get_keyboard())
-
-with open('keyboard_table_settings_type.json', 'w', encoding='utf-8') as f:
-    f.write(kb_table_settings_type.get_keyboard())
-
-with open('keyboard_table_settings_type_cal.json', 'w', encoding='utf-8') as f:
-    f.write(kb_table_settings_type_cal.get_keyboard())
-
-# ШИЗА
-with open('keyboard_change_group.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_change_group.get_keyboard())
-
-with open('false_command_keyboard.json', 'w', encoding='utf-8') as f:
-    f.write(false_command_keyboard.get_keyboard())
-
-with open('keyboard_shiza_moderator.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_shiza_moderator.get_keyboard())
-
-with open('keyboard_shiza_admin.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_shiza_admin.get_keyboard())
-
-with open('keyboard_email.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_email.get_keyboard())
-
-with open('keyboard_gcal.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_gcal.get_keyboard())
-
-with open('keyboard_books.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_books.get_keyboard())
-
-with open('keyboard_end.json', 'w', encoding='utf-8') as f:
-    f.write(keyboard_end.get_keyboard())
+print("Генерация общих клавиатур ВКонтакте...")
+for k in kbs:
+    print(k)
+    with open(f'{k}.json', 'w', encoding='utf-8') as f:
+        f.write(json.dumps(json.loads(eval(k).get_keyboard()), ensure_ascii=False, indent=4))
+print("Готово!")

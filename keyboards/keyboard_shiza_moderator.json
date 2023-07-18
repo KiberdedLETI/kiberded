@@ -1,1 +1,56 @@
-{"one_time":false,"inline":true,"buttons":[[{"color":"positive","action":{"type":"text","payload":"{\"type\":\"shiza_action\",\"command\":\"watch_databases\"}","label":"Просмотр БД"}}],[{"color":"negative","action":{"type":"text","payload":"{\"type\":\"shiza_action\",\"command\":\"edit_databases\"}","label":"Редактирование БД"}}],[{"color":"positive","action":{"type":"text","payload":"{\"type\":\"shiza_action\",\"command\":\"add_moderator\"}","label":"Добавить модератора"}}],[{"color":"positive","action":{"type":"text","payload":"{\"type\":\"shiza_navigation\",\"place\":\"add_preset_books_info\"}","label":"Добавить методички"}}],[{"color":"positive","action":{"type":"text","payload":"{\"type\":\"shiza_navigation\",\"place\":\"end_databases\"}","label":"Конец работы"}}]]}
+{
+    "one_time": false,
+    "inline": true,
+    "buttons": [
+        [
+            {
+                "color": "positive",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"shiza_action\",\"command\":\"watch_databases\"}",
+                    "label": "Просмотр БД"
+                }
+            }
+        ],
+        [
+            {
+                "color": "negative",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"shiza_action\",\"command\":\"edit_databases\"}",
+                    "label": "Редактирование БД"
+                }
+            }
+        ],
+        [
+            {
+                "color": "positive",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"shiza_action\",\"command\":\"add_moderator\"}",
+                    "label": "Добавить модератора"
+                }
+            }
+        ],
+        [
+            {
+                "color": "positive",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"shiza_navigation\",\"place\":\"add_preset_books_info\"}",
+                    "label": "Добавить методички"
+                }
+            }
+        ],
+        [
+            {
+                "color": "positive",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"shiza_navigation\",\"place\":\"end_databases\"}",
+                    "label": "Конец работы"
+                }
+            }
+        ]
+    ]
+}

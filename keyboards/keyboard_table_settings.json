@@ -7,18 +7,18 @@
                 "color": "primary",
                 "action": {
                     "type": "text",
-                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_today\"}",
-                    "label": "Расписание на сегодня"
+                    "payload": "{\"type\":\"navigation\",\"place\":\"table_settings_type\"}",
+                    "label": "Тип"
                 }
             }
         ],
         [
             {
-                "color": "secondary",
+                "color": "primary",
                 "action": {
                     "type": "text",
-                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_tomorrow\"}",
-                    "label": "Расписание на завтра"
+                    "payload": "{\"type\":\"action\",\"action_type\":\"shiza\",\"target\":\"table_settings_time\"}",
+                    "label": "Время"
                 }
             }
         ],
@@ -27,8 +27,8 @@
                 "color": "negative",
                 "action": {
                     "type": "text",
-                    "payload": "{\"type\":\"navigation\",\"place\":\"table_other\"}",
-                    "label": "На другие дни"
+                    "payload": "{\"type\":\"navigation\",\"place\":\"kb_table_settings_unsub\"}",
+                    "label": "Отписаться"
                 }
             }
         ],
@@ -37,8 +37,8 @@
                 "color": "secondary",
                 "action": {
                     "type": "text",
-                    "payload": "{\"type\":\"navigation\",\"place\":\"main\"}",
-                    "label": "Вернуться в начало"
+                    "payload": "{\"type\":\"navigation\",\"place\":\"other\"}",
+                    "label": "Назад"
                 }
             }
         ]

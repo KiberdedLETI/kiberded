@@ -1,132 +1,132 @@
 {
-  "one_time": false,
-  "inline": false,
-  "buttons": [
-    [
-      {
-        "color": "secondary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Понедельник (чёт)\"}",
-          "label": "Понедельник (чёт)"
-        }
-      },
-      {
-        "color": "primary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Понедельник (нечёт)\"}",
-          "label": "Понедельник (нечёт)"
-        }
-      }
-    ],
-    [
-      {
-        "color": "secondary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Вторник (чёт)\"}",
-          "label": "Вторник (чёт)"
-        }
-      },
-      {
-        "color": "primary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Вторник (нечёт)\"}",
-          "label": "Вторник (нечёт)"
-        }
-      }
-    ],
-    [
-      {
-        "color": "secondary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Среда (чёт)\"}",
-          "label": "Среда (чёт)"
-        }
-      },
-      {
-        "color": "primary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Среда (нечёт)\"}",
-          "label": "Среда (нечёт)"
-        }
-      }
-    ],
-    [
-      {
-        "color": "secondary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Четверг (чёт)\"}",
-          "label": "Четверг (чёт)"
-        }
-      },
-      {
-        "color": "primary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Четверг (нечёт)\"}",
-          "label": "Четверг (нечёт)"
-        }
-      }
-    ],
-    [
-      {
-        "color": "secondary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Пятница (чёт)\"}",
-          "label": "Пятница (чёт)"
-        }
-      },
-      {
-        "color": "primary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Пятница (нечёт)\"}",
-          "label": "Пятница (нечёт)"
-        }
-      }
-    ],
-    [
-      {
-        "color": "secondary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Суббота (чёт)\"}",
-          "label": "Суббота (чёт)"
-        }
-      },
-      {
-        "color": "primary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Суббота (нечёт)\"}",
-          "label": "Суббота (нечёт)"
-        }
-      }
-    ],
-    [
-      {
-        "color": "positive",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"navigation\",\"place\":\"table\"}",
-          "label": "Вернуться в расписания"
-        }
-      },
-      {
-        "color": "secondary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"navigation\",\"place\":\"main\"}",
-          "label": "Вернуться в начало"
-        }
-      }
+    "one_time": false,
+    "inline": false,
+    "buttons": [
+        [
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Понедельник (чёт)\"}",
+                    "label": "Понедельник (чёт)"
+                }
+            },
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Понедельник (нечёт)\"}",
+                    "label": "Понедельник (нечёт)"
+                }
+            }
+        ],
+        [
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Вторник (чёт)\"}",
+                    "label": "Вторник (чёт)"
+                }
+            },
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Вторник (нечёт)\"}",
+                    "label": "Вторник (нечёт)"
+                }
+            }
+        ],
+        [
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Среда (чёт)\"}",
+                    "label": "Среда (чёт)"
+                }
+            },
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Среда (нечёт)\"}",
+                    "label": "Среда (нечёт)"
+                }
+            }
+        ],
+        [
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Четверг (чёт)\"}",
+                    "label": "Четверг (чёт)"
+                }
+            },
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Четверг (нечёт)\"}",
+                    "label": "Четверг (нечёт)"
+                }
+            }
+        ],
+        [
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Пятница (чёт)\"}",
+                    "label": "Пятница (чёт)"
+                }
+            },
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Пятница (нечёт)\"}",
+                    "label": "Пятница (нечёт)"
+                }
+            }
+        ],
+        [
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Суббота (чёт)\"}",
+                    "label": "Суббота (чёт)"
+                }
+            },
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_weekday_2\",\"weekday\":\"Суббота (нечёт)\"}",
+                    "label": "Суббота (нечёт)"
+                }
+            }
+        ],
+        [
+            {
+                "color": "positive",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"navigation\",\"place\":\"table\"}",
+                    "label": "Вернуться в расписания"
+                }
+            },
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"navigation\",\"place\":\"main\"}",
+                    "label": "Вернуться в начало"
+                }
+            }
+        ]
     ]
-  ]
 }

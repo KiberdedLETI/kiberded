@@ -1,1 +1,16 @@
-{"inline_keyboard": [[{"text": "\u0411\u0440\u043e\u0441\u0438\u0442\u044c \u0435\u0449\u0451 \u0440\u0430\u0437", "callback_data": "t:action,c:heads_or_tails_toss"}], [{"text": "\u0412\u0435\u0440\u043d\u0443\u0442\u044c\u0441\u044f \u0432 \u043c\u0438\u043d\u0438-\u0438\u0433\u0440\u044b", "callback_data": "t:action,c:minigames"}]]}
+{
+    "inline_keyboard": [
+        [
+            {
+                "text": "Бросить ещё раз",
+                "callback_data": "t:action,c:heads_or_tails_toss"
+            }
+        ],
+        [
+            {
+                "text": "Вернуться в мини-игры",
+                "callback_data": "t:action,c:minigames"
+            }
+        ]
+    ]
+}

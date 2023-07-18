@@ -1,1 +1,16 @@
-{"one_time":false,"inline":true,"buttons":[[{"color":"positive","action":{"type":"text","payload":"{\"type\":\"shiza_navigation\",\"place\":\"start_databases\"}","label":"В начало"}}]]}
+{
+    "one_time": false,
+    "inline": true,
+    "buttons": [
+        [
+            {
+                "color": "positive",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"shiza_navigation\",\"place\":\"start_databases\"}",
+                    "label": "В начало"
+                }
+            }
+        ]
+    ]
+}

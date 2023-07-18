@@ -1,1 +1,10 @@
-{"inline_keyboard": [[{"text": "\u0420\u0430\u0441\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u044d\u043a\u0437\u0430\u043c\u0435\u043d\u043e\u0432", "callback_data": "t:action,c:table_exam"}]]}
+{
+    "inline_keyboard": [
+        [
+            {
+                "text": "Расписание экзаменов",
+                "callback_data": "t:action,c:table_exam"
+            }
+        ]
+    ]
+}

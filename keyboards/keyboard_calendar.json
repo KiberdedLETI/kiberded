@@ -1,1 +1,36 @@
-{"one_time":false,"inline":false,"buttons":[[{"color":"positive","action":{"type":"text","payload":"{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"calendar_today\"}","label":"Календарь на сегодня"}}],[{"color":"positive","action":{"type":"text","payload":"{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"calendar_tomorrow\"}","label":"Календарь на завтра"}}],[{"color":"secondary","action":{"type":"text","payload":"{\"type\":\"navigation\",\"place\":\"main\"}","label":"Вернуться в начало"}}]]}
+{
+    "one_time": false,
+    "inline": false,
+    "buttons": [
+        [
+            {
+                "color": "positive",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"calendar_today\"}",
+                    "label": "Календарь на сегодня"
+                }
+            }
+        ],
+        [
+            {
+                "color": "positive",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"calendar_tomorrow\"}",
+                    "label": "Календарь на завтра"
+                }
+            }
+        ],
+        [
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"navigation\",\"place\":\"main\"}",
+                    "label": "Вернуться в начало"
+                }
+            }
+        ]
+    ]
+}

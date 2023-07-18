@@ -1,1 +1,34 @@
-{"inline_keyboard": [[{"text": "\u0420\u0430\u0441\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u044d\u043a\u0437\u0430\u043c\u0435\u043d\u043e\u0432", "callback_data": "t:action,c:table_exam"}], [{"text": "\u0420\u0430\u0441\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u043d\u0430 \u0441\u0435\u0433\u043e\u0434\u043d\u044f", "callback_data": "t:action,c:table_today"}], [{"text": "\u0420\u0430\u0441\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u043d\u0430 \u0437\u0430\u0432\u0442\u0440\u0430", "callback_data": "t:action,c:table_tomorrow"}], [{"text": "\u041d\u0430 \u0434\u0440\u0443\u0433\u0438\u0435 \u0434\u043d\u0438", "callback_data": "t:navigation,p:table_other"}], [{"text": "\u0420\u0430\u0441\u043f\u0438\u0441\u0430\u043d\u0438\u0435 \u043f\u0440\u0435\u043f\u043e\u0434\u0430\u0432\u0430\u0442\u0435\u043b\u0435\u0439", "callback_data": "t:navigation,p:table_prepods"}]]}
+{
+    "inline_keyboard": [
+        [
+            {
+                "text": "Расписание экзаменов",
+                "callback_data": "t:action,c:table_exam"
+            }
+        ],
+        [
+            {
+                "text": "Расписание на сегодня",
+                "callback_data": "t:action,c:table_today"
+            }
+        ],
+        [
+            {
+                "text": "Расписание на завтра",
+                "callback_data": "t:action,c:table_tomorrow"
+            }
+        ],
+        [
+            {
+                "text": "На другие дни",
+                "callback_data": "t:navigation,p:table_other"
+            }
+        ],
+        [
+            {
+                "text": "Расписание преподавателей",
+                "callback_data": "t:navigation,p:table_prepods"
+            }
+        ]
+    ]
+}
