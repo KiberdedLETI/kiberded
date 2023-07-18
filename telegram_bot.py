@@ -32,7 +32,7 @@ from bot_functions.bots_common_funcs import read_calendar, day_of_day_toggle, re
     compile_group_stats, add_user_to_table, get_exams, get_prepods, get_subjects, group_is_donator, \
     add_user_to_anekdot, set_table_mode, get_tables_settings
 from bot_functions.anekdot import get_random_anekdot, get_random_toast, create_link_to_telegram
-from bot_functions.minigames import get_coin_flip_result, start_classical_rock_paper_scissors, \
+from fun.minigames import get_coin_flip_result, start_classical_rock_paper_scissors, \
     stop_classical_rock_paper_scissors, classical_rock_paper_scissors
 from shiza.databases_shiza_helper import change_user_group, create_database, change_user_additional_group, \
     check_group_exists

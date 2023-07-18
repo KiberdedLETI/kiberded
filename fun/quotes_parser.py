@@ -24,14 +24,13 @@ logger.setLevel(logging.INFO)
 logger.addHandler(console_handler)
 
 try:
-    config = toml.load('configuration.toml')
+    config = toml.load('../configuration.toml')
 except FileNotFoundError:
     logger.critical('configuration.toml не найден!')
     sys.exit()
 
 path = config.get('Kiberded').get('path')
 group_token = config.get('Kiberded').get('group_token')
-group_id = 0
 token = config.get('Kiberded').get('token')
 vk_login = config.get('Kiberded').get('vk_ded_page_login')
 vk_password = config.get('Kiberded').get('vk_ded_page_password')
