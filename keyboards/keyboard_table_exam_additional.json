@@ -1,34 +1,36 @@
 {
-  "one_time": false,
-  "inline": false,
-  "buttons": [
-    [
-      {
-        "color": "negative",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_exam\"}",
-          "label": "Расписание экзаменов"
-        }
-      },
-      {
-        "color": "negative",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_exam_2\"}",
-          "label": "Расписание экзаменов (доп)"
-        }
-      }
-    ],
-    [
-      {
-        "color": "secondary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"navigation\",\"place\":\"main\"}",
-          "label": "Вернуться в начало"
-        }
-      }
+    "one_time": false,
+    "inline": false,
+    "buttons": [
+        [
+            {
+                "color": "negative",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_exam\"}",
+                    "label": "Экзамены"
+                }
+            }
+        ],
+        [
+            {
+                "color": "negative",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_exam_2\"}",
+                    "label": "Экзамены (доп)"
+                }
+            }
+        ],
+        [
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"navigation\",\"place\":\"main\"}",
+                    "label": "Вернуться в начало"
+                }
+            }
+        ]
     ]
-  ]
 }
