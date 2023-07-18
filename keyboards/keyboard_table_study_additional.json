@@ -1,70 +1,70 @@
 {
-  "one_time": false,
-  "inline": false,
-  "buttons": [
-    [
-      {
-        "color": "primary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_today\"}",
-          "label": "Сегодня"
-        }
-      },
-      {
-        "color": "primary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_today_2\"}",
-          "label": "Сегодня (доп)"
-        }
-      }
-    ],
-    [
-      {
-        "color": "secondary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_tomorrow\"}",
-          "label": "Завтра"
-        }
-      },
-      {
-        "color": "secondary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_tomorrow_2\"}",
-          "label": "Завтра (доп)"
-        }
-      }
-    ],
-    [
-      {
-        "color": "negative",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"navigation\",\"place\":\"table_other\"}",
-          "label": "На другие дни"
-        }
-      },
-      {
-        "color": "negative",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"navigation\",\"place\":\"table_other_2\"}",
-          "label": "На другие дни (доп)"
-        }
-      }
-    ],
-    [
-      {
-        "color": "secondary",
-        "action": {
-          "type": "text",
-          "payload": "{\"type\":\"navigation\",\"place\":\"main\"}",
-          "label": "Вернуться в начало"
-        }
-      }
+    "one_time": false,
+    "inline": false,
+    "buttons": [
+        [
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_today\"}",
+                    "label": "Сегодня"
+                }
+            },
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_today_2\"}",
+                    "label": "Сегодня (доп)"
+                }
+            }
+        ],
+        [
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_tomorrow\"}",
+                    "label": "Завтра"
+                }
+            },
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_tomorrow_2\"}",
+                    "label": "Завтра (доп)"
+                }
+            }
+        ],
+        [
+            {
+                "color": "negative",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"navigation\",\"place\":\"table_other\"}",
+                    "label": "Всё"
+                }
+            },
+            {
+                "color": "negative",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"navigation\",\"place\":\"table_other_2\"}",
+                    "label": "Всё (доп)"
+                }
+            }
+        ],
+        [
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"navigation\",\"place\":\"main\"}",
+                    "label": "Вернуться в начало"
+                }
+            }
+        ]
     ]
-  ]
 }

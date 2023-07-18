@@ -1,1 +1,56 @@
-{"one_time":false,"inline":false,"buttons":[[{"color":"primary","action":{"type":"text","payload":"{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_set_type\",\"arg\":\"calendar\"}","label":"Календарь"}}],[{"color":"primary","action":{"type":"text","payload":"{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_set_type\",\"arg\":\"daily\"}","label":"Ежедневно"}}],[{"color":"primary","action":{"type":"text","payload":"{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_set_type\",\"arg\":\"weekly\"}","label":"Еженедельно"}}],[{"color":"primary","action":{"type":"text","payload":"{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_set_type\",\"arg\":\"both\"}","label":"Оба"}}],[{"color":"negative","action":{"type":"text","payload":"{\"type\":\"navigation\",\"place\":\"kb_table_settings\"}","label":"Назад"}}]]}
+{
+    "one_time": false,
+    "inline": false,
+    "buttons": [
+        [
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_set_type\",\"arg\":\"calendar\"}",
+                    "label": "Календарь"
+                }
+            }
+        ],
+        [
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_set_type\",\"arg\":\"daily\"}",
+                    "label": "Ежедневно"
+                }
+            }
+        ],
+        [
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_set_type\",\"arg\":\"weekly\"}",
+                    "label": "Еженедельно"
+                }
+            }
+        ],
+        [
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_set_type\",\"arg\":\"both\"}",
+                    "label": "Оба"
+                }
+            }
+        ],
+        [
+            {
+                "color": "negative",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"navigation\",\"place\":\"kb_table_settings\"}",
+                    "label": "Назад"
+                }
+            }
+        ]
+    ]
+}

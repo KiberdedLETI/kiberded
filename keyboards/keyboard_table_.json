@@ -1,1 +1,26 @@
-{"one_time":false,"inline":false,"buttons":[[{"color":"negative","action":{"type":"text","payload":"{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_empty\"}","label":"Где расписание?"}}],[{"color":"secondary","action":{"type":"text","payload":"{\"type\":\"navigation\",\"place\":\"main\"}","label":"Вернуться в начало"}}]]}
+{
+    "one_time": false,
+    "inline": false,
+    "buttons": [
+        [
+            {
+                "color": "negative",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"table_empty\"}",
+                    "label": "Где расписание?"
+                }
+            }
+        ],
+        [
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"navigation\",\"place\":\"main\"}",
+                    "label": "Вернуться в начало"
+                }
+            }
+        ]
+    ]
+}

@@ -703,7 +703,7 @@ def kb_table_other_odd():
     return markup
 
 
-# тоже самое, но additional:
+# то же самое, но additional:
 def kb_table_other_even_2():
     logger.info(f'Генерируем клавиатуру "Расписания на другие дни" чётная additional')
     markup = InlineKeyboardMarkup()
@@ -1226,14 +1226,6 @@ def keyboard_set_tables_mode_cal():
     return markup
 
 
-# мини-клавиатура для настройки уведомлений о неизвестной команде, для всех пользователей
-def false_command_keyboard():  # todo надо ли в тг??
-    logger.info(f'Генерируем мини-клавиатуру для настройки уведомлений о неизвестной команде')
-    logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
-    logger.info(f'Мини-клавиатура для настройки уведомлений о неизвестной команде готова.\n')
-    pass
-
-
 # огромная клавиатура с кнопками для расписания преподов. создается при импорте
 def keyboard_prepod_schedule(prepod_id, day):
     markup = InlineKeyboardMarkup()
@@ -1325,8 +1317,7 @@ if __name__ == '__main__':
     for keyboard in keyboards:
         try:
             with open(f'{keyboard}.json', 'w', encoding='utf-8') as f:
-                exec(f'markup = {keyboard}()')
-                f.write(markup.to_json())  # тут нет ошибки! markup - переменная, создается в предыдущей строке
+                f.write(json.dumps(json.loads(eval(keyboard)().to_json()), ensure_ascii=False, indent=4))
         except:
             logger.critical(f'Ошибка при генерации клавиатуры {keyboard}\ntraceback: {traceback.format_exc()}')
 

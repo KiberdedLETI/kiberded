@@ -1,1 +1,46 @@
-{"one_time":false,"inline":true,"buttons":[[{"color":"negative","action":{"type":"text","payload":"{\"type\":\"shiza_action\",\"command\":\"edit_email\"}","label":"Внести данные"}}],[{"color":"negative","action":{"type":"text","payload":"{\"type\":\"shiza_action\",\"command\":\"delete_email\"}","label":"Удалить данные"}}],[{"color":"positive","action":{"type":"text","payload":"{\"type\":\"shiza_navigation\",\"place\":\"start_databases\"}","label":"В начало"}}],[{"color":"positive","action":{"type":"text","payload":"{\"type\":\"shiza_navigation\",\"place\":\"end_databases\"}","label":"Конец работы"}}]]}
+{
+    "one_time": false,
+    "inline": true,
+    "buttons": [
+        [
+            {
+                "color": "negative",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"shiza_action\",\"command\":\"edit_email\"}",
+                    "label": "Внести данные"
+                }
+            }
+        ],
+        [
+            {
+                "color": "negative",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"shiza_action\",\"command\":\"delete_email\"}",
+                    "label": "Удалить данные"
+                }
+            }
+        ],
+        [
+            {
+                "color": "positive",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"shiza_navigation\",\"place\":\"start_databases\"}",
+                    "label": "В начало"
+                }
+            }
+        ],
+        [
+            {
+                "color": "positive",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"shiza_navigation\",\"place\":\"end_databases\"}",
+                    "label": "Конец работы"
+                }
+            }
+        ]
+    ]
+}

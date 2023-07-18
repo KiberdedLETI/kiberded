@@ -1,1 +1,54 @@
-{"one_time":false,"inline":false,"buttons":[[{"color":"primary","action":{"type":"text","payload":"{\"type\":\"action\",\"action_type\":\"shiza\",\"target\":\"change_additional_group\"}","label":"Изменить доп. группу"}}],[{"color":"primary","action":{"type":"text","payload":"{\"type\":\"action\",\"action_type\":\"shiza\",\"target\":\"edit_database\"}","label":"Работа с БД"}}],[{"color":"secondary","action":{"type":"text","payload":"{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"add_chat\"}","label":"Добавление в чат"}}],[{"color":"secondary","action":{"type":"text","payload":"{\"type\":\"navigation\",\"place\":\"other\"}","label":"Вернуться в Прочее"}},{"color":"secondary","action":{"type":"text","payload":"{\"type\":\"navigation\",\"place\":\"main\"}","label":"Вернуться в начало"}}]]}
+{
+    "one_time": false,
+    "inline": false,
+    "buttons": [
+        [
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"shiza\",\"target\":\"change_additional_group\"}",
+                    "label": "Изменить доп. группу"
+                }
+            }
+        ],
+        [
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"shiza\",\"target\":\"edit_database\"}",
+                    "label": "Работа с БД"
+                }
+            }
+        ],
+        [
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"add_chat\"}",
+                    "label": "Добавление в чат"
+                }
+            }
+        ],
+        [
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"navigation\",\"place\":\"other\"}",
+                    "label": "Вернуться в Прочее"
+                }
+            },
+            {
+                "color": "secondary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"navigation\",\"place\":\"main\"}",
+                    "label": "Вернуться в начало"
+                }
+            }
+        ]
+    ]
+}

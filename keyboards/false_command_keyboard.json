@@ -1,1 +1,16 @@
-{"one_time":false,"inline":true,"buttons":[[{"color":"positive","action":{"type":"text","payload":"{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"remove_notifications\"}","label":"Ясно, не показывать это"}}]]}
+{
+    "one_time": false,
+    "inline": true,
+    "buttons": [
+        [
+            {
+                "color": "positive",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"action\",\"action_type\":\"message\",\"command\":\"remove_notifications\"}",
+                    "label": "Ясно, не показывать это"
+                }
+            }
+        ]
+    ]
+}

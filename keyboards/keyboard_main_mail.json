@@ -1,1 +1,70 @@
-{"one_time":false,"inline":false,"buttons":[[{"color":"positive","action":{"type":"text","payload":"{\"type\":\"navigation\",\"place\":\"table\"}","label":"Расписание"}}],[{"color":"primary","action":{"type":"text","payload":"{\"type\":\"navigation\",\"place\":\"books\"}","label":"Методички"}},{"color":"primary","action":{"type":"text","payload":"{\"type\":\"navigation\",\"place\":\"prepods\"}","label":"Преподы"}}],[{"action":{"type":"open_link","link":"https://lk.etu.ru","label":"Личный кабинет","payload":null}},{"action":{"type":"open_link","link":"mail_url_placeholder","label":"Почта группы","payload":null}}],[{"color":"negative","action":{"type":"text","payload":"{\"type\":\"navigation\",\"place\":\"other\"}","label":"Прочее"}},{"action":{"type":"open_link","link":"https://vec.etu.ru","label":"Мудл","payload":null}}]]}
+{
+    "one_time": false,
+    "inline": false,
+    "buttons": [
+        [
+            {
+                "color": "positive",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"navigation\",\"place\":\"table\"}",
+                    "label": "Расписание"
+                }
+            }
+        ],
+        [
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"navigation\",\"place\":\"books\"}",
+                    "label": "Методички"
+                }
+            },
+            {
+                "color": "primary",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"navigation\",\"place\":\"prepods\"}",
+                    "label": "Преподы"
+                }
+            }
+        ],
+        [
+            {
+                "action": {
+                    "type": "open_link",
+                    "link": "https://lk.etu.ru",
+                    "label": "Личный кабинет",
+                    "payload": null
+                }
+            },
+            {
+                "action": {
+                    "type": "open_link",
+                    "link": "mail_url_placeholder",
+                    "label": "Почта группы",
+                    "payload": null
+                }
+            }
+        ],
+        [
+            {
+                "color": "negative",
+                "action": {
+                    "type": "text",
+                    "payload": "{\"type\":\"navigation\",\"place\":\"other\"}",
+                    "label": "Прочее"
+                }
+            },
+            {
+                "action": {
+                    "type": "open_link",
+                    "link": "https://vec.etu.ru",
+                    "label": "Мудл",
+                    "payload": null
+                }
+            }
+        ]
+    ]
+}
