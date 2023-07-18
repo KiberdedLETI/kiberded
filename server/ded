@@ -155,11 +155,11 @@ if [ -n "$1" ]; then
 			echo "	status - информация о дедах"
 			echo "    status --without-color - вывод информации белым шрифтом"
 			echo "		status -a - информация о всех дедах"
-			echo "  send_message - отправка сообщения в отладочную конфу"
-			echo "    send_message -c | --chat PARAM - отправка сообщения в конфу с произвольным chat_id (ОСТОРОЖНО!!!)"
-			echo "    send_message -u | --user PARAM- отправка сообщения юзеру (или конфу через peer_id) с произвольным user_id"
-			echo "    send_message -m | --moderator PARAM- отправка сообщения модераторам определенной группы"
-			echo "    send_message -g | --group PARAM - отправка сообщения в беседы определенной группы"
+			echo "  send_message - отправка сообщения в отладочную конфу + в ТГ"
+			echo "    send_message -c | --chat PARAM - отправка сообщения в конфу ВК с произвольным chat_id (ОСТОРОЖНО!!!)"
+			echo "    send_message -u | --user PARAM- отправка сообщения юзеру ВК (или конфу ВК через peer_id) с произвольным user_id"
+			echo "    send_message -m | --moderator PARAM- отправка сообщения модераторам определенной группы в ВК"
+			echo "    send_message -g | --group PARAM - отправка сообщения в беседы определенной группы в ВК"
 			;;
 		"start")
 			echo "	Выбери деда для запуска. Если нужно выйти - Ctrl-C тебе в помощь"

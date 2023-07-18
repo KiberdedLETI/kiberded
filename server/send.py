@@ -17,6 +17,11 @@ import sys
 import sqlite3
 import toml
 
+import telebot
+
+from datetime import datetime
+import pickle
+
 
 try:
     config = toml.load('./configuration.toml')  # если импортируется из корня
@@ -29,8 +34,14 @@ except FileNotFoundError:
 
 path = config.get('Kiberded').get('path')
 token = config.get('Kiberded').get('token')
+tg_token = config.get('Kiberded').get('token_telegram')
+tg_admin_chat = config.get('Kiberded').get('telegram_admin_chat')
+
+bot = telebot.TeleBot(tg_token)
 
 global vk
+
+now_date = datetime.now().strftime('%Y-%m-%d')  # необходимо для бэкапов сообщений
 
 
 def send_message(message: str, peer_id, attachment=''):
@@ -74,6 +85,64 @@ def send_message(message: str, peer_id, attachment=''):
     except requests.exceptions.ConnectionError:
         time.sleep(1)
         send_message(message, peer_id, attachment)
+
+
+def dump_message(message, callback=False) -> int:  # BIG Brother Is Watching You.
+    """
+    Функция для записи всех сообщений в pickle-файлы, дабы они потом собирались в одну гигантскую БД и хранились
+    где-нибудь у админов. Не очень гуманно, но лучше так, чем никак.
+    :param message: непосредственно сообщение, которое записывается в pickle
+    :param callback: if True, то это callback_query, и формат файла будет call_.....
+    :return: 0 если все ок
+    """
+    date = now_date
+    date_mes = message.date
+    chat_id = message.chat.id
+    message_id = message.message_id  # чтобы точно задампились все сообщения, потому что могут быть удаленные и
+    # отправленные несколько раз в секунду
+    callback_str = 'call_output_' if callback else ''
+    with open(f'{path}messages_backup/{date}/{callback_str}{date_mes}_{chat_id}_{message_id}.pickle', 'wb') as f:
+        pickle.dump(message, f)
+
+    return 0
+
+
+def send_tg_message(chat_id, text, **kwargs) -> telebot.types.Message:
+    """
+    Функция отправки сообщений. Создана одновременно и для обхода ограничения на максимальную длину текста, и для
+    автодампа сообщения. Возвращается API-reply отправленного сообщения; если текст больше 4096 символов - то оно
+    делится и возвращается api-peply последнего отправленного сообщения
+
+
+    Telegram documentation: https://core.telegram.org/bots/api#sendmessage
+
+    :param chat_id: Unique identifier for the target chat or username of the target channel (in the format
+    @channelusername)
+    :param text: Text of the message to be sent
+    :param parse_mode: Send Markdown or HTML, if you want Telegram apps to show bold, italic, fixed-width text or inline
+     URLs in your bot's message.
+    :param entities: List of special entities that appear in message text, which can be specified instead of parse_mode
+    :param disable_web_page_preview: Disables link previews for links in this message
+    :param disable_notification: Sends the message silently. Users will receive a notification with no sound.
+    :param protect_content: If True, the message content will be hidden for all users except for the target user
+    :param reply_to_message_id: If the message is a reply, ID of the original message
+    :param allow_sending_without_reply: Pass True, if the message should be sent even if the specified replied-to
+    message is not found
+    :param reply_markup: Additional interface options. A JSON-serialized object for an inline keyboard, custom reply
+    keyboard, instructions to remove reply keyboard or to force a reply from the user.
+    :param timeout:
+    :return: API reply (JSON-serialized message object)
+    """
+    msg = 0  # дабы IDE не ругалась, далее эта переменная так и так перезапишется
+    if len(text) > 4096:  # обход ограничения
+        splitted_text = telebot.util.smart_split(text, chars_per_string=3000)
+        for text in splitted_text:
+            msg = bot.send_message(chat_id, text, **kwargs)
+            dump_message(msg)
+    else:
+        msg = bot.send_message(chat_id, text, **kwargs)
+        dump_message(msg)
+    return msg
 
 
 def get_user(group):  # принимает номер группы и возвращает user_id, если есть
@@ -181,7 +250,7 @@ try:
             print(f'Нет юзеров, мб слетела база')
 
     elif sys.argv[index_counter] in ['-h', '--help', 'справка']:  # вызов справки
-        print('Без аргументов - отправка сообщения в отладочную конфу\n'
+        print('Без аргументов - отправка сообщения в отладочную конфу + в ТГ\n'
               '\t-c | чат PARAM - отправка сообщения в конфу с произвольным chat_id (осторожно!!!)\n'
               '\t-u | юзер PARAM- отправка сообщения юзеру (или конфу через peer_id) с произвольным user_id\n'
               '\t-m | модератор PARAM- отправка сообщения модераторам определенной группы\n'
@@ -192,6 +261,7 @@ try:
     else:  # отправка в отладочную
         message, is_attachment, attachment = get_content(1)
         send_message(message, 2000000001, attachment)
+        send_tg_message(tg_admin_chat, message)
 
 except IndexError:
     print('Недостаточно аргументов, см. ded help')

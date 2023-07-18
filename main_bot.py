@@ -304,6 +304,10 @@ def main_func():
             except OSError as os_error:
                 if '[Errno 101]' in str(os_error):  # ошибка OSError: Network is unreachable
                     pass
+                elif '[Errno -3]' in str(os_error): # Exception: [Errno -3] Temporary failure in name resolution
+                    pass
+                elif 'EOF occurred in violation of protocol'  in str(os_error):
+                    pass
                 else:
                     raise Exception(os_error)
 
