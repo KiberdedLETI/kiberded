@@ -166,60 +166,91 @@ keyboard_table_mixed.add_button('Вернуться в начало',
 
 # Аналогичные клавиатуры с доп.группой
 # Клавиатура "Расписания" СЕССИЯ
-keyboard_table_exam = VkKeyboard(one_time=False)
-keyboard_table_exam.add_button('Расписание экзаменов', color=VkKeyboardColor.NEGATIVE,
-                               payload={"type": "action",
-                                        "action_type": "message",
-                                        "command": "table_exam"})
-keyboard_table_exam.add_line()
-keyboard_table_exam.add_button('Вернуться в начало',
-                               payload={"type": "navigation",
-                                        "place": "main"})
+keyboard_table_exam_additional = VkKeyboard(one_time=False)
+keyboard_table_exam_additional.add_button('Экзамены', color=VkKeyboardColor.NEGATIVE,
+                                          payload={"type": "action",
+                                                   "action_type": "message",
+                                                   "command": "table_exam"})
+keyboard_table_exam_additional.add_line()
+keyboard_table_exam_additional.add_button('Экзамены (доп)', color=VkKeyboardColor.NEGATIVE,
+                                          payload={"type": "action",
+                                                   "action_type": "message",
+                                                   "command": "table_exam_2"})
+keyboard_table_exam_additional.add_line()
+keyboard_table_exam_additional.add_button('Вернуться в начало',
+                                          payload={"type": "navigation",
+                                                   "place": "main"})
 
 # Клавиатура "Расписания" обычная
-keyboard_table_study = VkKeyboard(one_time=False)
-keyboard_table_study.add_button('Расписание на сегодня', color=VkKeyboardColor.PRIMARY,
-                                payload={"type": "action",
-                                         "action_type": "message",
-                                         "command": "table_today"})
-keyboard_table_study.add_line()
-keyboard_table_study.add_button('Расписание на завтра', color=VkKeyboardColor.SECONDARY,
-                                payload={"type": "action",
-                                         "action_type": "message",
-                                         "command": "table_tomorrow"})
-keyboard_table_study.add_line()
-keyboard_table_study.add_button('На другие дни', color=VkKeyboardColor.NEGATIVE,
-                                payload={"type": "navigation",
-                                         "place": "table_other"})
-keyboard_table_study.add_line()
-keyboard_table_study.add_button('Вернуться в начало',
-                                payload={"type": "navigation",
-                                         "place": "main"})
+keyboard_table_study_additional = VkKeyboard(one_time=False)
+keyboard_table_study_additional.add_button('Сегодня', color=VkKeyboardColor.PRIMARY,
+                                           payload={"type": "action",
+                                                    "action_type": "message",
+                                                    "command": "table_today"})
+keyboard_table_study_additional.add_button('Сегодня (доп)', color=VkKeyboardColor.PRIMARY,
+                                           payload={"type": "action",
+                                                    "action_type": "message",
+                                                    "command": "table_today_2"})
+keyboard_table_study_additional.add_line()
+keyboard_table_study_additional.add_button('Завтра', color=VkKeyboardColor.SECONDARY,
+                                           payload={"type": "action",
+                                                    "action_type": "message",
+                                                    "command": "table_tomorrow"})
+keyboard_table_study_additional.add_button('Завтра (доп)', color=VkKeyboardColor.SECONDARY,
+                                           payload={"type": "action",
+                                                    "action_type": "message",
+                                                    "command": "table_tomorrow_2"})
+keyboard_table_study_additional.add_line()
+keyboard_table_study_additional.add_button('Всё', color=VkKeyboardColor.NEGATIVE,
+                                           payload={"type": "navigation",
+                                                    "place": "table_other"})
+keyboard_table_study_additional.add_button('Всё (доп)', color=VkKeyboardColor.NEGATIVE,
+                                           payload={"type": "navigation",
+                                                    "place": "table_other_2"})
+keyboard_table_study_additional.add_line()
+keyboard_table_study_additional.add_button('Вернуться в начало',
+                                           payload={"type": "navigation",
+                                                    "place": "main"})
 
 # Клавиатура "Расписания" смешанная (экзамены + расписание)
-keyboard_table_mixed = VkKeyboard(one_time=False)
-keyboard_table_mixed.add_button('Расписание экзаменов', color=VkKeyboardColor.NEGATIVE,
-                                payload={"type": "action",
-                                         "action_type": "message",
-                                         "command": "table_exam"})
-keyboard_table_mixed.add_line()
-keyboard_table_mixed.add_button('Расписание на сегодня', color=VkKeyboardColor.PRIMARY,
-                                payload={"type": "action",
-                                         "action_type": "message",
-                                         "command": "table_today"})
-keyboard_table_mixed.add_line()
-keyboard_table_mixed.add_button('Расписание на завтра', color=VkKeyboardColor.SECONDARY,
-                                payload={"type": "action",
-                                         "action_type": "message",
-                                         "command": "table_tomorrow"})
-keyboard_table_mixed.add_line()
-keyboard_table_mixed.add_button('На другие дни', color=VkKeyboardColor.NEGATIVE,
-                                payload={"type": "navigation",
-                                         "place": "table_other"})
-keyboard_table_mixed.add_line()
-keyboard_table_mixed.add_button('Вернуться в начало',
-                                payload={"type": "navigation",
-                                         "place": "main"})
+keyboard_table_mixed_additional = VkKeyboard(one_time=False)
+keyboard_table_mixed_additional.add_button('Экзамены', color=VkKeyboardColor.NEGATIVE,
+                                           payload={"type": "action",
+                                                    "action_type": "message",
+                                                    "command": "table_exam"})
+keyboard_table_mixed_additional.add_button('Экзамены (доп)', color=VkKeyboardColor.NEGATIVE,
+                                           payload={"type": "action",
+                                                    "action_type": "message",
+                                                    "command": "table_exam_2"})
+keyboard_table_mixed_additional.add_line()
+keyboard_table_mixed_additional.add_button('Сегодня', color=VkKeyboardColor.PRIMARY,
+                                           payload={"type": "action",
+                                                    "action_type": "message",
+                                                    "command": "table_today"})
+keyboard_table_mixed_additional.add_button('Сегодня (доп)', color=VkKeyboardColor.PRIMARY,
+                                           payload={"type": "action",
+                                                    "action_type": "message",
+                                                    "command": "table_today_2"})
+keyboard_table_mixed_additional.add_line()
+keyboard_table_mixed_additional.add_button('Завтра', color=VkKeyboardColor.SECONDARY,
+                                           payload={"type": "action",
+                                                    "action_type": "message",
+                                                    "command": "table_tomorrow"})
+keyboard_table_mixed_additional.add_button('Завтра (доп)', color=VkKeyboardColor.SECONDARY,
+                                           payload={"type": "action",
+                                                    "action_type": "message",
+                                                    "command": "table_tomorrow_2"})
+keyboard_table_mixed_additional.add_line()
+keyboard_table_mixed_additional.add_button('Всё', color=VkKeyboardColor.NEGATIVE,
+                                           payload={"type": "navigation",
+                                                    "place": "table_other"})
+keyboard_table_mixed_additional.add_button('Всё (доп)', color=VkKeyboardColor.NEGATIVE,
+                                           payload={"type": "navigation",
+                                                    "place": "table_other_2"})
+keyboard_table_mixed_additional.add_line()
+keyboard_table_mixed_additional.add_button('Вернуться в начало',
+                                           payload={"type": "navigation",
+                                                    "place": "main"})
 
 # Клавиатура "Календарь"
 keyboard_calendar = VkKeyboard(one_time=False)
@@ -859,8 +890,11 @@ kbs = ["keyboard_main",
        "keyboard_main_cal",
        "keyboard_main_mail_cal",
        "keyboard_table_study",
+       "keyboard_table_study_additional",
        "keyboard_table_exam",
+       "keyboard_table_exam_additional",
        "keyboard_table_mixed",
+       "keyboard_table_mixed_additional",
        "keyboard_table_",
        "kb_table_other_even",
        "kb_table_other_even_2",

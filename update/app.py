@@ -374,7 +374,7 @@ async def get_webhook_info(x_github_event: str, payload):
                                   'telegram_bot': True,
                                   'scheduler': True,
                                   'watcher': True,
-                                  'main_bot': True,
+                                  'mail_bot': True,
                                   'update_daemon': True}
                 for dep in dependence:
                     reboot_deds[dep] = True

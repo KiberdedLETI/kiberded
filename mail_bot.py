@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-# dependencies: [main_bot]
+# dependencies: [mail_bot]
 
 """
 Почтовый скрипт бота - проверка почтовых ящиков и отправка сообщения о новом письме
@@ -23,7 +23,7 @@ from telebot import custom_filters
 import traceback
 import logging
 
-logger = logging.getLogger('main_bot')
+logger = logging.getLogger('mail_bot')
 console_handler = logging.StreamHandler()
 logger.setLevel(logging.INFO)
 logger.addHandler(console_handler)

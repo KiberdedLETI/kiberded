@@ -16,12 +16,10 @@ import telebot
 from telebot import custom_filters
 from telebot import types
 import sqlite3
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 import pytz
 from keyboards_telegram.create_keyboards import payload_to_callback, keyboard_prepod_schedule
-from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
-from transliterate import translit
 import logging
 import toml
 import sys
@@ -32,7 +30,7 @@ from bot_functions.bots_common_funcs import read_calendar, day_of_day_toggle, re
     compile_group_stats, add_user_to_table, get_exams, get_prepods, get_subjects, group_is_donator, \
     add_user_to_anekdot, set_table_mode, get_tables_settings
 from bot_functions.anekdot import get_random_anekdot, get_random_toast, create_link_to_telegram
-from bot_functions.minigames import get_coin_flip_result, start_classical_rock_paper_scissors, \
+from fun.minigames import get_coin_flip_result, start_classical_rock_paper_scissors, \
     stop_classical_rock_paper_scissors, classical_rock_paper_scissors
 from shiza.databases_shiza_helper import change_user_group, create_database, change_user_additional_group, \
     check_group_exists
@@ -1194,7 +1192,8 @@ def text_query(message):
     today = datetime.now(pytz.timezone('Europe/Moscow')).date()
 
     kb = ''
-    kb_message = 'Я тебя не понял'  # на всякий случай. если ошибки не будет - то текст сообщения будет другим
+    kb_message = 'Я тебя не понял.' \
+                 '\nНапиши /main для открытия стартовой клавиатуры'  # на всякий случай
 
     # Выбор клавиатуры и сообщения
     if message.text == 'Расписание 🗓':
@@ -1589,14 +1588,6 @@ def callback_query(call):
                 cl = bot.edit_message_text(chat_id=call.from_user.id, text=message_ans, message_id=call.message.id,
                                       reply_markup=markup)
                 dump_message(cl, callback=True)
-
-
-# Обработка сообщений в лс от незарегистрированных юзеров todo remove - уже не нужно
-# @bot.message_handler(chat_types='private', is_registered=False)
-# def unregistered_user(message):
-#     dump_message(message)
-#     msg = send_message(message.chat.id, 'Введи номер группы в формате ХХХХ, например 9281')
-#     bot.register_next_step_handler(msg, change_group_step)
 
 
 # обработка inline-запросов
