@@ -1,0 +1,1 @@
+# dependencies: [telegram_bot]
