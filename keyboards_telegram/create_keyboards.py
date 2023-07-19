@@ -33,6 +33,8 @@ console_handler = logging.StreamHandler()
 logger.setLevel(logging.INFO)
 logger.addHandler(console_handler)
 
+nexus_link = 'https://t.me/science_nexus_bot'  # Периодически бота банят, так что нужно обновлять ссылку
+
 
 def payload_to_callback(payload) -> str:
     """
@@ -463,7 +465,7 @@ def keyboard_links_mail():
     lnk_lk = InlineKeyboardButton('Личный кабинет', url='https://lk.etu.ru/')
     lnk_vec = InlineKeyboardButton('Мудл', url='https://vec.etu.ru/')
     lnk_lib = InlineKeyboardButton('Библиотека ЛЭТИ', url='http://library.etu.ru/')
-    lnk_nexus = InlineKeyboardButton('Поиск научной лит-ры', url='https://t.me/libgen_scihub_9_bot')
+    lnk_nexus = InlineKeyboardButton('Поиск научной лит-ры', url=nexus_link)
 
     markup.row(lnk_etu, lnk_mail)
     markup.row(lnk_lk, lnk_vec)
@@ -482,7 +484,7 @@ def keyboard_links():
     lnk_lk = InlineKeyboardButton('Личный кабинет', url='https://lk.etu.ru/')
     lnk_vec = InlineKeyboardButton('Мудл', url='https://vec.etu.ru/')
     lnk_lib = InlineKeyboardButton('Библиотека ЛЭТИ', url='http://library.etu.ru/')
-    lnk_nexus = InlineKeyboardButton('Поиск научной лит-ры', url='https://t.me/science_nexus_bot')
+    lnk_nexus = InlineKeyboardButton('Поиск научной лит-ры', url=nexus_link)
 
     markup.row(lnk_etu)
     markup.row(lnk_lk, lnk_vec)
