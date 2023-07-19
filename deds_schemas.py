@@ -31,8 +31,7 @@ def recursion_scan(path, files_arr=[]):
             if file.path[14:] + '\n' in gitignore_data:
                 continue
             if os.path.isfile(file.path):
-                if file.path.endswith('.db') or \
-                        file.path.endswith('.pyc'):
+                if file.path.endswith(('.db', '.pyc',)):
                     continue
                 files_arr.append(file.path)
             else:
@@ -43,9 +42,7 @@ def recursion_scan(path, files_arr=[]):
 
 
 def get_file_dependencies(file_path):
-    if file_path.endswith('.png') or \
-            file_path.endswith('.txt') or \
-            file_path.endswith('.md'):
+    if file_path.endswith(('.png', '.txt', '.md',)):
         dependencies = []
     else:
         with open(file_path, encoding='utf-8') as f:
