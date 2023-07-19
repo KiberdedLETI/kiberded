@@ -294,9 +294,9 @@ def cron():
 
     # Раз в месяц обовляем расписание преподавателей
     if date.today().day == 3:
+        create_departments_db()
         parse_prepods_schedule()
         load_prepods_table_cache()
-        create_departments_db()
         generate_departments_keyboards()
         generate_prepods_keyboards()
 
