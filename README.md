@@ -73,7 +73,7 @@
      + нажимаем **New SSH Key**, в поле **Title** вводим что-нибудь, в поле **Key** вставляем публичный ключ, тыкаем **Add SSH Key**
    + Копируем репозиторий: `git clone git@github.com:KiberdedLETI/kiberded.git`
 3. Установка утилиты *ded*:
-   + `cd email-py`
+   + `cd kiberded`
    + `ln --force server/ded /usr/bin/ded`
    + `chmod a+x server/ded`
    + Проверка работоспособности: `ded status` должен выдать что-то типа того, что все деды не работают
@@ -92,7 +92,7 @@
      + начальная настройка и вход в аккаунт: `yandex-disk setup`, по ссылке надо ввести код в браузере с войденным аккаунтом деда
      + несинхронизируемые папки можно добавить в `~/.config/yandex-disk/config.cfg` через exclude-dirs, например: `exclude-dirs=kiberded`
      + напуск демона: `yandex-disk start`
-     + бекап каждый день в 00:01: `crontab -e`, добавляем `1 0 * * * sh /root/email-py/server/daily-backup.sh` (только если юзер root, см. полный путь до email-py)
+     + бекап каждый день в 00:01: `crontab -e`, добавляем `1 0 * * * sh /root/kiberded/server/daily-backup.sh` (только если юзер root, см. полный путь до email-py)
    + Перезагрузка:
      + ~деда каждую ночь: `crontab -e`, добавляем `0 0 * * * ded restart --all`
      + ~ сервера каждую неделю по воскресеньям: `crontab -e`, добавляем `0 0 * * 0 reboot`
