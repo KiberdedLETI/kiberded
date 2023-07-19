@@ -9,7 +9,7 @@
 import os
 
 
-main_bot = 'main_bot'
+mail_bot = 'mail_bot'
 
 chat_bot = 'chat_bot'
 

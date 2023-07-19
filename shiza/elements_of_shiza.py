@@ -549,7 +549,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                 data_to_add = str(event.obj.message["text"]).strip(' /').split('/')
                                 if len(data_to_add[0].split('@')) == 2 and len(data_to_add) == 2:
                                     edit_email(group, data_to_add[0], data_to_add[1])
-                                    subprocess.Popen(["systemctl", "restart", "main_bot"], stdout=subprocess.PIPE)
+                                    subprocess.Popen(["systemctl", "restart", "mail_bot"], stdout=subprocess.PIPE)
                                     send_message(peer_id=user_id,
                                                  message=f'Почта {data_to_add[0]} добавлена. Теперь бот будет '
                                                          f'присылать в беседу группы (если она есть) оповещения'
@@ -599,7 +599,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                      keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
                         send_message(peer_id=2000000001,
                                      message=f'Ивент в шизе: @id{user_id} из {group} удаляет почту')
-                        subprocess.Popen(["systemctl", "restart", "main_bot"], stdout=subprocess.PIPE)
+                        subprocess.Popen(["systemctl", "restart", "mail_bot"], stdout=subprocess.PIPE)
 
                     elif shiza_command == 'delete_calendar':  # удаление календаря
                         send_message(peer_id=user_id, message=f'Удаляем следующие данные:\n{view_gcal(group)}')

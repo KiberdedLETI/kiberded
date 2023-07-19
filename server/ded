@@ -7,11 +7,11 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 
 # текущие деды: ОБНОВЛЯЮЩЕГО ОСТАВИТЬ НА ПОСЛЕДНЕМ МЕСТЕ
-deds=("chat_bot" "main_bot" "watcher" "scheduler" "telegram_bot" "update_daemon")
+deds=("chat_bot" "mail_bot" "watcher" "scheduler" "telegram_bot" "update_daemon")
 deds_names=("Кибердед" "Почтовый" "Наблюдающий" "Планировочный" "Кибертелеграмный" "Обновляющий")
 
 # деды для остановки из рубилова:
-deds_rubilovo=("chat_bot" "main_bot" "scheduler" "telegram_bot")
+deds_rubilovo=("chat_bot" "mail_bot" "scheduler" "telegram_bot")
 
 # функция отображения статуса дедов
 status(){

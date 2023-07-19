@@ -3,7 +3,7 @@
 
 # скрипт для установки сервисов
 
-services=("chat_bot" "main_bot" "update_daemon" "watcher" "scheduler" "telegram_bot")
+services=("chat_bot" "mail_bot" "update_daemon" "watcher" "scheduler" "telegram_bot")
 echo "	Установщик служб: выбери службу"
 PS3="Введи циферку: "
 select service in ${services[*]}

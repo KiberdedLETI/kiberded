@@ -8,7 +8,7 @@ After=network-online.target
 [Service]
 Restart=always
 WorkingDirectory=/root/kiberded
-ExecStart=/usr/bin/env python3 /root/kiberded/main_bot.py
+ExecStart=/usr/bin/env python3 /root/kiberded/mail_bot.py
 
 [Install]
 WantedBy=multi-user.target
