@@ -1,0 +1,10 @@
+{
+    "inline_keyboard": [
+        [
+            {
+                "text": "Где расписание?",
+                "callback_data": "t:action,c:table_empty"
+            }
+        ]
+    ]
+}

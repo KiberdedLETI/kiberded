@@ -108,6 +108,17 @@ keyboard_table_.add_button('Вернуться в начало',
                            payload={"type": "navigation",
                                     "place": "main"})
 
+# Клавиатура "Расписания" пустая если есть доп. группа. Аналогично, если нет основного расписания - не показываем ничего
+keyboard_table__additional = VkKeyboard(one_time=False)
+keyboard_table__additional.add_button('Где расписание?', color=VkKeyboardColor.NEGATIVE,
+                                      payload={"type": "action",
+                                               "action_type": "message",
+                                               "command": "table_empty"})
+keyboard_table__additional.add_line()
+keyboard_table__additional.add_button('Вернуться в начало',
+                                      payload={"type": "navigation",
+                                               "place": "main"})
+
 # Клавиатура "Расписания" СЕССИЯ
 keyboard_table_exam = VkKeyboard(one_time=False)
 keyboard_table_exam.add_button('Расписание экзаменов', color=VkKeyboardColor.NEGATIVE,
@@ -896,6 +907,7 @@ kbs = ["keyboard_main",
        "keyboard_table_mixed",
        "keyboard_table_mixed_additional",
        "keyboard_table_",
+       "keyboard_table__additional",
        "kb_table_other_even",
        "kb_table_other_even_2",
        "kb_table_other_odd",

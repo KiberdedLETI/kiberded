@@ -116,6 +116,11 @@ def keyboard_table_():
     return markup
 
 
+# Клавиатура "Расписания" пустая с доп. группой (точно такая же)
+def keyboard_table__additional():
+    return keyboard_table_()
+
+
 # Клавиатура "Расписания" СЕССИЯ
 def keyboard_table_exam():
     logger.info(f'Генерируем клавиатуру "Расписания" СЕССИЯ')
@@ -1291,6 +1296,7 @@ if __name__ == '__main__':
         'keyboard_main_cal',
         'keyboard_main',
         'keyboard_table_',
+        'keyboard_table__additional',
         'keyboard_table_exam',
         'keyboard_table_exam_additional',
         'keyboard_table_study',
