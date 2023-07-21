@@ -282,121 +282,88 @@ def cron():
 
     # Раз в месяц обновляем расписание преподавателей
     if date.today().day == 3:
-        create_departments_db()
-        parse_prepods_schedule()
-        load_prepods_table_cache()
-        generate_departments_keyboards()
+        create_departments_db()  # Обновление списка кафедр
+        parse_prepods_schedule()  # Парсинг расписания преподавателей
+        load_prepods_table_cache()  # Загрузка кэша
+        generate_departments_keyboards()  # Генерация клавиатур с обновленным списком кафедр
         generate_prepods_keyboards()
 
     # структура сообщения: донатное (добавляется последним) + daily_cron() + расписание/календарь (все при наличии)
 
-    load_calendar_cache()  # На всякий обновляем кэш календаря перед отправкой расписания
+    load_calendar_cache()  # На всякий обновляем кэш календаря и расписания перед отправкой
     load_table_cache()
 
-    groups, gcal_lnks, chat_ids, tg_chat_ids, tg_last_messages = get_groups()
-    schedule_counter = 0  # счетчик отправленных сообщений
-    calendar_counter = 0  # счетчик отправленных календарей
+    group_data = get_groups()
 
-    send_message('Ежедневный крон', 2000000001)
+    # логи для отправки отчета в админский чат
+    log_msg = ""
+    log_msg_vk = []
+    log_msg_tg = []
+
+    send_vk_message('Ежедневный крон', 2000000001)
     send_tg_message(tg_admin_chat, 'Ежедневный крон')
 
-    for k in range(len(groups)):
-        group = groups[k]
-        peer_id = chat_ids[k]  # str, только для сообщения об ошибке
-        tg_chat = tg_chat_ids[k]  # int, для отправки в Telegram
-        tg_last_message = tg_last_messages[k]  # int, для открепления в Telegram
+    for group in group_data.index:
+        vk_chat = group_data.loc[group, 'vk_chat_id']  # int by default
+        tg_chat = group_data.loc[group, 'tg_chat_id']
+        msg = ""
 
         try:
-            # Если нет беседы группы, то просто обновляем бд и пропускаем составление сообщения ей
-            if not chat_ids[k] and not tg_chat_ids[k]:
-                daily_cron(group)
-                continue
-
-            # иначе собираем данные для сообщений - изменения в параметрах группы
-            if chat_ids[k]:
-                peer_id = int(chat_ids[k])
-            if tg_chat_ids[k]:
-                tg_chat = int(tg_chat_ids[k])
-
             # обновление данных - изменения в учебном состоянии (семестр/сессия)
             is_exam, is_study, daily_str = daily_cron(group)
 
-            # если и то и то =True -> есть расписание сессии, но семестр еще идет (заканчивается, скорее всего)
-            if is_exam and is_study:
-                is_exam = 0  # тогда оставляем пока обычное расписание
+            # Если отключена отправка расписания в конфу - на этом всё, едем дальше.
+            if not group_data.loc[group, 'send_tables']:
+                continue
 
-            please_donate, attachment = donator_daily_cron(group)  # ежедневная пикча и уведомление о ее отключении
+            # Собираем сообщение с расписанием: календарь если прописан календарь (независимо от учебного статуса),
+            # иначе обычное расписание если учеба, плюс оповещение об экзаменах/консультациях, если таковые есть.
+            gcal_over_tables = bool(group_data.loc[group, 'gcal_over_tables'])
+            gcal_over_exam = bool(group_data.loc[group, 'gcal_over_exam'])
 
-            # сообщение отправляется либо с календарем, либо с расписоном. от этого две сборки сообщения
-            if gcal_lnks[k]:  # если есть календарь
-                calendar_message = read_calendar(group)
-                if calendar_message.split()[-1] != 'Пусто':  # только дни когда что-то есть
-                    # Отправка ВК
-                    if peer_id:
-                        response = send_message(message=please_donate + daily_str + calendar_message,
-                                                peer_id=peer_id,
-                                                attachment=attachment)
-                        pin_message(response, peer_id)
-                        logger.warning(f'Календарь отправлен группе {group}')
+            msg += read_calendar(group) if gcal_over_tables else read_table(group) if is_study else ""
+            msg += f"\n{get_exam_notification(group)}" if is_exam and not gcal_over_exam else ""
 
-                    # Отправка ТГ
-                    if tg_chat:
-                        if tg_last_message:  # Открепляем предыдущее, если оно было todo check
-                            unpin_tg_message(tg_chat, tg_last_message)
-                        msg = send_tg_message(tg_chat, please_donate + daily_str + calendar_message)
-                        pin_tg_message(msg)
-                        logger.warning(f'Календарь отправлен в ТГ группе {group}')
+            # Проверка на содержательность сообщения (есть ли какое-то из расписаний)
+            # TODO
+            # if calendar_message.split()[-1] != 'Пусто'
+            # if read_table(group).split()[-1] != 'Пусто':
 
-                    calendar_counter += 1
+            msg = f"{daily_str}\n{msg}"
 
-            else:  # если нет календаря
-                table_message = daily_str
+            # ежедневная пикча для донатеров
+            attachment = ""
+            if group_data.loc[group, 'is_donator'] and group_data.loc[group, 'with_dayofday']:
+                attachment = get_day_photo()
 
-                if is_exam:  # если идут экзамены, добавляем экзамен на сегодня в сообщение
-                    exam_notification = get_exam_notification(group)
-                    if not exam_notification:  # если на сегодня нет экзаменов, то пробуем посмотреть на завтра
-                        exam_notification = get_exam_notification(group, day=date.today()+timedelta(days=1))
+            # Отправка сообщения в нужный чат
+            if vk_chat:
+                response = send_vk_message(message=msg, peer_id=vk_chat, attachment=attachment)
+                pin_vk_message(response, vk_chat)
+                log_msg_vk += [f"{group} - {'календарь' if gcal_over_tables else 'расписание'}\n"]
 
-                    if exam_notification:
-                        table_message += exam_notification
+            if tg_chat:
+                if group_data.loc[group, 'tg_last_msg']:  # Открепляем предыдущее, если оно было
+                    unpin_tg_message(tg_chat, group_data.loc[group, 'tg_last_msg'])
+                msg_ = send_tg_message(tg_chat, msg)
+                pin_tg_message(msg_)
+                log_msg_tg += [f"{group} - {'календарь' if gcal_over_tables else 'расписание'}\n"]
 
-                elif is_study:  # иначе, если обычный учебный день - расписание
-                    if read_table(group).split()[-1] != 'Пусто':
-                        table_message += read_table(group)
+        except Exception as send_tables_err:
+            log_msg += f"{group} - ОШИБКА {send_tables_err}\n" \
+                       f"--------- vk: {vk_chat}\n" \
+                       f"--------- tg: {tg_chat}\n" \
+                       f"--------- msg: {msg}\n\n"
+            continue
 
-                if table_message:  # если есть хоть что-то в сообщении на день, форматируем и отправляем
-                    # Отправка ВК
-                    if peer_id:
-                        table_message = please_donate.join(table_message)  # please_donate в начало
-                        response = send_message(message=table_message, peer_id=peer_id,
-                                                attachment=attachment)
+    log_msg = f"Выполнена рассылка расписаний\n" \
+              f"VK ({len(log_msg_vk)}):\n{''.join(log_msg_vk)}\n\n" \
+              f"TG ({len(log_msg_tg)}):\n{''.join(log_msg_tg)}\n\n" \
+              f"{log_msg}"
 
-                        if response[0].get('conversation_message_id'):
-                            pin_message(response, peer_id)  # пробуем закрепить сообщение
-
-                        logger.warning(f'Расписание отправлено группе {group}')
-
-                    # Отправка ТГ
-                    if tg_chat:
-                        if tg_last_message:
-                            unpin_tg_message(tg_chat, tg_last_message)
-                        msg = send_tg_message(tg_chat, table_message)
-                        pin_tg_message(msg)
-                        logger.warning(f'Расписание отправлено в ТГ группе {group}')
-
-                    schedule_counter += 1
-
-        except Exception as e:
-            err_message = f'Ошибка крона в конфе {peer_id}, группа {group}: {e}\n{traceback.format_exc()}'
-            send_message(err_message, 2000000001)
-            send_tg_message(tg_admin_chat, err_message)
-
-    stats_message = f'Отправлено {calendar_counter + schedule_counter} сообщений из ' \
-                    f'{sum(chat_id is not None for chat_id in chat_ids)}.\n' \
-                    f'Расписаний: {schedule_counter}\n' \
-                    f'Календарей: {calendar_counter}'
-    send_message(stats_message, 2000000001)
-    send_tg_message(tg_admin_chat, stats_message)
+    send_tg_message(tg_admin_chat, log_msg)
+    send_vk_message(log_msg, 2000000001)
+    return 0
 
 
 def get_group(user_id, source='vk') -> str:  # принимает user_id и возвращает его группу
