@@ -251,9 +251,10 @@ def load_teacher_ids(group):
     return 0
 
 
-def create_database(group, is_global_parsing=False, keep_old_data_override=False, override_bool=False) -> str:
+def create_database(group, is_global_parsing=False, keep_old_data_override=False, override_bool=False):
     """
-    Создание БД для группы и все сопутствующие операции
+    Создание БД для группы и все сопутствующие операции.
+    БД создается из экспортируемого .ical-календаря с расписанием группы, потому что так когда-то было удобнее.
 
     :param str group: номер группы
     :param bool is_global_parsing: if True, парсинг будет производиться в глобальном режиме - меньше уведомлений,
@@ -269,9 +270,9 @@ def create_database(group, is_global_parsing=False, keep_old_data_override=False
     else:
         keep_old_data = override_bool
 
-    with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:  # достаем странный айдишник
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:  # достаем странный айдишник
         cur = con.cursor()
-        etu_id = cur.execute("SELECT etu_id FROM all_groups WHERE fullNumber=?", [group]).fetchone()
+        etu_id = cur.execute("SELECT etu_id FROM group_gcals WHERE group_id=?", [group]).fetchone()
         if etu_id:  # если группа такая существует
             etu_id = etu_id[0]
     con.close()
@@ -299,19 +300,23 @@ def create_database(group, is_global_parsing=False, keep_old_data_override=False
 
         schedule_list = []
         prepods_list = []
-        for i in range(14):
+
+        for i in range(14):  # 14 - две недели, четная/нечетная
             day = datetime.now(pytz.timezone('Europe/Moscow')).date() + timedelta(days=i)
             for component in full_cal.walk():
                 if component.get('dtstart'):
                     dtstart = component.get('dtstart').dt
                     if (day.isocalendar()[1] - dtstart.isocalendar()[1]) % 2 == 0 and dtstart.weekday() == day.weekday():
-                        if (day.isocalendar()[1] - parity_count[0].isocalendar()[1]) % 2 == 0:
+
+                        if (day.isocalendar()[1] - parity_count[0].isocalendar()[1]) % 2 == 0:  # Чётность пары
                             parity = '1'  # если криво меняется на "% 2 != 0" строкой выше
                         else:
                             parity = '0'
+
                         dtstart = str(dtstart).split()[1][:5]
                         summary = component.get('SUMMARY').split()
                         description = component.get('DESCRIPTION')
+
                         name = 'Ошибка ФИО'  # ФИО преподавателя
                         classroom = ''  # может сломаться?
                         subject = ' '.join(summary[:-1])
@@ -421,11 +426,13 @@ def create_database(group, is_global_parsing=False, keep_old_data_override=False
             if cur.execute('SELECT isExam FROM group_gcals WHERE group_id=?', [group]).fetchone()[0]:
                 parse_exams(group)
         con.close()
+
     except Exception as e:
         if is_global_parsing:
             return '', f'\n{group} - Ошибка:{e}\n{traceback.format_exc()}\n'
         return f'Ошибка создания базы данных группы {group}. Обратись за помощью к администраторам.', \
                f'Ошибка создания БД: {e}\n{traceback.format_exc()}'
+
     if is_global_parsing:
         return '', f'{group} - Успешно\nМетоды:{book_notif_admin}\n'
     return f'База данных группы {group} успешно загружена!\n{book_notif_user}', book_notif_admin
@@ -807,7 +814,7 @@ def check_group_exists(group_num):
 
     with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:
         cur = con.cursor()
-        return True if cur.execute('''SELECT fullNumber FROM all_groups WHERE fullNumber=?''', [group_num]).fetchone() else False
+        return True if cur.execute('SELECT etu_id FROM group_gcals WHERE group_id=?', [group_num]).fetchone() else False
 
 
 # шиза для юзеров
@@ -1453,10 +1460,10 @@ def add_preset_books(group, is_global_parsing=False) -> str:  # добавлен
 
     user_str = ''
     admin_str = ''
-    with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
         try:
-            semester = str(cur.execute('SELECT semester FROM all_groups WHERE fullNumber=?', [group]).fetchone()[0])
+            semester = str(cur.execute('SELECT semester FROM group_gcals WHERE group_id=?', [group]).fetchone()[0])
         except TypeError:
             return f'Группа {group} не найдена', f'Группа {group} не найдена'
     con.close()

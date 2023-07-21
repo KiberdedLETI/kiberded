@@ -635,11 +635,12 @@ def get_exam_data(group) -> dict:
 
     return_str = {}
 
-    with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
         try:
             etu_id, course, study_type = \
-                cur.execute("SELECT etu_id, course, studyingType FROM all_groups WHERE fullNumber=?", [group]).fetchall()[0]
+                cur.execute("SELECT etu_id, course, studying_type FROM group_gcals WHERE group_id=?",
+                            [group]).fetchall()[0]
         except IndexError:
 
             return {}
@@ -769,9 +770,9 @@ def parse_group_params(group, set_default_next_sem=False):
     """
 
     # номер группы и её id в ИС "Расписание" отличаются - в базе соответствующие разные значения
-    with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        etu_id = cur.execute("SELECT etu_id FROM all_groups WHERE fullNumber=?", [group]).fetchone()[0]
+        etu_id = cur.execute("SELECT etu_id FROM group_gcals WHERE group_id=?", [group]).fetchone()[0]
     con.close()
 
     # получение данных
@@ -845,26 +846,18 @@ def parse_group_params(group, set_default_next_sem=False):
             " WHERE group_id=?", [group_dates])
     con.close()
 
-    # если оказалось, что на сайте старое расписание, апдейтим номер семестра в all_groups - но это пока нигде не нужно
+    # если оказалось, что на сайте старое расписание, апдейтим номер семестра в group_gcals - но это пока нигде не нужно
     if set_default_next_sem:  # номер сема апдейтится по сравнению с сайтом, а не бд (semester)
-        with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:
+        with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
             cur = con.cursor()
-            cur.execute('UPDATE all_groups SET semester=? WHERE fullNumber=?', (semester+1, group))
+            cur.execute('UPDATE group_gcals SET semester=? WHERE group_id=?', (semester+1, group))
         con.close()
-
-        # deprecated - do not touch
-        # with sqlite3.connect(f'{path}databases/{group}.db') as con:
-        #     cur = con.cursor()
-        #     cur.execute("DROP TABLE IF EXISTS schedule")
-        #     # cur.execute("DROP TABLE IF EXISTS prepods") пока не надо, будет ломаться
-
     return 0
 
 
 def parse_etu_ids() -> str:
     """
-    Обновляет all_groups.db в связи с появлением новых групп - загружает соответствующие им id на ИС "Расписание" ЛЭТИ
-
+    Обновляет group_ids.db в связи с появлением новых групп - загружает соответствующие им id на ИС "Расписание" ЛЭТИ
     :return: сообщение с оповещением для отладочной беседы
     """
 

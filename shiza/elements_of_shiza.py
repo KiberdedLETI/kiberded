@@ -653,9 +653,9 @@ def change_group_func(user_id):
                 send_message(peer_id=user_id, message='Секунду, ищем группу...')
 
                 # проверка на существование группы
-                with sqlite3.connect(f'{path_db}admindb/databases/all_groups.db') as con:
+                with sqlite3.connect(f'{path_db}admindb/databases/group_ids.db') as con:
                     cur = con.cursor()
-                    group_data = cur.execute('SELECT etu_id, studyingType FROM all_groups WHERE fullNumber=?',
+                    group_data = cur.execute('SELECT etu_id, studying_type FROM group_gcals WHERE group_id=?',
                                              [values_check]).fetchone()
 
                 if group_data:
@@ -724,9 +724,10 @@ def change_additional_group_func(user_id):  # смена/установка но
             if len(values_check) == 4 and values_check.isdecimal():  # проверка формата
                 send_message(peer_id=user_id, message='Секунду, ищем группу...')
                 # проверка на существование такой группы
-                with sqlite3.connect(f'{path_db}admindb/databases/all_groups.db') as con:
+                with sqlite3.connect(f'{path_db}admindb/databases/group_ids.db') as con:
                     cur = con.cursor()
-                    group_data = cur.execute('SELECT etu_id, studyingType FROM all_groups WHERE fullNumber=?', [values_check]).fetchone()
+                    group_data = cur.execute('SELECT etu_id, studying_type FROM group_gcals WHERE group_id=?',
+                                             [values_check]).fetchone()
                 if group_data:
                     if group_data[1] == 'заоч':
                         send_message(peer_id=user_id,
