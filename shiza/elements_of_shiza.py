@@ -491,7 +491,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                                            [group_to_add]).fetchall():
                                                 cur.execute('UPDATE group_gcals SET last_donate=? WHERE group_id=?',
                                                             (date.today()+timedelta(days=donate_period), group_to_add))
-                                                donate_chat = cur.execute('SELECT chat_id FROM group_gcals WHERE group_id=?', [group_to_add]).fetchall()
+                                                donate_chat = cur.execute('SELECT vk_chat_id FROM group_gcals WHERE group_id=?', [group_to_add]).fetchall()
                                             else:
                                                 raise ValueError(f'Нет такой группы: {group_to_add}')
                                         with sqlite3.connect(f'{path}databases/admins.db') as con:

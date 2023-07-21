@@ -404,7 +404,7 @@ def compile_group_stats(peer_id, admin_stats=False, source='vk') -> str:  # Зд
     :return: сообщение со статистикой группы/бота
     """
 
-    id_col = 'chat_id' if source == 'vk' else 'tg_chat_id'
+    id_col = 'vk_chat_id' if source == 'vk' else 'tg_chat_id'
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
@@ -443,7 +443,7 @@ def compile_group_stats(peer_id, admin_stats=False, source='vk') -> str:  # Зд
             all_users_vk = cur.execute('SELECT group_id FROM user_ids WHERE user_id IS NOT NULL').fetchall()
             all_users_tg = cur.execute('SELECT group_id FROM user_ids WHERE telegram_id IS NOT NULL').fetchall()
             all_groups = cur.execute('SELECT DISTINCT group_id FROM user_ids').fetchall()
-            all_chats = cur.execute('SELECT group_id FROM group_gcals WHERE chat_id IS NOT NULL').fetchall()
+            all_chats = cur.execute('SELECT group_id FROM group_gcals WHERE vk_chat_id IS NOT NULL').fetchall()
             all_tg_chats = cur.execute('SELECT group_id FROM group_gcals WHERE tg_chat_id IS NOT NULL').fetchall()
             all_mail = cur.execute('SELECT group_id FROM group_gcals WHERE mail IS NOT NULL').fetchall()
             all_gcals = cur.execute('SELECT group_id FROM group_gcals WHERE gcal_link IS NOT NULL').fetchall()

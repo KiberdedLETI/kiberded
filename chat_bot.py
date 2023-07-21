@@ -264,7 +264,7 @@ def get_books(subject, group_id, event, is_old=False):
                     f"THEN name " \
                 f"END AS name, " \
                 f"CASE " \
-                    f"WHEN doc_link IS NOT NULL  OR doc_link IS NULL AND name IS NOT NULL AND file_link_tg IS NULL " \
+                    f"WHEN doc_link IS NOT NULL OR doc_link IS NULL AND name IS NOT NULL AND file_link_tg IS NULL " \
                     f"THEN doc_link " \
                 f"END AS doc_link FROM books_old WHERE subject=? ORDER BY name"
     else:
@@ -274,7 +274,7 @@ def get_books(subject, group_id, event, is_old=False):
                     f"THEN name " \
                 f"END AS name, " \
                 f"CASE " \
-                    f"WHEN doc_link IS NOT NULL  OR doc_link IS NULL AND name IS NOT NULL AND file_link_tg IS NULL " \
+                    f"WHEN doc_link IS NOT NULL OR doc_link IS NULL AND name IS NOT NULL AND file_link_tg IS NULL " \
                     f"THEN doc_link " \
                 f"END AS doc_link FROM books WHERE subject=? ORDER BY name"
 
@@ -741,7 +741,7 @@ def main(vk_session, group_token):
                                                                               get_freedom(message["from_id"]))
                                 add_chat_notif = f'Добавлена конфа группы {new_group_id} ' \
                                                  f'юзером @id{message["from_id"]}\n' \
-                                                 f'chat_id: {new_chat_id}\n' \
+                                                 f'vk_chat_id: {new_chat_id}\n' \
                                                  f'{" ".join(add_chat_message.split()[:4])}'  # если там ошибка
                                 send_to_vk(event=None, message_send=add_chat_notif, chat_id_send=2000000001,
                                            is_to_user=False)

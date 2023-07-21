@@ -785,9 +785,9 @@ def add_new_chat_step(message):
             send_message(tg_id, f'Ошибка - нет такой группы: {group}. Проверь данные и попробуй еще раз')
             return 0
 
-        old_chat_id = cur.execute('SELECT chat_id FROM group_gcals WHERE group_id=?', [group]).fetchone()[0]
+        old_chat_id = cur.execute('SELECT vk_chat_id FROM group_gcals WHERE group_id=?', [group]).fetchone()[0]
         if old_chat_id:
-            return_str = f'Беседа группы {group} уже есть ВКонтакте - chat_id={old_chat_id}\n' \
+            return_str = f'Беседа группы {group} уже есть ВКонтакте - vk_chat_id={old_chat_id}\n' \
                          f'Чтобы добавить беседу и в Телеграм, напиши в беседе ВК команду "@kiberded_bot телеграм"'
         else:
             old_chat_id = cur.execute('SELECT tg_chat_id '
@@ -904,10 +904,10 @@ def add_telegram_user_id(vk_id, tg_id, id_type='user'):
         grp_q = f'SELECT group_id FROM user_ids WHERE user_id=?'
         grp_alt_q = f'SELECT group_id FROM user_ids WHERE telegram_id=?'
     elif id_type == 'group':
-        del_q = f'DELETE FROM group_gcals WHERE tg_chat_id=? AND chat_id IS NULL'
-        old_q = f'SELECT tg_chat_id FROM group_gcals WHERE chat_id=?'
-        upd_q = f'UPDATE group_gcals SET tg_chat_id=? WHERE chat_id=?'
-        grp_q = f'SELECT group_id FROM group_gcals WHERE chat_id=?'
+        del_q = f'DELETE FROM group_gcals WHERE tg_chat_id=? AND vk_chat_id IS NULL'
+        old_q = f'SELECT tg_chat_id FROM group_gcals WHERE vk_chat_id=?'
+        upd_q = f'UPDATE group_gcals SET tg_chat_id=? WHERE vk_chat_id=?'
+        grp_q = f'SELECT group_id FROM group_gcals WHERE vk_chat_id=?'
         grp_alt_q = f'SELECT group_id FROM group_gcals WHERE tg_chat_id=?'  # вот этот запрос пока не нужен, но все же
     else:
         raise ValueError('id_type must be "user" or "group"')
@@ -942,7 +942,7 @@ def add_telegram_user_id(vk_id, tg_id, id_type='user'):
         return f"Аккаунт в Телеграме успешно привязан к https://vk.com/id{vk_id}, группа {group}.", group
 
     elif id_type == 'group':
-        return f"Группа в Телеграме успешно привязана к chat_id={vk_id}, группа {group}.", group
+        return f"Группа в Телеграме успешно привязана к vk_chat_id={vk_id}, группа {group}.", group
 
 
 @bot.message_handler(commands=['start'])
@@ -962,7 +962,7 @@ def send_welcome(message):
         if server_hash == user_hash:  # Совпадает - добавляем пользователя/беседу
             if int(user_id) > 2000000000:  # источник сообщения - беседа todo если нет беседы вк, предлагать добавить в телеге
                 reply, user_group = add_telegram_user_id(str(user_id), str(message.chat.id), id_type='group')
-                msg_source = 'chat_id='
+                msg_source = 'vk_chat_id='
 
             else:  # источник сообщения - пользователь
                 reply, user_group = add_telegram_user_id(str(user_id), str(message.chat.id))

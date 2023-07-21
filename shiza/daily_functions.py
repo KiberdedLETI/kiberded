@@ -99,7 +99,7 @@ def get_groups():
         cur = con.cursor()
         groups = cur.execute('SELECT group_id FROM group_gcals').fetchall()
         gcal_links = cur.execute('SELECT gcal_link FROM group_gcals').fetchall()
-        chat_ids = cur.execute('SELECT chat_id FROM group_gcals').fetchall()
+        chat_ids = cur.execute('SELECT vk_chat_id FROM group_gcals').fetchall()
         tg_chat_ids = cur.execute('SELECT tg_chat_id FROM group_gcals').fetchall()
         tg_last_messages = cur.execute('SELECT tg_last_msg FROM group_gcals').fetchall()  # Чтобы откреплять
     con.close()

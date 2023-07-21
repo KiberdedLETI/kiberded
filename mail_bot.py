@@ -210,7 +210,7 @@ def chat_params():  # достает всю таблицу group_gcals в мас
         ans = []
         for row in cur.execute("SELECT mail FROM group_gcals").fetchall():
             if row[0]:  # не добавляем тех у кого нет почты
-                ans.append(cur.execute('SELECT chat_id, group_id, mail, mail_password, mail_imap, tg_chat_id FROM group_gcals WHERE mail=?', [row[0]]).fetchone())
+                ans.append(cur.execute('SELECT vk_chat_id, group_id, mail, mail_password, mail_imap, tg_chat_id FROM group_gcals WHERE mail=?', [row[0]]).fetchone())
     con.close()
     return ans
 

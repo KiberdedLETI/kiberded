@@ -514,10 +514,10 @@ def view_email(group):
         cur = con.cursor()
         mail_data = cur.execute('SELECT mail, mail_password '
                                 'FROM group_gcals '
-                                'WHERE group_id=? AND chat_id IS NOT NULL', [group]).fetchall()
+                                'WHERE group_id=? AND vk_chat_id IS NOT NULL', [group]).fetchall()
         unauthorized_td_chats = cur.execute('SELECT tg_chat_id '
                                             'FROM group_gcals '
-                                            'WHERE group_id=? AND chat_id IS NULL', [group]).fetchall()
+                                            'WHERE group_id=? AND vk_chat_id IS NULL', [group]).fetchall()
 
     con.close()
     mail_data = list(mail_data[0])
@@ -545,10 +545,10 @@ def view_gcal(group):
         cur = con.cursor()
         mail_cal_data = cur.execute('SELECT gcal_link '
                                     'FROM group_gcals '
-                                    'WHERE group_id=? AND chat_id IS NOT NULL', [group]).fetchone()[0]
+                                    'WHERE group_id=? AND vk_chat_id IS NOT NULL', [group]).fetchone()[0]
         unauthorized_td_chats = cur.execute('SELECT tg_chat_id '
                                             'FROM group_gcals '
-                                            'WHERE group_id=? AND chat_id IS NULL', [group]).fetchall()
+                                            'WHERE group_id=? AND vk_chat_id IS NULL', [group]).fetchall()
 
     con.close()
     if mail_cal_data:  # если есть почта группы
@@ -577,12 +577,12 @@ def edit_email(group, email='', password=''):  # добавление почты
     """
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        # Вот здесь в запросе нужно будет убрать AND chat_id IS NOT NULL если отдельно для ТГ делать.
+        # Вот здесь в запросе нужно будет убрать AND vk_chat_id IS NOT NULL если отдельно для ТГ делать.
         # Это проверка на неавторизованные беседы
         old_data = cur.execute(f"SELECT mail, mail_password, mail_imap group_gcals "
                                f"FROM group_gcals "
                                f"WHERE group_id={group} "
-                               f"AND chat_id IS NOT NULL").fetchall()
+                               f"AND vk_chat_id IS NOT NULL").fetchall()
 
         if old_data:
             old_data = old_data[0]
@@ -599,7 +599,7 @@ def edit_email(group, email='', password=''):  # добавление почты
         
         cur.execute(f"UPDATE group_gcals SET mail=?, mail_password=?, mail_imap=? "
                     f"WHERE group_id={group} "
-                    f"AND chat_id IS NOT NULL",
+                    f"AND vk_chat_id IS NOT NULL",
                     [email, password, imap_address])
         con.commit()
     con.close()
@@ -623,12 +623,12 @@ def edit_gcal(group, gcal=''):  # добавление календаря (пр�
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        # Вот здесь в запросе нужно будет убрать AND chat_id IS NOT NULL если отдельно для ТГ делать.
+        # Вот здесь в запросе нужно будет убрать AND vk_chat_id IS NOT NULL если отдельно для ТГ делать.
         # Это проверка на неавторизованные беседы
         old_gcal = cur.execute(f"SELECT gcal_link group_gcals "
                                f"FROM group_gcals "
                                f"WHERE group_id={group} "
-                               f"AND chat_id IS NOT NULL").fetchone()
+                               f"AND vk_chat_id IS NOT NULL").fetchone()
         if old_gcal:
             old_gcal = old_gcal[0]
             if not gcal:
@@ -637,7 +637,7 @@ def edit_gcal(group, gcal=''):  # добавление календаря (пр�
         cur.execute(f"UPDATE group_gcals "
                     f"SET gcal_link=? "
                     f"WHERE group_id=? "
-                    f"AND chat_id IS NOT NULL", (gcal, group))
+                    f"AND vk_chat_id IS NOT NULL", (gcal, group))
     con.close()
 
     generate_main_keyboard(group)  # Обновляем клавиатуру
