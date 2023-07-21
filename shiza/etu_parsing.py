@@ -245,17 +245,6 @@ def parse_prepods_schedule():
     return 0
 
 
-def get_prepod(surname, initials=None):
-    """
-    Ищет преподавателя по фамилии или инициалам, возвращает id и ФИО для подтверждения
-
-    :param str surname:
-    :param str initials:
-    :return:
-    """
-    raise NotImplementedError('В разработке')
-
-
 def get_calendar(group_id, day=today) -> str:
     """
     Составление расписания из .ical календаря
@@ -684,7 +673,7 @@ def parse_exams(group, exam_json_data=None, set_default_next_sem=False) -> str:
     :return: сообщение с оповещением об изменениях в беседу группы
     """
 
-    return_data = ''  # для крона, оповещения об изменениях в расписоне сессии
+    return_data = ''  # для крона, оповещения об изменениях в расписании сессии
 
     if exam_json_data is None:
         exam_json_data = get_exam_data(group)

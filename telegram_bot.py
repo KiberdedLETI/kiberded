@@ -26,8 +26,8 @@ import sys
 import pickle
 from requests.exceptions import ReadTimeout, ConnectionError
 
-from bot_functions.bots_common_funcs import read_calendar, day_of_day_toggle, read_table, get_day, \
-    compile_group_stats, add_user_to_table, get_exams, get_prepods, get_subjects, group_is_donator, \
+from bot_functions.bots_common_funcs import read_calendar, read_table, get_day, \
+    compile_group_stats, add_user_to_table, get_exams, get_prepods, group_is_donator, \
     add_user_to_anekdot, set_table_mode, get_tables_settings
 from bot_functions.anekdot import get_random_anekdot, get_random_toast, create_link_to_telegram
 from fun.minigames import get_coin_flip_result, start_classical_rock_paper_scissors, \
