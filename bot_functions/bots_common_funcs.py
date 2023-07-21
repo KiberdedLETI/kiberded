@@ -6,7 +6,7 @@ import re
 import time
 import pytz
 import requests
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import sqlite3
 import sys
 import os
@@ -210,6 +210,54 @@ def get_exams(group) -> str:
     return str_to_vk
 
 
+def get_exam_notification(group, day=date.today()) -> str:
+    """
+    Сообщение с экзаменом/консультацией на заданный день из таблицы exam_schedule (при наличии)
+
+    :param str group: группа
+    :param date day: день. По умолчанию - сегодня и завтра
+    :return: сообщение с расписанием
+    """
+
+    # По умолчанию смотрим сегодня-завтра
+    exam_days = [day] if day != date.today() else [date.today(), date.today() + timedelta(days=1)]
+    exam_msg = ''
+
+    with sqlite3.connect(f'{path}databases/{group}.db') as con:
+        cur = con.cursor()
+        if cur.execute("SELECT name FROM sqlite_master "  # если нет таблицы с экзаменами, то ничего не присылаем
+                       "WHERE type='table' AND name='exam_schedule'").fetchone() is not None:
+
+            for exam_day in exam_days:
+                exam = cur.execute('SELECT time, subject, name, classroom '
+                                   'FROM exam_schedule WHERE date=?', [exam_day]).fetchone()
+
+                if exam is not None:  # Экзамен
+                    exam_msg = f'в {exam[0]} экзамен по {exam[1]}' \
+                               f'\nПреподаватель - {exam[2]}' \
+                               f'\nАудитория {exam[3]}' \
+                               f'\nУдачи!'
+
+                else:  # Консультация
+                    consult = cur.execute('SELECT subject, name, consult_date, consult_time, consult_classroom '
+                                          'FROM exam_schedule '
+                                          'WHERE consult_date=?', [exam_day]).fetchone()
+                    if consult is not None:
+                        exam_msg = f'в {consult[3]} консультация по {consult[0]}' \
+                                   f'\nПреподаватель - {consult[1]}'
+                        if consult[4] != '':
+                            exam_msg += f'\nАудитория {consult[4]}'
+
+                if exam_msg:
+                    if day == date.today():
+                        exam_msg = f"Сегодня {exam_msg}\n"
+                    elif day == date.today() + timedelta(days=1):
+                        exam_msg = f"Завтра {exam_msg}"
+                    else:
+                        exam_msg = f"{exam_day} {exam_msg}"
+    return exam_msg
+
+
 def get_prepods(subject, group_id, is_old=False) -> str:
     """
     Получение данных о преподавателях заданного предмета
@@ -232,7 +280,6 @@ def get_prepods(subject, group_id, is_old=False) -> str:
             for row in cursor.execute(query, [subject]):
                 str_to_vk += f'{row[0]} - {row[1]}\n'
         except Exception as e:
-            logger.error(f'Ошибка чтения преподов: {str(e)}')
             str_to_vk += 'Возникла какая-то ошибка'
     return str_to_vk
 

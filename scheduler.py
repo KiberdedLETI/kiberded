@@ -19,11 +19,11 @@ import telebot
 import logging
 import traceback
 from bot_functions.anekdot import get_random_toast
-from bot_functions.bots_common_funcs import get_last_lesson, read_calendar, read_table, get_day, set_table_mode
+from bot_functions.bots_common_funcs import get_last_lesson, read_calendar, read_table, get_day, set_table_mode, \
+    get_exam_notification
 from shiza.etu_parsing import update_group_params, load_calendar_cache, load_table_cache, \
     parse_prepods_schedule, load_prepods_table_cache
-from shiza.daily_functions import daily_cron, get_exam_notification, get_groups, \
-    get_anekdot_user_ids, get_user_table_ids, get_day_photo
+from shiza.daily_functions import daily_cron, get_day_photo
 from shiza.databases_shiza_helper import generate_prepods_keyboards, generate_departments_keyboards, \
     create_departments_db
 import sys
