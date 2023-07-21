@@ -20,7 +20,7 @@ import logging
 import traceback
 from bot_functions.anekdot import get_random_toast
 from bot_functions.bots_common_funcs import get_last_lesson, read_calendar, read_table, get_day, set_table_mode
-from shiza.etu_parsing import parse_etu_ids, load_calendar_cache, load_table_cache, \
+from shiza.etu_parsing import update_group_params, load_calendar_cache, load_table_cache, \
     parse_prepods_schedule, load_prepods_table_cache
 from shiza.daily_functions import daily_cron, get_exam_notification, get_groups, \
     get_anekdot_user_ids, get_user_table_ids, get_day_photo
@@ -257,7 +257,7 @@ def cron():
     if date.today().strftime('%m-%d') == '09-01':
         try:
             send_message(f"Парсинг etu_id's. Проверь корректность данных!!!:\n", 2000000001)
-            admin_message = parse_etu_ids()  # обновлять эти айди нужно перед обновлением всех БД и прочего
+            admin_message, deleted_groups = update_group_params()  # обновлять эти айди нужно перед обновлением всех БД и прочего
             send_message(admin_message, 2000000001)
             # send_tg_message(tg_admin_chat, admin_message)
         except KeyError as e:

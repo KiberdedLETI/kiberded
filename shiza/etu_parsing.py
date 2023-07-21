@@ -855,33 +855,75 @@ def parse_group_params(group, set_default_next_sem=False):
     return 0
 
 
-def parse_etu_ids() -> str:
+def update_group_params():
     """
     Обновляет group_ids.db в связи с появлением новых групп - загружает соответствующие им id на ИС "Расписание" ЛЭТИ
-    :return: сообщение с оповещением для отладочной беседы
+    :return: сообщение с оповещением для админской беседы, список групп для удаления (нужно рассылать оповещения)
     """
 
+    # Получаем данные
     url = 'https://digital.etu.ru/api/general/dicts/groups?scheduleId=publicated&withSemesterSeasons=true'
-    all_data = requests.get(url, headers=headers).json()
-    all_groups = []
-    for i in range(len(all_data)):
-        all_groups.append((str(all_data[i]["fullNumber"]), str(all_data[i]["id"]), int(all_data[i]["course"]),
-                           int(all_data[i]["semester"]), str(all_data[i]["studyingType"])))
+    data = requests.get(url, headers=headers).json()
 
-    with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:
+    # Извлекаем и прописываем даты семестра
+    dates = ["semesterStart", "semesterEnd", "examStart", "examEnd"]
+    for el in range(len(data)):
+        for d in dates:
+            try:
+                print(data[el]["semesterSeasons"][0]["GroupSemesterSeason"][d])
+                data[el][d] = datetime.strptime(data[el]["semesterSeasons"][0]["GroupSemesterSeason"][d][:10], '%Y-%m-%d').date()
+            except TypeError:  # значение даты None или неправильный путь (мб нет GroupSemesterSeason)
+                data[el][d] = None
+
+    # Преобразуем в датафрейм для удобства обработки
+    df = pd.DataFrame(data)
+    df = df[['id', 'fullNumber', 'course', 'semester', 'studyingType', 'educationLevel',
+             "semesterStart", "semesterEnd", "examStart", "examEnd"]]
+
+    # Сравниваем с базой и обновляем при необходимости
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        all_groups_old = cur.execute('SELECT * FROM all_groups').fetchall()
-        diff = list(set(all_groups) - set(all_groups_old))
-        if not diff:  # если нету новых etu_ids
-            raise KeyError('Новых etu_id не обнаружено')
-        cur.execute('DROP TABLE IF EXISTS all_groups')
-        cur.execute("CREATE TABLE all_groups ("
-                    "fullNumber text, etu_id text, course int, semester int, studyingType text)")
-        cur.executemany("INSERT INTO all_groups (fullNumber, etu_id, course, semester, studyingType) "
-                        "VALUES (?, ?, ?, ?, ?)", all_groups)
+        old = pd.read_sql('SELECT etu_id, course, semester, studying_type, group_id FROM group_gcals', con)
+
+        new_gs = set(df[['id', 'fullNumber']].itertuples(index=False, name=None))
+        old_gs = set(old[['etu_id', 'group_id']].itertuples(index=False, name=None))
+        to_add = new_gs - old_gs
+        to_remove = old_gs - new_gs
+
+        # Сперва обновляем (только, остальное все равно потом) etu_id у тех, кто НЕ в обеих группах (был и остается)
+        staying = list(df.loc[~df.id.isin([el[0] for el in to_add]), ['id', 'fullNumber']].itertuples(index=False, name=None))
+        cur.executemany("UPDATE group_gcals SET etu_id=? WHERE group_id=?", staying)
+        con.commit()
+
+        # Теперь разбираемся с изменениями
+        # Старые группы (к удалению)
+        if to_remove:
+            cur.executemany(f"DELETE FROM group_gcals WHERE etu_id=? AND group_id=?", to_remove)
+            con.commit()
+            # todo уведомления группы об удалении
+
+        # Новые группы
+        if to_add:
+            to_add = list(df.loc[df.index.isin([el[0] for el in to_add])].itertuples(index=False, name=None))
+            cur.executemany("INSERT INTO group_gcals "
+                            "(etu_id, group_id, course, semester, studying_type, level, "
+                            "semester_start, semester_end, exam_start, exam_end) "
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", to_add)
+            con.commit()
+
+        # Обновляем все остальное. etu_id не трогаем - уже обновлено выше.
+        df = list(df[['course', 'semester', 'studyingType', "semesterStart", "semesterEnd", "examStart", "examEnd",
+                      "fullNumber"]].itertuples(index=False, name=None))
+        cur.executemany("UPDATE group_gcals SET course=?, semester=?, studying_type=?, "
+                        "semester_start=?, semester_end=?, exam_start=?, exam_end=? WHERE group_id=?", df)
+        con.commit()
     con.close()
 
-    message = f'Обновлена БД all_groups, загружены новые etu_ids.\n' \
-              f'Групп было: {len(all_groups_old)}\nГрупп стало: {len(all_groups)}.\n' \
-              f'Новые группы: {[group[0] for group in diff]}'
-    return message
+    add_groups = [el[1] for el in to_add]
+    remove_groups = [el[1] for el in to_remove]
+    message = f'Обновлена БД all_groups'
+    if to_add:
+        message += f'\nДобавлены группы ({len(add_groups)} шт.): {", ".join(add_groups)}'
+    if to_remove:
+        message += f'\nУдалены группы ({len(remove_groups)} шт.): {", ".join(remove_groups)}'
+    return message, remove_groups
