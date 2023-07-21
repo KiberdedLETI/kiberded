@@ -28,7 +28,7 @@ from shiza.databases_shiza_helper import generate_prepods_keyboards, generate_de
     create_departments_db
 import sys
 import pickle
-
+import pandas as pd
 global config
 global vk_session
 global vk
@@ -245,6 +245,17 @@ def get_anekdot(num) -> str:
     return anekdot_str
 
 
+def get_groups() -> pd.DataFrame:
+    """
+    Получение списка групп, ссылок на календарь и chat_ids
+    :return: df[[group_id, gcal_link, vk_chat_id, tg_chat_id, tg_last_msg]] (index=group_id)
+    """
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        q = "SELECT group_id, gcal_link, vk_chat_id, tg_chat_id, tg_last_msg FROM group_gcals"
+        df = pd.read_sql(q, con).set_index('group_id')
+    return df
+
+
 def cron():
     """
     Большая функция, в которой отправляются расписания и прочие штуки по беседам групп,
@@ -411,6 +422,24 @@ def get_group(user_id, source='vk') -> str:  # принимает user_id и в�
     return group
 
 
+def get_anekdot_user_ids(source='vk') -> list:  # список юзеров для рассылки анекдотов
+    """
+    Получение списка пользователей, подписанных на анекдоты.
+
+    :param str source: 'vk' / 'tg' - источник сообщения
+    :return: список [(user_id, count), ...]
+    """
+    with sqlite3.connect(f'{path}admindb/databases/anekdot_ids.db') as con:
+        cursor = con.cursor()
+        data = []
+        cursor.execute(f'CREATE TABLE IF NOT EXISTS {source}_users(id text, count text, source text)')
+
+        for row in cursor.execute(f'SELECT * FROM {source}_users'):
+            data.append(tuple((int(row[0]), int(row[1]))))
+    con.close()
+    return data
+
+
 def anekdots():
     """
     Отправка анекдотов в цикле всем подписанным
@@ -448,6 +477,39 @@ def get_custom_personal_tables_time() -> list:
         res = cursor.execute(f'SELECT DISTINCT time FROM `tg_users` WHERE time IS NOT NULL').fetchall()
         res2 = cursor.execute(f'SELECT DISTINCT time FROM `vk_users` WHERE time IS NOT NULL').fetchall()
     return list(set(res + res2))
+
+
+def get_user_table_ids(source='vk') -> dict:  # список юзеров для рассылки расписания
+    """
+    Получение списка пользователей, подписанных на ежедневное расписание, а также параметров рассылки
+    :param str source: 'vk' / 'tg' - источник сообщения
+    todo refactor in dataframe format
+    :return: {"time": {"type":[user_ids], ...}, ...};
+        "time"=None - дефолтное время, "type"='None' дефолтный режим рассылки.
+    """
+
+    with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
+        cursor = con.cursor()
+        data = []
+
+        cursor.execute(f'CREATE TABLE IF NOT EXISTS `{source}_users` (id text, count text, type text, time text)')
+
+        query = f'SELECT id, count, type, time FROM `{source}_users`'
+        for row in cursor.execute(query):
+            data.append(tuple((int(row[0]), tuple((int(row[1]), str(row[2]), str(row[3]))))))
+    con.close()
+
+    # Форматируем в {"time": {"type":[user_ids], ...}, ...}
+    # Для ВК формат тот же, для совместимости, однако функционала пока нет todo
+    result = {}
+    for user_id, user_settings in data:
+        table_mode = user_settings[1]
+        table_time = user_settings[2]
+
+        data = result.setdefault(table_time, {})
+        data.setdefault(table_mode, []).append(user_id)
+
+    return result
 
 
 def send_personal_tables(table_time='None'):
