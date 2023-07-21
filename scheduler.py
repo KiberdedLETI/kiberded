@@ -18,7 +18,7 @@ import vk_api
 import telebot
 import logging
 import traceback
-from bot_functions.anekdot import get_random_toast
+from fun.anekdot import get_random_toast
 from bot_functions.bots_common_funcs import get_last_lesson, read_calendar, read_table, get_day, set_table_mode, \
     get_exam_notification
 from shiza.etu_parsing import update_group_params, load_calendar_cache, load_table_cache, \

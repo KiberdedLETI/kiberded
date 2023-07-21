@@ -26,7 +26,7 @@ from shiza import elements_of_shiza
 from bot_functions.bots_common_funcs import read_calendar, day_of_day_toggle, read_table, get_day, weekly_toast_toggle, \
     compile_group_stats, add_user_to_table, get_exams, get_prepods, group_is_donator, add_user_to_anekdot, \
     get_tables_settings, set_table_mode, get_donators, create_link_to_telegram
-from bot_functions.anekdot import get_random_anekdot, get_random_toast
+from fun.anekdot import get_random_anekdot, get_random_toast
 # init
 logger = logging.getLogger('chat_bot')
 console_handler = logging.StreamHandler()
