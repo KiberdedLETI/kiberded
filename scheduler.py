@@ -32,7 +32,7 @@ import pickle
 global config
 global vk_session
 global vk
-global num_of_base
+global num_of_anekdots
 
 # common init
 logger = logging.getLogger('scheduler')
@@ -48,7 +48,7 @@ except FileNotFoundError:
 
 token = config.get('Kiberded').get('token')
 tg_token = config.get('Kiberded').get('token_telegram')
-num_of_base = config.get('Kiberded').get('num_of_base')  # количество анекдотов в базе
+num_of_anekdots = config.get('Kiberded').get('num_of_base')  # количество анекдотов в базе
 path = config.get('Kiberded').get('path')
 cron_time = config.get('Kiberded').get('cron_time')
 tables_time = config.get('Kiberded').get('tables_time')
@@ -230,7 +230,7 @@ def get_anekdot(num) -> str:
     """
     Чтение анекдота из базы под заданным номером
 
-    :param int num: номер анекдота (0 - num_of_base)
+    :param int num: номер анекдота (0 - num_of_anekdots)
     :return: анекдот.
     """
 
@@ -239,33 +239,10 @@ def get_anekdot(num) -> str:
         cursor.execute('SELECT text FROM anekdots WHERE id=?', [num])
         data = cursor.fetchall()
         text = data[0][0]
-    if text == 'ERROR':
-        get_anekdot(random.randint(0, num_of_base))
+    if text == 'ERROR':  # Пахнет рекурсией
+        get_anekdot(random.randint(0, num_of_anekdots))
     anekdot_str = text[3:-4]
     return anekdot_str
-
-
-def send_anekdot(user_id, num, target='vk'):
-    """
-    Чтение и отправка анекдота (get_anekdot -> send_message) с обработкой ошибок
-
-    :param int user_id: id для отправки
-    :param int num: номер анекдота (0 - num_of_base)
-    :param str target: название приложения для отправки ('vk' или 'tg')
-    :return: 0
-    """
-
-    try:
-        anekdot_str = get_anekdot(num)
-
-        if target == 'vk':
-            send_message(anekdot_str, user_id)
-        elif target == 'tg':
-            send_tg_message(user_id, anekdot_str)
-
-    except Exception as e:
-        logger.error(f'Произошла ошибка при отправке анекдота адресату @id{str(user_id)}: {str(e)}')
-    return 0
 
 
 def cron():
@@ -438,15 +415,24 @@ def anekdots():
     """
     Отправка анекдотов в цикле всем подписанным
     """
+    ids = get_anekdot_user_ids(source='vk')
+    for id in ids:
+        try:
+            msg = "Ежедневные анекдоты:\n" if id[1] > 1 else "Ежедневный анекдот:\n"
+            msg += '\n'.join([get_anekdot(random.randint(0, num_of_anekdots)) for k in range(id[1])])
+            send_message(msg, id[0])
+        except Exception as e:
+            send_message(f"Ошибка отправки {id[1]} анекдотов юзеру @{id[0]}: {e}", 2000000001)
 
-    all_ids = {'vk': get_anekdot_user_ids(source='vk'),
-               'tg': get_anekdot_user_ids(source='tg')}
-
-    for source, ids in all_ids.items():
-        for id in ids:
-            send_message('Ежедневный анекдот:', id[0])
-            for i in range(id[1]):
-                send_anekdot(id[0], random.randint(0, num_of_base), target=source)
+    ids = get_anekdot_user_ids(source='tg')
+    for id in ids:
+        try:
+            msg = "Ежедневные анекдоты:\n" if id[1] > 1 else "Ежедневный анекдот:\n"
+            msg += '\n'.join([get_anekdot(random.randint(0, num_of_anekdots)) for k in range(id[1])])
+            send_tg_message(msg, id[0])
+        except Exception as e:
+            send_tg_message(tg_admin_chat, f"Ошибка отправки {id[1]} анекдотов юзеру @{id[0]}: {e}")
+    return 0
 
 
 def get_custom_personal_tables_time() -> list:
