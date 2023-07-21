@@ -407,7 +407,6 @@ def add_user_to_anekdot(user_id, count, source='vk') -> str:
 def compile_group_stats(peer_id, admin_stats=False, source='vk') -> str:  # Здесь, потому что используется в обоих ботах
     """
     Сборка статистики группы: количество участников, статус группы, почта, календарь
-    TODO отдельный подсчет бесед в телеграме (+ записывать их в group_gcals, а не user_ids)
 
     :param int peer_id: id беседы
     :param bool admin_stats: if True, собирает данные всего бота, а не по одной группе
@@ -419,7 +418,7 @@ def compile_group_stats(peer_id, admin_stats=False, source='vk') -> str:  # Зд
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        all_stats = cur.execute(f'SELECT gcal_link, mail, last_donate, with_dayofday, group_id, with_toast '
+        all_stats = cur.execute(f'SELECT gcal_link, mail, is_donator, with_dayofday, group_id, with_toast '
                                 f'FROM group_gcals WHERE {id_col}=?', [peer_id]).fetchall()
 
         all_users = cur.execute('SELECT group_id FROM user_ids '
@@ -458,7 +457,7 @@ def compile_group_stats(peer_id, admin_stats=False, source='vk') -> str:  # Зд
             all_tg_chats = cur.execute('SELECT group_id FROM group_gcals WHERE tg_chat_id IS NOT NULL').fetchall()
             all_mail = cur.execute('SELECT group_id FROM group_gcals WHERE mail IS NOT NULL').fetchall()
             all_gcals = cur.execute('SELECT group_id FROM group_gcals WHERE gcal_link IS NOT NULL').fetchall()
-            all_donators = cur.execute('SELECT group_id FROM group_gcals WHERE last_donate IS NOT NULL').fetchall()
+            all_donators = cur.execute('SELECT group_id FROM group_gcals WHERE is_donator IS NOT NULL').fetchall()
             ans += '\n\nГлобальная статистика:\n' \
                    f'Всего пользователей {len(all_users_total)}:\n' \
                    f'-- из ВКонтакте: {len(all_users_vk)}\n' \
