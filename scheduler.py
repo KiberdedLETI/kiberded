@@ -23,7 +23,7 @@ from bot_functions.bots_common_funcs import get_last_lesson, read_calendar, read
     get_exam_notification
 from shiza.etu_parsing import update_group_params, load_calendar_cache, load_table_cache, \
     parse_prepods_schedule, load_prepods_table_cache
-from shiza.daily_functions import daily_cron, get_day_photo
+from shiza.daily_functions import daily_cron
 from shiza.databases_shiza_helper import generate_prepods_keyboards, generate_departments_keyboards, \
     create_departments_db
 import sys
@@ -243,6 +243,24 @@ def get_anekdot(num) -> str:
         get_anekdot(random.randint(0, num_of_anekdots))
     anekdot_str = text[3:-4]
     return anekdot_str
+
+
+def get_day_photo() -> str:
+    """
+    Получение рандомной ссылки на фотографию для донатного ежедневного сообщения расписания в беседу (пока только ВК)
+    :return: ссылка на фотографию
+    """
+
+    with sqlite3.connect(f'{path}admindb/databases/day_of_day.db') as con:
+        cursor = con.cursor()
+        cursor.execute('SELECT count_field FROM count')
+        data = cursor.fetchone()
+        numphotos = int(data[0])
+        cursor.execute('SELECT link FROM photos')
+        all_photos = cursor.fetchall()
+        photo = all_photos[random.randint(0, numphotos-1)][0]
+    con.close()
+    return photo
 
 
 def get_groups() -> pd.DataFrame:

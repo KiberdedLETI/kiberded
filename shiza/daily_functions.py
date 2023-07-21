@@ -4,106 +4,14 @@
 
 import random
 from datetime import date, datetime, timedelta
-from bot_functions.bots_common_funcs import day_of_day_toggle, weekly_toast_toggle
 import sqlite3
 import os
 from shiza.databases_shiza_helper import create_database, remove_old_data
-from shiza.etu_parsing import parse_exams, parse_group_params, get_exam_data
-import toml
-import sys
+from shiza.etu_parsing import parse_exams, get_exam_data
 
 
 path = f'{os.path.abspath(os.curdir)}/'
 num_of_base = 589999  # объем базы анекдотов
-
-
-def get_day_photo() -> str:
-    """
-    Получение рандомной ссылки на фотографию для донатного ежедневного сообщения расписания в беседу
-    :return: ссылка на фотографию
-    """
-
-    with sqlite3.connect(f'{path}admindb/databases/day_of_day.db') as con:
-        cursor = con.cursor()
-        cursor.execute('SELECT count_field FROM count')
-        data = cursor.fetchone()
-        numphotos = int(data[0])
-        cursor.execute('SELECT link FROM photos')
-        all_photos = cursor.fetchall()
-        photo = all_photos[random.randint(0, numphotos-1)][0]
-    con.close()
-    return photo
-
-
-def get_anekdot_user_ids(source='vk') -> list:  # список юзеров для рассылки анекдотов
-    """
-    Получение списка пользователей, подписанных на анекдоты.
-
-    :param str source: 'vk' / 'tg' - источник сообщения
-    :return: список [(user_id, count), ...]
-    """
-    with sqlite3.connect(f'{path}admindb/databases/anekdot_ids.db') as con:
-        cursor = con.cursor()
-        data = []
-        cursor.execute(f'CREATE TABLE IF NOT EXISTS {source}_users(id text, count text, source text)')
-
-        # todo replace with fetchall()
-        for row in cursor.execute(f'SELECT * FROM {source}_users'):
-            data.append(tuple((int(row[0]), int(row[1]))))
-        # \
-    con.close()
-    return data
-
-
-def get_user_table_ids(source='vk') -> dict:  # список юзеров для рассылки расписания
-    """
-    Получение списка пользователей, подписанных на ежедневное расписание, а также параметров рассылки
-    :param str source: 'vk' / 'tg' - источник сообщения
-
-    :return: {"time": {"type":[user_ids], ...}, ...};
-        "time"=None - дефолтное время, "type"='None' дефолтный режим рассылки.
-    """
-
-    with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
-        cursor = con.cursor()
-        data = []
-
-        cursor.execute(f'CREATE TABLE IF NOT EXISTS `{source}_users` (id text, count text, type text, time text)')
-
-        query = f'SELECT id, count, type, time FROM `{source}_users`'
-        for row in cursor.execute(query):
-            data.append(tuple((int(row[0]), tuple((int(row[1]), str(row[2]), str(row[3]))))))
-    con.close()
-
-    # Форматируем в {"time": {"type":[user_ids], ...}, ...}
-    # Для ВК формат тот же, для совместимости, однако функционала пока нет todo
-    result = {}
-    for user_id, user_settings in data:
-        table_mode = user_settings[1]
-        table_time = user_settings[2]
-
-        data = result.setdefault(table_time, {})
-        data.setdefault(table_mode, []).append(user_id)
-
-    return result
-
-
-def get_groups():
-    """
-    Получение списка групп, ссылок на календарь и chat_ids
-    :return: lists: groups, gcal_links, chat_ids, tg_chat_ids, tg_last_messages
-    """
-
-    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
-        con.row_factory = lambda cur, row: row[0]
-        cur = con.cursor()
-        groups = cur.execute('SELECT group_id FROM group_gcals').fetchall()
-        gcal_links = cur.execute('SELECT gcal_link FROM group_gcals').fetchall()
-        chat_ids = cur.execute('SELECT vk_chat_id FROM group_gcals').fetchall()
-        tg_chat_ids = cur.execute('SELECT tg_chat_id FROM group_gcals').fetchall()
-        tg_last_messages = cur.execute('SELECT tg_last_msg FROM group_gcals').fetchall()  # Чтобы откреплять
-    con.close()
-    return groups, gcal_links, chat_ids, tg_chat_ids, tg_last_messages
 
 
 def daily_cron(group):
