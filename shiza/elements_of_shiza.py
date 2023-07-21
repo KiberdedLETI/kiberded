@@ -25,7 +25,7 @@ from shiza.databases_shiza_helper import watch_all_databases, edit_all_databases
     get_group, generate_subject_keyboards, edit_admin_database, add_moderator, create_database, get_database_to_watch, \
     change_user_group, get_common_group, edit_email, edit_gcal, add_preset_books, view_email, view_gcal, delete_email, \
     delete_gcal, get_stock_groups, change_user_additional_group, get_common_additional_group, check_group_exists, \
-    load_table_cache, load_calendar_cache
+    load_table_cache, load_calendar_cache, add_donator_group
 
 # common init
 logger = logging.getLogger('chat_bot')
@@ -468,7 +468,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                                  keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
                                 break
 
-                    # Добавление группы в донатеры TODO move to Telegram as well
+                    # Добавление группы в донатеры
                     elif shiza_command == "add_donator":
                         if freedom == 'admin':
                             send_message(peer_id=user_id, keyboard=open_keyboard('keyboard_end'),
@@ -481,48 +481,19 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                     group_to_add = str(event.obj.message['text'])
                                     if group_to_add.isdecimal() and len(group_to_add) == 4:
 
-                                        # Проверка и добавление группы в донатеры
-                                        with sqlite3.connect(f"{path}databases/group_ids.db") as con:
-                                            cur = con.cursor()
-                                            donate_chat = cur.execute('SELECT vk_chat_id FROM group_gcals '
-                                                                      'WHERE group_id=?', [group_to_add]).fetchall()
-                                            if not donate_chat:
-                                                raise ValueError(f'Нет такой группы: {group_to_add}')
-                                            else:
-                                                cur.execute("UPDATE group_gcals SET is_donator=TRUE "
-                                                            "WHERE group_id=?", [group_to_add])
-                                                con.commit()
-                                        con.close()
-
-                                        # Получаем список модераторов группы для оповещения
-                                        with sqlite3.connect(f'{path}databases/admins.db') as con:
-                                            cur = con.cursor()
-                                            moder_info = cur.execute('SELECT id FROM users WHERE group_id=?',
-                                                                     [group_to_add]).fetchall()
-                                            moder_msg = ""
-                                            if moder_info:
-                                                moder_info = moder_info[0]
-                                                for i in range(len(moder_info)):
-                                                    moder_msg += f'@id{moder_info[i]} '
-                                            if not moder_msg:
-                                                moder_msg = "тут таких пока нет, напиши админам"
+                                        admin_msg, group_msg, group_chat = add_donator_group(group_to_add, source='vk')
 
                                         # Ответ админу
                                         send_message(peer_id=user_id,
-                                                     message=f'Группа {group_to_add} успешно добавлена в донатеры!',
+                                                     message=admin_msg,
                                                      keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
 
                                         # Оповещение группы
                                         notif_success = False
-                                        if donate_chat:
-                                            donate_notif = f'Спасибо за поддержку! \nКто-то из ' \
-                                                           f'{group_to_add} помог нам рублем, теперь вам ' \
-                                                           f'доступны некоторые приколы, настроить ' \
-                                                           f'которые может модератор группы ({moder_msg.strip()}) в ' \
-                                                           f'Прочее -> Поддержать проект.\n'
+                                        if group_chat:
                                             try:
-                                                send_message(peer_id=donate_chat[0][0],
-                                                             message=donate_notif)
+                                                send_message(peer_id=group_chat,
+                                                             message=group_msg)
                                                 notif_success = True
                                             except vk_api.ApiError:  # не отправить в конфу, ну и ладно
                                                 pass
@@ -531,8 +502,8 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
 
                                         # Оповещение админского чатика ВК
                                         send_message(peer_id=2000000001,
-                                                     message=f'Добавлена группа-донатер {group_to_add}.\n'
-                                                             f'Уведомление в конфу {donate_chat}: '
+                                                     message=f'{admin_msg}\n'
+                                                             f'Уведомление в конфу {group_chat}: '
                                                              f'{"" if notif_success else "не"} отправлено')
 
                                     # Важно! Это всегда в конце, иначе будет всплывать KeyError из-за payload

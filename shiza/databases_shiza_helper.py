@@ -713,6 +713,53 @@ def remove_old_data(group) -> bool:
     return return_status
 
 
+def add_donator_group(group_to_add, source='vk'):
+    """
+    Добавление группы в донатеры (проставление is_donator=TRUE, генерация ответа и получение chat_id)
+
+    :param str group_to_add: номер группы
+    :param str source: 'vk' или 'tg'
+    :return: admin_message, donate_notification, donate_chat_id
+    """
+
+    # Проверка и добавление группы в донатеры
+    with sqlite3.connect(f"{path}databases/group_ids.db") as con:
+        cur = con.cursor()
+        q = f'SELECT `{source}_chat_id` FROM group_gcals WHERE group_id=?'
+        donate_chat = cur.execute(q, [group_to_add]).fetchall()
+        if not donate_chat:
+            raise ValueError(f'Ошибка добавления группы-донатера - нет такой группы: {group_to_add}')
+        else:
+            cur.execute("UPDATE group_gcals SET is_donator=TRUE "
+                        "WHERE group_id=?", [group_to_add])
+            con.commit()
+    con.close()
+
+    # Получаем список модераторов группы для оповещения
+    with sqlite3.connect(f'{path}databases/admins.db') as con:
+        cur = con.cursor()
+        moder_info = cur.execute('SELECT id FROM users WHERE group_id=?',
+                                 [group_to_add]).fetchall()
+        moder_msg = ""
+        if moder_info:
+            moder_info = moder_info[0]
+            for i in range(len(moder_info)):
+                moder_msg += f'@id{moder_info[i]} '
+        if not moder_msg:
+            moder_msg = "тут таких пока нет, напиши админам"
+
+    # Оповещение группы
+    donate_notif = f'Спасибо за поддержку! \nКто-то из ' \
+                   f'{group_to_add} помог нам рублем, теперь вам ' \
+                   f'доступны некоторые приколы, настроить ' \
+                   f'которые может модератор группы ({moder_msg.strip()}) в ' \
+                   f'Прочее -> Поддержать проект.\n'
+
+    # Оповещение админского чатика
+    admin_msg = f'Добавлена группа-донатер {group_to_add}.'
+    return admin_msg, donate_notif, donate_chat
+
+
 def add_moderator(user_id, group_num):
     """
     Добавление модератора в группу

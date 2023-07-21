@@ -33,7 +33,7 @@ from bot_functions.anekdot import get_random_anekdot, get_random_toast, create_l
 from fun.minigames import get_coin_flip_result, start_classical_rock_paper_scissors, \
     stop_classical_rock_paper_scissors, classical_rock_paper_scissors
 from shiza.databases_shiza_helper import change_user_group, create_database, change_user_additional_group, \
-    check_group_exists
+    check_group_exists, add_donator_group
 
 
 # init
@@ -1130,6 +1130,41 @@ def add_dayofday_picture_next_step(message):  # обработка добавл�
         send_message(dayofdaypics_chat, f'Юзер {message.chat.id} пытался скинуть фотку, а скинул сотку: '
                                         f'{message.content_type}\nПодробнее можно глянуть в огурчиках: '
                                         f'{message.date}_{message.chat.id}_{message.id}.pickle')
+
+
+@bot.message_handler(commands=['add_donator'], is_admin=True)
+def add_donator(message):
+    dump_message(message)
+    print(message)
+
+    msg = send_message(message.chat.id, 'Напиши номер группы, которую нужно добавить в донатеры')
+    bot.register_next_step_handler(msg, add_donator_next_step)
+
+
+def add_donator_next_step(message):
+    group_to_add = message.text
+    if group_to_add.isdecimal() and len(group_to_add) == 4:
+
+        try:  # Добавление группы
+            admin_msg, group_msg, group_chat = add_donator_group(group_to_add, source='tg')
+        except Exception as e:
+            send_message(admin_chat, f"Ошибка добавления группы-донатера {group_to_add}: {e}")
+            return 0
+
+        # Оповещение группы и админов
+        notif_status = False
+        notif_e = ''
+        if group_chat:
+            try:
+                send_message(group_chat, group_msg)
+            except Exception as notif_e:
+                pass
+            notif_status = True
+
+        admin_msg += f"Сообщение группе {group_to_add}: {'' if not notif_status else 'не '}отправлено"
+        admin_msg += f':\n{notif_e}' if notif_e else ''
+        send_message(admin_chat, admin_msg)
+    return 0
 
 
 # Команды во всех беседах:
