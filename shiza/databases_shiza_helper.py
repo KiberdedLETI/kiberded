@@ -1197,28 +1197,31 @@ def generate_links_keyboard(group):  # создает клавиатуру с с
 
 def create_departments_db():
     """
-    Создаёт базу данных с названиями кафедр и их id
+    Заполняет базу данных с названиями кафедр и их id
     :return: 0
     """
 
-    url = 'https://digital.etu.ru/api/general/dicts/departments'
-    r = requests.get(url, headers=headers).json()
-    # returns rows {"id":45,"title":"Баз.каф.АИ","type":"normal","facultyId":3}
+    # Получение данных
+    try:
+        url = 'https://digital.etu.ru/api/general/dicts/departments'
+        df = pd.DataFrame(requests.get(url, headers=headers).json())
+        df = df[['id', 'title', 'type', 'facultyId']]
+        df['facultyId'] = df['facultyId'].fillna(0)
+        if df.empty:
+            raise ValueError('Не удалось получить данные о кафедрах (general/dicts/departments)')
+    except Exception as data_err:
+        # todo tg logs
+        return 0
 
+    # Добавление в базу
     with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
         cur = con.cursor()
-        cur.execute('DROP TABLE IF EXISTS departments')
-        cur.execute(
-            'CREATE TABLE IF NOT EXISTS departments (id INTEGER PRIMARY KEY, title TEXT, type TEXT, facultyId INTEGER)')
-        for row in r:
-            print(row)
-            if not row['facultyId']:
-                row['facultyId'] = 0
-            cur.execute(
-                f'INSERT INTO departments VALUES ({row["id"]}, "{row["title"]}", "{row["type"]}", {row["facultyId"]})')
+        cur.execute('CREATE TABLE IF NOT EXISTS '
+                    'departments (id INTEGER PRIMARY KEY, title TEXT, type TEXT, facultyId INTEGER)')
+        cur.execute('TRUNCATE TABLE departments')
+        df.to_sql('departments', con, if_exists='append', index=False)  # appending to empty table to keep primary key
         con.commit()
     con.close()
-
     return 0
 
 
