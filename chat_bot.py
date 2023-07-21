@@ -514,13 +514,12 @@ def main(vk_session, group_token):
                             kb_message = 'Ты можешь отредактировать бота под свою группу с помощью редактора.'
 
                     elif endpoint == 'donate':
-                        donate_status, deadline = group_is_donator(group)
+                        donate_status = group_is_donator(group)
                         if donate_status and get_freedom(message["from_id"]) != 'user':
                             kb = 'keyboard_settings_donator'
                             kb_message = f'Спасибо за поддержку проекта! Здесь можно управлять функциями, ' \
                                          f'доступными группам-донатерам. Нажимай на кнопки, чтобы ' \
                                          f'включить/выключить фичу.' \
-                                         f'\nДонатный функционал отключается: {deadline}' \
                                          '\nЗадонатить можно переводом на карту сбербанка: ' \
                                          '\n4274 3200 7296 2973'
                         else:

@@ -278,13 +278,9 @@ def group_is_donator(group) -> bool:
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        last_donate = cur.execute("SELECT last_donate FROM group_gcals WHERE group_id=?", [group]).fetchone()[0]
-        if last_donate:  # bool 0/1
-            donate_date = datetime.strptime(last_donate, '%Y-%m-%d').date()  # переводим в дату
-            donate_deadline = donate_date
-            if datetime.now(pytz.timezone('Europe/Moscow')).date() <= donate_deadline:  # донат в силе
-                return True, donate_deadline
-    return False, 0  # не знаю нужен ли второй параметр
+        if cur.execute("SELECT is_donator FROM group_gcals WHERE group_id=?", [group]).fetchone()[0]:  # bool 0/1
+            return True
+    return False
 
 
 def get_tables_settings(user_id, source='tg'):

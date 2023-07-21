@@ -1307,14 +1307,13 @@ def callback_query(call):
             kb_message = get_tables_settings(call.from_user.id)
 
         elif endpoint == 'donate':
-            donate_status, deadline = group_is_donator(group)
+            donate_status = group_is_donator(group)
             if donate_status:
                 # kb = 'keyboard_settings_donator' todo
                 kb = 'keyboard_other'
                 kb_message = f'Спасибо за поддержку проекта! Здесь можно будет управлять функциями, ' \
                              f'доступными группам-донатерам. Нажимай на кнопки, чтобы ' \
                              f'включить/выключить фичу.' \
-                             f'\nДонатный функционал отключается: {deadline}' \
                              '\nЗадонатить можно переводом на карту сбербанка: ' \
                              '\n4274 3200 7296 2973'
             else:
