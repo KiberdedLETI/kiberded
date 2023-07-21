@@ -11,6 +11,7 @@ import sqlite3
 import sys
 import os
 import toml
+from hashlib import sha256
 
 # init
 try:
@@ -449,6 +450,23 @@ def add_user_to_anekdot(user_id, count, source='vk') -> str:
     con.close()
 
     return str_to_vk
+
+
+def create_link_to_telegram(user_id, hash_key="", source=""):
+    """
+    Создает ссылку для авторизации пользователя в боте в телеграме. Ссылка содержит id пользователя и токен
+
+    :param hash_key: Дополнительный ключ для создания токена ИЗ КОНФИГА
+    :param user_id: id пользователя ВКонтакте
+    :param str source: Источник перехода: "" - пользователь, "group" - беседа
+    :return: link, user_id, token
+    """
+
+    user_id = str(user_id)
+    user_str = bytearray(f"KDed{user_id[::-1]}{hash_key}", 'utf-8')
+    m = sha256(user_str).hexdigest()[:48]  # В ТГ ограничение 64 символа, а нам нужно еще user_id передать
+    tg_link = f"https://telegram.me/kiberded_leti_bot?start{source}={user_id}_{m}"
+    return tg_link, user_id, m
 
 
 def compile_group_stats(peer_id, admin_stats=False, source='vk') -> str:  # Здесь, потому что используется в обоих ботах
