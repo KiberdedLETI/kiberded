@@ -61,7 +61,7 @@ bot = telebot.TeleBot(tg_token)
 now_date = datetime.now().strftime('%Y-%m-%d')  # необходимо для бэкапов сообщений
 
 
-def send_message(message, peer_id, attachment=''):
+def send_vk_message(message, peer_id, attachment=''):
     """
     Отправка сообщения с обработкой Flood-control
 
@@ -79,7 +79,7 @@ def send_message(message, peer_id, attachment=''):
     except vk_api.exceptions.ApiError as vk_error:
         if '[9]' in str(vk_error):  # ошибка flood-control: если флудим, то ждем секунду ответа
             time.sleep(1)
-            send_message(message, peer_id)
+            send_vk_message(message, peer_id)
             logger.warning('Flood-control, спим секунду')
         elif '[10]' in str(vk_error):  # Internal server error (чиво?)
             logger.warning(f'Сообщение не отправлено: {vk_error}, message={message}, peer_id={peer_id}')
@@ -90,11 +90,11 @@ def send_message(message, peer_id, attachment=''):
         elif '[914]' in str(vk_error):  # message is too long
             print(f'Сообщение слишком длинное, разбиваем на части')
             for i in range(math.floor(len(message)/4096)):  # разбиение сообщение на части по 4кб
-                send_message(message[i*4096:i*4096+4096], peer_id)
+                send_vk_message(message[i * 4096:i * 4096 + 4096], peer_id)
             if len(message) % 4096 != 0:  # последний кусок сообщения
-                send_message(message[-(len(message) % 4096):], peer_id, attachment)
+                send_vk_message(message[-(len(message) % 4096):], peer_id, attachment)
             elif attachment:  # если вдруг длина сообщения кратна 4кб и есть вложение - отправляем его без текста
-                send_message(message='', peer_id=peer_id, attachment=attachment)
+                send_vk_message(message='', peer_id=peer_id, attachment=attachment)
         elif '[925]' in str(vk_error):
             pass
         else:
@@ -209,14 +209,14 @@ def send_tg_message(chat_id, text, **kwargs) -> telebot.types.Message:
     return msg
 
 
-def pin_message(response, peer_id):  # закрепление сообщения (если есть права администратора беседы)
+def pin_vk_message(response, peer_id):  # закрепление сообщения (если есть права администратора беседы)
     try:
         message_id = response[0].get('conversation_message_id')
         vk_session.method('messages.pin', {"peer_id": peer_id, "conversation_message_id": message_id, "v": 5.131})
     except vk_api.exceptions.ApiError as vk_error:
         if '[9]' in str(vk_error):  # ошибка flood-control: если флудим, то ждем секунду ответа
             time.sleep(1)
-            pin_message(message_id, peer_id)
+            pin_vk_message(message_id, peer_id)
             logger.warning('Flood-control, спим секунду')
         elif '[925]' in str(vk_error):
             pass
@@ -267,20 +267,20 @@ def cron():
     # В начале курса, а также в первых месяцах новых семестров обновляем etu_ids
     if date.today().strftime('%m-%d') == '09-01':
         try:
-            send_message(f"Парсинг etu_id's. Проверь корректность данных!!!:\n", 2000000001)
+            send_vk_message(f"Парсинг etu_id's. Проверь корректность данных!!!:\n", 2000000001)
             admin_message, deleted_groups = update_group_params()  # обновлять эти айди нужно перед обновлением всех БД и прочего
-            send_message(admin_message, 2000000001)
+            send_vk_message(admin_message, 2000000001)
             # send_tg_message(tg_admin_chat, admin_message)
         except KeyError as e:
-            send_message(e, 2000000001)
+            send_vk_message(e, 2000000001)
             # send_tg_message(tg_admin_chat, e)
         except Exception as e:
             err_message = f'Ошибка парсинга etu_id: {e}\n{traceback.format_exc()}'
-            send_message(err_message, 2000000001)
+            send_vk_message(err_message, 2000000001)
             # send_tg_message(tg_admin_chat, err_message)
             logger.critical(f"{err_message}")
 
-    # Раз в месяц обовляем расписание преподавателей
+    # Раз в месяц обновляем расписание преподавателей
     if date.today().day == 3:
         create_departments_db()
         parse_prepods_schedule()
@@ -449,9 +449,9 @@ def anekdots():
         try:
             msg = "Ежедневные анекдоты:\n" if id[1] > 1 else "Ежедневный анекдот:\n"
             msg += '\n'.join([get_anekdot(random.randint(0, num_of_anekdots)) for k in range(id[1])])
-            send_message(msg, id[0])
+            send_vk_message(msg, id[0])
         except Exception as e:
-            send_message(f"Ошибка отправки {id[1]} анекдотов юзеру @{id[0]}: {e}", 2000000001)
+            send_vk_message(f"Ошибка отправки {id[1]} анекдотов юзеру @{id[0]}: {e}", 2000000001)
 
     ids = get_anekdot_user_ids(source='tg')
     for id in ids:
@@ -610,14 +610,14 @@ def send_personal_tables(table_time='None'):
                                     pin_tg_message(msgg, chat_type='private')
 
                             else:
-                                send_message(message, user_id)
+                                send_vk_message(message, user_id)
 
                             logger.warning(f'Расписание отправлено юзеру {user_id} из гр. {group}')
 
                 except Exception:
                     error_message = f'Произошла ошибка при отправке расписания: {traceback.format_exc()}\n' \
                                     f'Юзер {user_id}, группа {group}'
-                    send_message(error_message, 2000000001)
+                    send_vk_message(error_message, 2000000001)
                     send_tg_message(tg_admin_chat, error_message)
 
 
@@ -652,7 +652,7 @@ def send_toast(chat_id, tg_chat_id=None):
     :return: 0
     """
     toast_message = f'Еженедельный случайный тост:\n{get_random_toast(header=False)}'
-    send_message(toast_message, chat_id)
+    send_vk_message(toast_message, chat_id)
     if tg_chat_id:
         send_tg_message(tg_chat_id, toast_message)
     logger.warning(f'Тост отправлен группе с peer_id={chat_id}; в telegram - {tg_chat_id}')
@@ -666,7 +666,7 @@ def initialization():
     vk_session = vk_api.VkApi(token=token)
     vk = vk_session.get_api()
 
-    send_message('Планировочный дед активирован', 2000000001)
+    send_vk_message('Планировочный дед активирован', 2000000001)
     send_tg_message(-1001668185586, 'Планировочный дед активирован')
     logger.warning('Планировочный дед активирован')
     return 0
@@ -698,5 +698,5 @@ try:
         time.sleep(30)
 except Exception as e:
     global_err = f'Произошла ошибка при выполнении cron_table: {str(e)}\n{traceback.format_exc()}'
-    send_message(global_err, 2000000001)
+    send_vk_message(global_err, 2000000001)
     send_tg_message(tg_admin_chat, global_err)
