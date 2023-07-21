@@ -28,7 +28,7 @@ from requests.exceptions import ReadTimeout, ConnectionError
 
 from bot_functions.bots_common_funcs import read_calendar, read_table, get_day, \
     compile_group_stats, add_user_to_table, get_exams, get_prepods, group_is_donator, \
-    add_user_to_anekdot, set_table_mode, get_tables_settings
+    add_user_to_anekdot, set_table_mode, get_tables_settings, get_donators
 from bot_functions.anekdot import get_random_anekdot, get_random_toast, create_link_to_telegram
 from fun.minigames import get_coin_flip_result, start_classical_rock_paper_scissors, \
     stop_classical_rock_paper_scissors, classical_rock_paper_scissors
@@ -1203,17 +1203,7 @@ def deds(message):
 @bot.message_handler(commands=['donaters', 'донатеры'], chat_id=[admin_chat])
 def donaters(message):
     dump_message(message)
-
-    ans = 'Список донатеров:'
-    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
-        cur = con.cursor()
-        for row in cur.execute('SELECT group_id, last_donate, with_dayofday, with_toast FROM group_gcals'):
-            if row[1]:
-                ans += f'\n{row[0]} - до {row[1]}:\n' \
-                       f'Пикчи {"подключены" if row[2] else "отключены"}\n' \
-                       f'Тост {"подключен" if row[3] else "отключен"}\n'
-    con.close()
-    send_message(message.chat.id, ans)
+    send_message(message.chat.id, get_donators())
 
 
 # Обработка текстовых сообщений в лс

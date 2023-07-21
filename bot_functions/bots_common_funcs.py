@@ -253,6 +253,21 @@ def get_subjects(group) -> list:
     return subjects
 
 
+def get_donators():
+    """
+    Статистика по группам-донатерам
+    """
+    ans = 'Список донатеров:'
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        cur = con.cursor()
+        for row in cur.execute('SELECT group_id, with_dayofday, with_toast FROM group_gcals WHERE is_donator=TRUE'):
+            ans += f'\n{row[0]}:\n' \
+                   f'- Пикчи {"подключены" if row[1] else "отключены"}\n' \
+                   f'- Тост {"подключен" if row[2] else "отключен"}\n'
+    con.close()
+    return ans
+
+
 def group_is_donator(group) -> bool:
     """
     Смотрит донатный статус группы
