@@ -42,7 +42,7 @@ def recursion_scan(path, files_arr=[]):
 
 
 def get_file_dependencies(file_path):
-    if file_path.endswith(('.png', '.txt', '.md',)):
+    if file_path.endswith(('.png', '.txt', '.md', '.json')):
         dependencies = []
     else:
         with open(file_path, encoding='utf-8') as f:

@@ -1,3 +1,4 @@
+# dependencies: [chat_bot]
 import json
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
