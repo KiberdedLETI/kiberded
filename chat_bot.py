@@ -24,9 +24,9 @@ import sys
 import subprocess
 from shiza import elements_of_shiza
 from bot_functions.bots_common_funcs import read_calendar, day_of_day_toggle, read_table, get_day, weekly_toast_toggle, \
-    compile_group_stats, add_user_to_table, get_exams, get_prepods, get_subjects, group_is_donator, add_user_to_anekdot, \
-    get_tables_settings, set_table_mode
-from bot_functions.anekdot import get_random_anekdot, get_random_toast, create_link_to_telegram
+    compile_group_stats, add_user_to_table, get_exams, get_prepods, group_is_donator, add_user_to_anekdot, \
+    get_tables_settings, set_table_mode, get_donators, create_link_to_telegram
+from fun.anekdot import get_random_anekdot, get_random_toast
 # init
 logger = logging.getLogger('chat_bot')
 console_handler = logging.StreamHandler()
@@ -231,7 +231,7 @@ def group_study_status(group) -> str:
     #     if cur.execute("SELECT * FROM sqlite_master WHERE name ='schedule' and type='table';").fetchone():
     #         return 'study'
 
-    return return_message  # в результате получится либо keyboard_table либо keyboard_table_exam либо keyboard_table_
+    return return_message  # в результате получится либо kb_table либо kb_table_exam либо kb_table_
 
 
 def open_keyboard(keyboard) -> str:
@@ -264,7 +264,7 @@ def get_books(subject, group_id, event, is_old=False):
                     f"THEN name " \
                 f"END AS name, " \
                 f"CASE " \
-                    f"WHEN doc_link IS NOT NULL  OR doc_link IS NULL AND name IS NOT NULL AND file_link_tg IS NULL " \
+                    f"WHEN doc_link IS NOT NULL OR doc_link IS NULL AND name IS NOT NULL AND file_link_tg IS NULL " \
                     f"THEN doc_link " \
                 f"END AS doc_link FROM books_old WHERE subject=? ORDER BY name"
     else:
@@ -274,7 +274,7 @@ def get_books(subject, group_id, event, is_old=False):
                     f"THEN name " \
                 f"END AS name, " \
                 f"CASE " \
-                    f"WHEN doc_link IS NOT NULL  OR doc_link IS NULL AND name IS NOT NULL AND file_link_tg IS NULL " \
+                    f"WHEN doc_link IS NOT NULL OR doc_link IS NULL AND name IS NOT NULL AND file_link_tg IS NULL " \
                     f"THEN doc_link " \
                 f"END AS doc_link FROM books WHERE subject=? ORDER BY name"
 
@@ -437,12 +437,12 @@ def main(vk_session, group_token):
                         kb_message = f'Сегодня у нас: {str_day_today}'  # вызов get_day() в init
                         if additional_group:
                             if users[user_id]['additional_study_status']:  # additional только если они тоже учатся
-                                kb = f'keyboard_table_{users[user_id]["study_status"]}_additional'
+                                kb = f'kb_table_{users[user_id]["study_status"]}_additional'
                             else:
-                                kb = f'keyboard_table_{users[user_id]["study_status"]}'
+                                kb = f'kb_table_{users[user_id]["study_status"]}'
                                 kb_message += f'\nРасписание для доп. группы {additional_group} пока недоступно'
                         else:
-                            kb = f'keyboard_table_{users[user_id]["study_status"]}'
+                            kb = f'kb_table_{users[user_id]["study_status"]}'
 
                     elif endpoint == 'table_other':
                         kb = f'kb_table_other_{"even" if str_day_today.split()[1] == "(чёт)" else "odd"}'
@@ -477,28 +477,28 @@ def main(vk_session, group_token):
                         kb_message = 'Выбирай предмет (предыдущий семестр):'
 
                     elif endpoint == 'calendar':
-                        kb = 'keyboard_calendar'
+                        kb = 'kb_calendar'
                         kb_message = f'Что нам готовит день грядущий? \nСегодня {today} - {str_day_today}'
 
                     elif endpoint == 'other':
-                        kb = 'keyboard_other'
+                        kb = 'kb_other'
                         kb_message = 'Тут будут всякие штуки и шутки'
 
                     elif endpoint == 'kb_table_settings_sub':
                         kb_message = add_user_to_table(message["from_id"], '1')
-                        kb = 'keyboard_table_settings'
+                        kb = 'kb_table_settings'
 
                     elif endpoint == 'kb_table_settings_unsub':
                         kb_message = add_user_to_table(message["from_id"], '-1')
-                        kb = 'keyboard_other'
+                        kb = 'kb_other'
 
                     elif endpoint == 'kb_table_settings':
                         kb_message = get_tables_settings(message["from_id"], 'vk')
-                        kb = 'keyboard_table_settings'
+                        kb = 'kb_table_settings'
 
                     elif endpoint == 'table_settings_type':
-                        kb = 'keyboard_table_settings_type_cal' if groups[group]['calendar'] \
-                            else 'keyboard_table_settings_type'
+                        kb = 'kb_table_settings_type_cal' if groups[group]['calendar'] \
+                            else 'kb_table_settings_type'
 
                         kb_message = f'Доступные режимы рассылки расписания:' \
                                      f'\n{"Календарь - расписание из календаря" if groups[group]["calendar"] else ""}' \
@@ -507,24 +507,23 @@ def main(vk_session, group_token):
                                      f'\nОба - собственно, оба варианта.'
 
                     elif endpoint == 'settings':
-                        kb = f'keyboard_settings_{get_freedom(message["from_id"])}'
+                        kb = f'kb_settings_{get_freedom(message["from_id"])}'
                         if get_freedom(message["from_id"]) == 'user':
                             kb_message = f'Здесь ты можешь изменить номер своей группы. \nСейчас ты в {group}'
                         else:
                             kb_message = 'Ты можешь отредактировать бота под свою группу с помощью редактора.'
 
                     elif endpoint == 'donate':
-                        donate_status, deadline = group_is_donator(group)
+                        donate_status = group_is_donator(group)
                         if donate_status and get_freedom(message["from_id"]) != 'user':
-                            kb = 'keyboard_settings_donator'
+                            kb = 'kb_settings_donator'
                             kb_message = f'Спасибо за поддержку проекта! Здесь можно управлять функциями, ' \
                                          f'доступными группам-донатерам. Нажимай на кнопки, чтобы ' \
                                          f'включить/выключить фичу.' \
-                                         f'\nДонатный функционал отключается: {deadline}' \
                                          '\nЗадонатить можно переводом на карту сбербанка: ' \
                                          '\n4274 3200 7296 2973'
                         else:
-                            kb = 'keyboard_other'
+                            kb = 'kb_other'
                             kb_message = 'Бот живет и развивается исключительно за счет сообщества' \
                                          ' вокруг него.' \
                                          '\nЗадонатить можно переводом на карту сбербанка: ' \
@@ -741,7 +740,7 @@ def main(vk_session, group_token):
                                                                               get_freedom(message["from_id"]))
                                 add_chat_notif = f'Добавлена конфа группы {new_group_id} ' \
                                                  f'юзером @id{message["from_id"]}\n' \
-                                                 f'chat_id: {new_chat_id}\n' \
+                                                 f'vk_chat_id: {new_chat_id}\n' \
                                                  f'{" ".join(add_chat_message.split()[:4])}'  # если там ошибка
                                 send_to_vk(event=None, message_send=add_chat_notif, chat_id_send=2000000001,
                                            is_to_user=False)
@@ -784,16 +783,7 @@ def main(vk_session, group_token):
                         send_to_vk(event=None, message_send=deds_status, chat_id_send=2000000001, is_to_user=False)
 
                     elif message_splitted in ('[club201485931|@kiberded_bot] донатеры', '[club201485931|@kiberded_bot], донатеры'):
-                        ans = 'Список донатеров:'
-                        with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
-                            cur = con.cursor()
-                            for row in cur.execute('SELECT group_id, last_donate, with_dayofday, with_toast FROM group_gcals'):
-                                if row[1]:
-                                    ans += f'\n{row[0]} - до {row[1]}:\n' \
-                                           f'Пикчи {"подключены" if row[2] else "отключены"}\n' \
-                                           f'Тост {"подключен" if row[3] else "отключен"}\n'
-                        con.close()
-                        send_to_vk(event=None, message_send=ans, chat_id_send=2000000001, is_to_user=False)
+                        send_to_vk(event=None, message_send=get_donators(), chat_id_send=2000000001, is_to_user=False)
 
                     # Рассылка сообщений через бота, вызывается только из отладочной беседы
                     elif message_splitted in ('[club201485931|@kiberded_bot] сообщение', '[club201485931|@kiberded_bot], сообщение'):
@@ -830,7 +820,7 @@ def main(vk_session, group_token):
                         except KeyError:
                             if message['from_id'] not in users.keys():
                                 kb_message = 'Ошибка автозапуска. Тыкни кнопку "изменить группу"'
-                                send_to_vk(keyboard_send=open_keyboard('keyboard_change_group'),
+                                send_to_vk(keyboard_send=open_keyboard('kb_change_group'),
                                            message_send=kb_message, event=event)
                             continue
                         if payload["command"] == "start":
@@ -850,13 +840,13 @@ def main(vk_session, group_token):
                             pass
                         else:
                             kb_message = 'Ошибка - нет номера группы. Тыкни кнопку "изменить группу"'
-                            send_to_vk(keyboard_send=open_keyboard('keyboard_change_group'),
+                            send_to_vk(keyboard_send=open_keyboard('kb_change_group'),
                                        message_send=kb_message, event=event)
 
                     # костыль, если пользователь потеряет клавиатуру как-то..
                     elif message_splitted in ('Клавиатура', 'клавиатура'):
                         send_to_vk(message_send='А вот и клавиатура\nДед на связи.', event=event,
-                                   keyboard_send=open_keyboard(f'keyboard_other'))
+                                   keyboard_send=open_keyboard(f'kb_other'))
 
                     elif users[message['from_id']]['err_notifications'] is True:
                         if len(message["text"]) == 4 and message["text"].isdecimal():
@@ -868,7 +858,7 @@ def main(vk_session, group_token):
                                                            '(кроме случаев, когда об этом написано).'
                                                            '\nОткрой клавиатуру кнопкой в окне диалога '
                                                            'или напиши "Клавиатура"',
-                                       keyboard_send=open_keyboard('false_command_keyboard'))
+                                       keyboard_send=open_keyboard('false_command_kb'))
 
         # elif event.type == VkBotEventType.MESSAGE_EVENT:  # обработка callback-кнопок в конфе
         #     if event.object.peer_id > 2000000000:
@@ -895,10 +885,10 @@ def infinity_main():
             update_full_users_data()
             if e.user_id not in users.keys():
                 start_message = 'Ошибка: нет информации о группе пользователя.'
-                start_kb = 'keyboard_change_group'
+                start_kb = 'kb_change_group'
             else:
                 start_message = 'Завершаем настройку - можешь взаимодействовать с ботом кнопками на клавиатуре:'
-                start_kb = 'keyboard_other'
+                start_kb = 'kb_other'
 
             send_to_vk(event=None, message_send=start_message, is_to_user=False,
                        chat_id_send=e.user_id, keyboard_send=open_keyboard(start_kb))

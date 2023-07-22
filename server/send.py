@@ -155,7 +155,7 @@ def get_user(group):  # принимает номер группы и возвр
 def get_chat(group):  # принимает номер группы и возвращает peer_id, если есть
     with sqlite3.connect(f'{path}/admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        chats = cur.execute('SELECT chat_id FROM group_gcals WHERE group_id=?', [group]).fetchall()
+        chats = cur.execute('SELECT vk_chat_id FROM group_gcals WHERE group_id=?', [group]).fetchall()
     return chats
 
 
@@ -169,7 +169,7 @@ def get_users():  # возвращает user_id всех пользовател
 def get_chats():  # возвращает все peer_id
     with sqlite3.connect(f'{path}/admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        chats = cur.execute('SELECT chat_id FROM group_gcals').fetchall()
+        chats = cur.execute('SELECT vk_chat_id FROM group_gcals').fetchall()
     return chats
 
 
@@ -205,7 +205,7 @@ try:
             peer_id = int(chat_id) + 2000000000
             send_message(message, peer_id, attachment)
         except ValueError:
-            print(f'Некорректный chat_id: {chat_id}. Сообщение не отправлено')
+            print(f'Некорректный vk_chat_id: {chat_id}. Сообщение не отправлено')
 
     elif sys.argv[index_counter] in ['-u', '--user', 'юзер']:  # отправка юзеру через user_id
         peer_id = sys.argv[index_counter+1]

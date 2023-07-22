@@ -17,7 +17,7 @@ import requests
 from icalendar import Calendar
 import pytz
 from datetime import datetime, timedelta
-from shiza.etu_parsing import parse_group_params, parse_exams, load_calendar_cache, load_table_cache
+from shiza.etu_parsing import parse_exams, load_calendar_cache, load_table_cache
 from datetime import date
 import math
 from transliterate import translit
@@ -251,9 +251,10 @@ def load_teacher_ids(group):
     return 0
 
 
-def create_database(group, is_global_parsing=False, keep_old_data_override=False, override_bool=False) -> str:
+def create_database(group, is_global_parsing=False, keep_old_data_override=False, override_bool=False):
     """
-    Создание БД для группы и все сопутствующие операции
+    Создание БД для группы и все сопутствующие операции.
+    БД создается из экспортируемого .ical-календаря с расписанием группы, потому что так когда-то было удобнее.
 
     :param str group: номер группы
     :param bool is_global_parsing: if True, парсинг будет производиться в глобальном режиме - меньше уведомлений,
@@ -269,9 +270,9 @@ def create_database(group, is_global_parsing=False, keep_old_data_override=False
     else:
         keep_old_data = override_bool
 
-    with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:  # достаем странный айдишник
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:  # достаем странный айдишник
         cur = con.cursor()
-        etu_id = cur.execute("SELECT etu_id FROM all_groups WHERE fullNumber=?", [group]).fetchone()
+        etu_id = cur.execute("SELECT etu_id FROM group_gcals WHERE group_id=?", [group]).fetchone()
         if etu_id:  # если группа такая существует
             etu_id = etu_id[0]
     con.close()
@@ -299,19 +300,23 @@ def create_database(group, is_global_parsing=False, keep_old_data_override=False
 
         schedule_list = []
         prepods_list = []
-        for i in range(14):
+
+        for i in range(14):  # 14 - две недели, четная/нечетная
             day = datetime.now(pytz.timezone('Europe/Moscow')).date() + timedelta(days=i)
             for component in full_cal.walk():
                 if component.get('dtstart'):
                     dtstart = component.get('dtstart').dt
                     if (day.isocalendar()[1] - dtstart.isocalendar()[1]) % 2 == 0 and dtstart.weekday() == day.weekday():
-                        if (day.isocalendar()[1] - parity_count[0].isocalendar()[1]) % 2 == 0:
+
+                        if (day.isocalendar()[1] - parity_count[0].isocalendar()[1]) % 2 == 0:  # Чётность пары
                             parity = '1'  # если криво меняется на "% 2 != 0" строкой выше
                         else:
                             parity = '0'
+
                         dtstart = str(dtstart).split()[1][:5]
                         summary = component.get('SUMMARY').split()
                         description = component.get('DESCRIPTION')
+
                         name = 'Ошибка ФИО'  # ФИО преподавателя
                         classroom = ''  # может сломаться?
                         subject = ' '.join(summary[:-1])
@@ -402,15 +407,6 @@ def create_database(group, is_global_parsing=False, keep_old_data_override=False
 
         generate_main_keyboard(group)  # создаем главную клавиатуру
         generate_links_keyboard(group)  # создаем клавиатуру с ссылками для тг
-
-        try:  # Обработка ошибки номера группы
-            parse_group_params(group)  # парсим даты семестра
-        except Exception as e:
-            if is_global_parsing:
-                pass
-            else:
-                raise e
-
         book_notif_user, book_notif_admin = add_preset_books(group, is_global_parsing)  # добавляем набор книжек
         generate_subject_ids(group)  # генерация таблицы subject_ids для тг
         generate_subject_keyboards(group)  # генерируем клавиатуры предметов и преподов для вк
@@ -421,11 +417,13 @@ def create_database(group, is_global_parsing=False, keep_old_data_override=False
             if cur.execute('SELECT isExam FROM group_gcals WHERE group_id=?', [group]).fetchone()[0]:
                 parse_exams(group)
         con.close()
+
     except Exception as e:
         if is_global_parsing:
             return '', f'\n{group} - Ошибка:{e}\n{traceback.format_exc()}\n'
         return f'Ошибка создания базы данных группы {group}. Обратись за помощью к администраторам.', \
                f'Ошибка создания БД: {e}\n{traceback.format_exc()}'
+
     if is_global_parsing:
         return '', f'{group} - Успешно\nМетоды:{book_notif_admin}\n'
     return f'База данных группы {group} успешно загружена!\n{book_notif_user}', book_notif_admin
@@ -514,10 +512,10 @@ def view_email(group):
         cur = con.cursor()
         mail_data = cur.execute('SELECT mail, mail_password '
                                 'FROM group_gcals '
-                                'WHERE group_id=? AND chat_id IS NOT NULL', [group]).fetchall()
+                                'WHERE group_id=? AND vk_chat_id IS NOT NULL', [group]).fetchall()
         unauthorized_td_chats = cur.execute('SELECT tg_chat_id '
                                             'FROM group_gcals '
-                                            'WHERE group_id=? AND chat_id IS NULL', [group]).fetchall()
+                                            'WHERE group_id=? AND vk_chat_id IS NULL', [group]).fetchall()
 
     con.close()
     mail_data = list(mail_data[0])
@@ -545,10 +543,10 @@ def view_gcal(group):
         cur = con.cursor()
         mail_cal_data = cur.execute('SELECT gcal_link '
                                     'FROM group_gcals '
-                                    'WHERE group_id=? AND chat_id IS NOT NULL', [group]).fetchone()[0]
+                                    'WHERE group_id=? AND vk_chat_id IS NOT NULL', [group]).fetchone()[0]
         unauthorized_td_chats = cur.execute('SELECT tg_chat_id '
                                             'FROM group_gcals '
-                                            'WHERE group_id=? AND chat_id IS NULL', [group]).fetchall()
+                                            'WHERE group_id=? AND vk_chat_id IS NULL', [group]).fetchall()
 
     con.close()
     if mail_cal_data:  # если есть почта группы
@@ -577,12 +575,12 @@ def edit_email(group, email='', password=''):  # добавление почты
     """
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        # Вот здесь в запросе нужно будет убрать AND chat_id IS NOT NULL если отдельно для ТГ делать.
+        # Вот здесь в запросе нужно будет убрать AND vk_chat_id IS NOT NULL если отдельно для ТГ делать.
         # Это проверка на неавторизованные беседы
         old_data = cur.execute(f"SELECT mail, mail_password, mail_imap group_gcals "
                                f"FROM group_gcals "
                                f"WHERE group_id={group} "
-                               f"AND chat_id IS NOT NULL").fetchall()
+                               f"AND vk_chat_id IS NOT NULL").fetchall()
 
         if old_data:
             old_data = old_data[0]
@@ -599,7 +597,7 @@ def edit_email(group, email='', password=''):  # добавление почты
         
         cur.execute(f"UPDATE group_gcals SET mail=?, mail_password=?, mail_imap=? "
                     f"WHERE group_id={group} "
-                    f"AND chat_id IS NOT NULL",
+                    f"AND vk_chat_id IS NOT NULL",
                     [email, password, imap_address])
         con.commit()
     con.close()
@@ -623,21 +621,21 @@ def edit_gcal(group, gcal=''):  # добавление календаря (пр�
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        # Вот здесь в запросе нужно будет убрать AND chat_id IS NOT NULL если отдельно для ТГ делать.
+        # Вот здесь в запросе нужно будет убрать AND vk_chat_id IS NOT NULL если отдельно для ТГ делать.
         # Это проверка на неавторизованные беседы
         old_gcal = cur.execute(f"SELECT gcal_link group_gcals "
                                f"FROM group_gcals "
                                f"WHERE group_id={group} "
-                               f"AND chat_id IS NOT NULL").fetchone()
+                               f"AND vk_chat_id IS NOT NULL").fetchone()
         if old_gcal:
             old_gcal = old_gcal[0]
             if not gcal:
                 gcal = old_gcal
         
         cur.execute(f"UPDATE group_gcals "
-                    f"SET gcal_link=? "
+                    f"SET gcal_link=?, gcal_over_tables=TRUE, gcal_over_exams=TRUE "
                     f"WHERE group_id=? "
-                    f"AND chat_id IS NOT NULL", (gcal, group))
+                    f"AND vk_chat_id IS NOT NULL", (gcal, group))
     con.close()
 
     generate_main_keyboard(group)  # Обновляем клавиатуру
@@ -668,7 +666,8 @@ def delete_gcal(group):
     """
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        cur.execute('UPDATE group_gcals SET gcal_link=null WHERE group_id=?', [group])
+        cur.execute('UPDATE group_gcals SET gcal_link=null, gcal_over_tables=FALSE, gcal_over_exams=FALSE '
+                    'WHERE group_id=?', [group])
     con.close()
 
     # Удаляем кэш календаря
@@ -713,6 +712,53 @@ def remove_old_data(group) -> bool:
     return return_status
 
 
+def add_donator_group(group_to_add, source='vk'):
+    """
+    Добавление группы в донатеры (проставление is_donator=TRUE, генерация ответа и получение chat_id)
+
+    :param str group_to_add: номер группы
+    :param str source: 'vk' или 'tg'
+    :return: admin_message, donate_notification, donate_chat_id
+    """
+
+    # Проверка и добавление группы в донатеры
+    with sqlite3.connect(f"{path}databases/group_ids.db") as con:
+        cur = con.cursor()
+        q = f'SELECT `{source}_chat_id` FROM group_gcals WHERE group_id=?'
+        donate_chat = cur.execute(q, [group_to_add]).fetchall()
+        if not donate_chat:
+            raise ValueError(f'Ошибка добавления группы-донатера - нет такой группы: {group_to_add}')
+        else:
+            cur.execute("UPDATE group_gcals SET is_donator=TRUE "
+                        "WHERE group_id=?", [group_to_add])
+            con.commit()
+    con.close()
+
+    # Получаем список модераторов группы для оповещения
+    with sqlite3.connect(f'{path}databases/admins.db') as con:
+        cur = con.cursor()
+        moder_info = cur.execute('SELECT id FROM users WHERE group_id=?',
+                                 [group_to_add]).fetchall()
+        moder_msg = ""
+        if moder_info:
+            moder_info = moder_info[0]
+            for i in range(len(moder_info)):
+                moder_msg += f'@id{moder_info[i]} '
+        if not moder_msg:
+            moder_msg = "тут таких пока нет, напиши админам"
+
+    # Оповещение группы
+    donate_notif = f'Спасибо за поддержку! \nКто-то из ' \
+                   f'{group_to_add} помог нам рублем, теперь вам ' \
+                   f'доступны некоторые приколы, настроить ' \
+                   f'которые может модератор группы ({moder_msg.strip()}) в ' \
+                   f'Прочее -> Поддержать проект.\n'
+
+    # Оповещение админского чатика
+    admin_msg = f'Добавлена группа-донатер {group_to_add}.'
+    return admin_msg, donate_notif, donate_chat
+
+
 def add_moderator(user_id, group_num):
     """
     Добавление модератора в группу
@@ -749,7 +795,7 @@ def add_moderator(user_id, group_num):
 
 def check_group_exists(group_num):
     """
-    Проверка наличия группы в БД по all_groups и директории с БД
+    Проверка наличия группы в БД по group_gcals и директории с БД
 
     :param str group_num: номер группы
     :return: True, если группа есть, иначе False
@@ -758,9 +804,9 @@ def check_group_exists(group_num):
     if f"{group_num}.db" not in os.listdir(f'{path}databases/'):
         return False
 
-    with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        return True if cur.execute('''SELECT fullNumber FROM all_groups WHERE fullNumber=?''', [group_num]).fetchone() else False
+        return True if cur.execute('SELECT etu_id FROM group_gcals WHERE group_id=?', [group_num]).fetchone() else False
 
 
 # шиза для юзеров
@@ -813,7 +859,7 @@ def change_user_additional_group(group_id, user_id, source='vk'):  # меняе�
     :param group_id: номер группы
     :param user_id: id пользователя
     :param str source: источник изменения группы ('vk' или 'tg')
-    :return: bool существует ли БД для данной группы; bool был ли юзер в боте; сообщение о добавлении группы
+    :return: bool был ли юзер в боте; сообщение о добавлении группы
     """
 
     id_col = 'user_id' if source == 'vk' else 'telegram_id'
@@ -824,8 +870,6 @@ def change_user_additional_group(group_id, user_id, source='vk'):  # меняе�
             user_existed = True
         con.close()
         answer = f'Дополнительная группа успешно изменена на {group_id}'
-        group_exists = True
-        return group_exists, user_existed, answer
     else:
         with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
             cur = con.cursor()
@@ -833,8 +877,8 @@ def change_user_additional_group(group_id, user_id, source='vk'):  # меняе�
             user_existed = True
         con.close()
         answer = f'Дополнительная группа успешно удалена.'
-        group_exists = True
-        return group_exists, user_existed, answer
+
+    return user_existed, answer
 
 
 # генерация таблицы с предметами и их id для тг
@@ -1197,28 +1241,31 @@ def generate_links_keyboard(group):  # создает клавиатуру с с
 
 def create_departments_db():
     """
-    Создаёт базу данных с названиями кафедр и их id
+    Заполняет базу данных с названиями кафедр и их id
     :return: 0
     """
 
-    url = 'https://digital.etu.ru/api/general/dicts/departments'
-    r = requests.get(url, headers=headers).json()
-    # returns rows {"id":45,"title":"Баз.каф.АИ","type":"normal","facultyId":3}
+    # Получение данных
+    try:
+        url = 'https://digital.etu.ru/api/general/dicts/departments'
+        df = pd.DataFrame(requests.get(url, headers=headers).json())
+        df = df[['id', 'title', 'type', 'facultyId']]
+        df['facultyId'] = df['facultyId'].fillna(0)
+        if df.empty:
+            raise ValueError('Не удалось получить данные о кафедрах (general/dicts/departments)')
+    except Exception as data_err:
+        # todo tg logs
+        return 0
 
+    # Добавление в базу
     with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
         cur = con.cursor()
-        cur.execute('DROP TABLE IF EXISTS departments')
-        cur.execute(
-            'CREATE TABLE IF NOT EXISTS departments (id INTEGER PRIMARY KEY, title TEXT, type TEXT, facultyId INTEGER)')
-        for row in r:
-            print(row)
-            if not row['facultyId']:
-                row['facultyId'] = 0
-            cur.execute(
-                f'INSERT INTO departments VALUES ({row["id"]}, "{row["title"]}", "{row["type"]}", {row["facultyId"]})')
+        cur.execute('CREATE TABLE IF NOT EXISTS '
+                    'departments (id INTEGER PRIMARY KEY, title TEXT, type TEXT, facultyId INTEGER)')
+        cur.execute('TRUNCATE TABLE departments')
+        df.to_sql('departments', con, if_exists='append', index=False)  # appending to empty table to keep primary key
         con.commit()
     con.close()
-
     return 0
 
 
@@ -1403,10 +1450,10 @@ def add_preset_books(group, is_global_parsing=False) -> str:  # добавлен
 
     user_str = ''
     admin_str = ''
-    with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
         try:
-            semester = str(cur.execute('SELECT semester FROM all_groups WHERE fullNumber=?', [group]).fetchone()[0])
+            semester = str(cur.execute('SELECT semester FROM group_gcals WHERE group_id=?', [group]).fetchone()[0])
         except TypeError:
             return f'Группа {group} не найдена', f'Группа {group} не найдена'
     con.close()
@@ -1452,14 +1499,14 @@ def add_preset_books(group, is_global_parsing=False) -> str:  # добавлен
         if is_global_parsing:
             admin_str = f'Отсутствуют - нет {filename}.xlsx'
         else:
-            admin_str = f'Нету методичек для {group}, cеместр {semester}'
-    except ValueError as e:  # нету листа в файле
+            admin_str = f'Нет методичек для {group}, cеместр {semester}'
+    except ValueError as e:  # нет листа в файле
         user_str = f'Списка учебников по умолчанию не найдено. Раздел "Методички" создан пустым, ' \
                    'добавлять туда файлы может модератор группы, см. статью на странице сообщества.'
         if is_global_parsing:
             admin_str = f'Отсутствуют - нет "{sheet_code}" в {filename}.xlsx'
         else:
-            admin_str = f'Нету листа методичек в {filename}.xlsx для {group}, cеместр {semester}\n{e}'
+            admin_str = f'Нет листа методичек в {filename}.xlsx для {group}, cеместр {semester}\n{e}'
     except Exception as e:  # пока оставлю на другие ошибки
         user_str = f'Списка учебников по умолчанию не найдено. Раздел "Методички" создан пустым, ' \
                      'добавлять туда файлы может модератор группы, см. статью на странице сообщества.'

@@ -18,21 +18,20 @@ import vk_api
 import telebot
 import logging
 import traceback
-from bot_functions.anekdot import get_random_toast
-from bot_functions.bots_common_funcs import get_last_lesson, read_calendar, read_table, get_day, set_table_mode
-from shiza.etu_parsing import parse_etu_ids, load_calendar_cache, load_table_cache, \
-    parse_prepods_schedule, load_prepods_table_cache
-from shiza.daily_functions import daily_cron, donator_daily_cron, get_exam_notification, get_groups, \
-    get_anekdot_user_ids, get_user_table_ids
+from fun.anekdot import get_random_toast
+from bot_functions.bots_common_funcs import get_last_lesson, read_calendar, read_table, get_day, set_table_mode, \
+    get_exam_notification
+from shiza.etu_parsing import update_group_params, load_calendar_cache, load_table_cache, \
+    parse_prepods_schedule, load_prepods_table_cache, parse_exams
 from shiza.databases_shiza_helper import generate_prepods_keyboards, generate_departments_keyboards, \
-    create_departments_db
+    create_departments_db, remove_old_data
 import sys
 import pickle
-
+import pandas as pd
 global config
 global vk_session
 global vk
-global num_of_base
+global num_of_anekdots
 
 # common init
 logger = logging.getLogger('scheduler')
@@ -48,7 +47,7 @@ except FileNotFoundError:
 
 token = config.get('Kiberded').get('token')
 tg_token = config.get('Kiberded').get('token_telegram')
-num_of_base = config.get('Kiberded').get('num_of_base')  # количество анекдотов в базе
+num_of_anekdots = config.get('Kiberded').get('num_of_base')  # количество анекдотов в базе
 path = config.get('Kiberded').get('path')
 cron_time = config.get('Kiberded').get('cron_time')
 tables_time = config.get('Kiberded').get('tables_time')
@@ -61,7 +60,7 @@ bot = telebot.TeleBot(tg_token)
 now_date = datetime.now().strftime('%Y-%m-%d')  # необходимо для бэкапов сообщений
 
 
-def send_message(message, peer_id, attachment=''):
+def send_vk_message(message, peer_id, attachment=''):
     """
     Отправка сообщения с обработкой Flood-control
 
@@ -79,7 +78,7 @@ def send_message(message, peer_id, attachment=''):
     except vk_api.exceptions.ApiError as vk_error:
         if '[9]' in str(vk_error):  # ошибка flood-control: если флудим, то ждем секунду ответа
             time.sleep(1)
-            send_message(message, peer_id)
+            send_vk_message(message, peer_id)
             logger.warning('Flood-control, спим секунду')
         elif '[10]' in str(vk_error):  # Internal server error (чиво?)
             logger.warning(f'Сообщение не отправлено: {vk_error}, message={message}, peer_id={peer_id}')
@@ -90,11 +89,11 @@ def send_message(message, peer_id, attachment=''):
         elif '[914]' in str(vk_error):  # message is too long
             print(f'Сообщение слишком длинное, разбиваем на части')
             for i in range(math.floor(len(message)/4096)):  # разбиение сообщение на части по 4кб
-                send_message(message[i*4096:i*4096+4096], peer_id)
+                send_vk_message(message[i * 4096:i * 4096 + 4096], peer_id)
             if len(message) % 4096 != 0:  # последний кусок сообщения
-                send_message(message[-(len(message) % 4096):], peer_id, attachment)
+                send_vk_message(message[-(len(message) % 4096):], peer_id, attachment)
             elif attachment:  # если вдруг длина сообщения кратна 4кб и есть вложение - отправляем его без текста
-                send_message(message='', peer_id=peer_id, attachment=attachment)
+                send_vk_message(message='', peer_id=peer_id, attachment=attachment)
         elif '[925]' in str(vk_error):
             pass
         else:
@@ -209,14 +208,14 @@ def send_tg_message(chat_id, text, **kwargs) -> telebot.types.Message:
     return msg
 
 
-def pin_message(response, peer_id):  # закрепление сообщения (если есть права администратора беседы)
+def pin_vk_message(response, peer_id):  # закрепление сообщения (если есть права администратора беседы)
     try:
         message_id = response[0].get('conversation_message_id')
         vk_session.method('messages.pin', {"peer_id": peer_id, "conversation_message_id": message_id, "v": 5.131})
     except vk_api.exceptions.ApiError as vk_error:
         if '[9]' in str(vk_error):  # ошибка flood-control: если флудим, то ждем секунду ответа
             time.sleep(1)
-            pin_message(message_id, peer_id)
+            pin_vk_message(message_id, peer_id)
             logger.warning('Flood-control, спим секунду')
         elif '[925]' in str(vk_error):
             pass
@@ -230,7 +229,7 @@ def get_anekdot(num) -> str:
     """
     Чтение анекдота из базы под заданным номером
 
-    :param int num: номер анекдота (0 - num_of_base)
+    :param int num: номер анекдота (0 - num_of_anekdots)
     :return: анекдот.
     """
 
@@ -239,33 +238,133 @@ def get_anekdot(num) -> str:
         cursor.execute('SELECT text FROM anekdots WHERE id=?', [num])
         data = cursor.fetchall()
         text = data[0][0]
-    if text == 'ERROR':
-        get_anekdot(random.randint(0, num_of_base))
+    if text == 'ERROR':  # Пахнет рекурсией
+        get_anekdot(random.randint(0, num_of_anekdots))
     anekdot_str = text[3:-4]
     return anekdot_str
 
 
-def send_anekdot(user_id, num, target='vk'):
+def get_day_photo() -> str:
     """
-    Чтение и отправка анекдота (get_anekdot -> send_message) с обработкой ошибок
-
-    :param int user_id: id для отправки
-    :param int num: номер анекдота (0 - num_of_base)
-    :param str target: название приложения для отправки ('vk' или 'tg')
-    :return: 0
+    Получение рандомной ссылки на фотографию для донатного ежедневного сообщения расписания в беседу (пока только ВК)
+    :return: ссылка на фотографию
     """
 
-    try:
-        anekdot_str = get_anekdot(num)
+    with sqlite3.connect(f'{path}admindb/databases/day_of_day.db') as con:
+        cursor = con.cursor()
+        cursor.execute('SELECT count_field FROM count')
+        data = cursor.fetchone()
+        numphotos = int(data[0])
+        cursor.execute('SELECT link FROM photos')
+        all_photos = cursor.fetchall()
+        photo = all_photos[random.randint(0, numphotos-1)][0]
+    con.close()
+    return photo
 
-        if target == 'vk':
-            send_message(anekdot_str, user_id)
-        elif target == 'tg':
-            send_tg_message(user_id, anekdot_str)
 
-    except Exception as e:
-        logger.error(f'Произошла ошибка при отправке анекдота адресату @id{str(user_id)}: {str(e)}')
-    return 0
+def get_groups() -> pd.DataFrame:
+    """
+    Получение списка групп, ссылок на календарь и chat_ids
+    :return: df[[group_id, gcal_link, vk_chat_id, tg_chat_id, tg_last_msg]] (index=group_id)
+    """
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        q = "SELECT group_id, gcal_link, vk_chat_id, tg_chat_id, tg_last_msg FROM group_gcals"
+        df = pd.read_sql(q, con).set_index('group_id')
+    return df
+
+
+def update_study_status(group):
+    """
+    Ежедневная проверка состояния группы (is_Study, is_Exam) с сопутствующим запуском разных функций парсинга данных
+
+    :param group: группа
+    :return: is_exam, is_study (bool 0/1), сообщение с оповещением об изменении
+    """
+
+    # также парсит периодически расписание на предмет обновлений.
+    today = date.today()
+    daily_return_str = ''
+    session_str = ''  # Возможно здесь по умолчанию можно сделать сообщение об ошибке
+
+    # достаем из БД параметры "идет ли семестр" и "идет ли сессия"
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        cur = con.cursor()
+        all_dates = cur.execute(f'SELECT group_id, semester_start, semester_end, exam_start, exam_end, isStudy, isExam '
+                                f'FROM group_gcals WHERE group_id=?', [group]).fetchall()[0]
+
+    # переводим в дату, чтобы можно было сравнить
+    semester_start = datetime.strptime(all_dates[1], '%Y-%m-%d').date()
+    semester_end = datetime.strptime(all_dates[2], '%Y-%m-%d').date()
+    is_study_old = all_dates[4]
+    is_exam_old = all_dates[5]
+
+    # обновляем bool isStudy и isExam
+    is_study = 1 if semester_start <= today <= semester_end else 0
+
+    try:  # isExam внутри try, потому что не у всех групп есть сессия (exam_start, exam_end)
+        exam_start = datetime.strptime(all_dates[3], '%Y-%m-%d').date()
+        exam_end = datetime.strptime(all_dates[4], '%Y-%m-%d').date()
+        is_exam = 1 if exam_start <= today <= exam_end else 0  # обновляем данные
+
+        # если семестр скоро закончится, пробуем подтянуть данные сессии
+        if today+timedelta(days=14) >= semester_end and today <= exam_start:
+            session_str, is_exam = parse_exams(group)
+
+    except TypeError:  # нет exam_start/end
+        is_exam = 0
+
+    # записываем новые is_study и is_exam
+    with con:
+        cur.execute("UPDATE group_gcals SET isStudy=?, isExam=? WHERE group_id=?", [is_study, is_exam, group])
+    con.close()
+
+    # В период сессии обновляем расписание сессии, еженедельно
+    if today.weekday() == 2 and is_exam:
+        daily_return_str += parse_exams(group)
+
+    # пытаемся (чуть-чуть) заранее подгружать расписание до начала семестра/сессии todo
+    #if semester_start-timedelta(days=2) <= today:  # осенью эт получается 30-08, зимой ~ начало февраля, норм
+        #parse_group_params(group)  # пытаемся заранее подгружать даты нового сема
+
+    # дальше реакции на 4 варианта изменения параметров - началась сессия/конец сессии, начался сем/конец сема*
+    if is_exam != is_exam_old:
+        # Начались экзамены
+        if is_exam:
+            # session str получено при обновлении is_exam
+            daily_return_str = f'Началась сессия! Выживут не все, но будет весело.\n{session_str}\n' \
+                               f'Расписание экзаменов всегда можно посмотреть во вкладке "Расписание" ' \
+                               f'чат-бота.\n\nУдачи!\n'
+
+        # Кончились экзамены
+        else:
+            parse_exams(group, set_default_next_sem=True)  # удаляем расписание экзаменов
+            daily_return_str = f'С окончанием сессии! До встречи в следующем семестре. ' \
+                               f'А пока, Дед переходит в спящий режим.'
+
+    if is_study != is_study_old:  # todo не работает в личке
+        # Начался семестр
+        if is_study:
+            # стираем старые БД; генерируем новое.
+            refresh_db_status, admin_book_str = create_database(group, keep_old_data_override=True, override_bool=True)
+            daily_return_str = f'С началом семестра! Теперь Дед будет ежедневно присылать утром расписание' \
+                               f' на день.\nРасписание, список предметов и преподавателей, а также всякие' \
+                               f' методички всегда можно посмотреть в чат-боте.\nУспехов!\n{refresh_db_status}\n' \
+                               f'P.S. Методички предыдущего семестра, при наличии, должны быть доступны ближайший ' \
+                               f'месяц, специально для любителей допсы.'
+        # Кончился семестр
+        else:
+            daily_return_str = 'С окончанием семестра! Дед переходит в спящий режим, расписания больше не будут ' \
+                               'присылаться. \nУдачи!'
+
+    if is_study and today-timedelta(days=28) >= semester_start:  # если кончилась допса
+        data_removed = remove_old_data(group)
+        if data_removed:
+            daily_return_str = f'Из базы данных удалены методички предыдущего семестра.\nКто не закрылся - F.'
+
+    if daily_return_str:
+        daily_return_str += f'\n'  # форматирование итогового сообщения
+    return is_exam, is_study, daily_return_str
+
 
 
 def cron():
@@ -276,139 +375,108 @@ def cron():
     :return:
     """
 
-    # В начале курса, а также в первых месяцах новых семестров обновляем etu_ids
-    if date.today().strftime('%m-%d') == '09-01':
+    # В первые и последние месяцы семестров пару раз в неделю обновляем etu_ids и даты семестра/сессии
+    if date.today().strftime('%m') in ['01', '02', '05', '06', '08', '09', '12'] and date.today().weekday() in [0, 4]:
         try:
-            send_message(f"Парсинг etu_id's. Проверь корректность данных!!!:\n", 2000000001)
-            admin_message = parse_etu_ids()  # обновлять эти айди нужно перед обновлением всех БД и прочего
-            send_message(admin_message, 2000000001)
-            # send_tg_message(tg_admin_chat, admin_message)
+            send_tg_message(tg_admin_chat, "Парсинг etu_id's. Проверь корректность данных!!!:\n")
+            admin_message, deleted_groups = update_group_params()
+            send_tg_message(tg_admin_chat, admin_message)
         except KeyError as e:
-            send_message(e, 2000000001)
-            # send_tg_message(tg_admin_chat, e)
+            send_tg_message(tg_admin_chat, e)
         except Exception as e:
             err_message = f'Ошибка парсинга etu_id: {e}\n{traceback.format_exc()}'
-            send_message(err_message, 2000000001)
-            # send_tg_message(tg_admin_chat, err_message)
+            send_tg_message(tg_admin_chat, err_message)
             logger.critical(f"{err_message}")
 
-    # Раз в месяц обовляем расписание преподавателей
+    # Раз в месяц обновляем расписание преподавателей
     if date.today().day == 3:
-        create_departments_db()
-        parse_prepods_schedule()
-        load_prepods_table_cache()
-        generate_departments_keyboards()
+        create_departments_db()  # Обновление списка кафедр
+        parse_prepods_schedule()  # Парсинг расписания преподавателей
+        load_prepods_table_cache()  # Загрузка кэша
+        generate_departments_keyboards()  # Генерация клавиатур с обновленным списком кафедр
         generate_prepods_keyboards()
 
-    # структура сообщения: донатное (добавляется последним) + daily_cron() + расписание/календарь (все при наличии)
+    # структура сообщения: донатное (добавляется последним) + update_study_status() + расписание/календарь (все при наличии)
 
-    load_calendar_cache()  # На всякий обновляем кэш календаря перед отправкой расписания
+    load_calendar_cache()  # На всякий обновляем кэш календаря и расписания перед отправкой
     load_table_cache()
 
-    groups, gcal_lnks, chat_ids, tg_chat_ids, tg_last_messages = get_groups()
-    schedule_counter = 0  # счетчик отправленных сообщений
-    calendar_counter = 0  # счетчик отправленных календарей
+    group_data = get_groups()
 
-    send_message('Ежедневный крон', 2000000001)
+    # логи для отправки отчета в админский чат
+    log_msg = ""
+    log_msg_vk = []
+    log_msg_tg = []
+
+    send_vk_message('Ежедневный крон', 2000000001)
     send_tg_message(tg_admin_chat, 'Ежедневный крон')
 
-    for k in range(len(groups)):
-        group = groups[k]
-        peer_id = chat_ids[k]  # str, только для сообщения об ошибке
-        tg_chat = tg_chat_ids[k]  # int, для отправки в Telegram
-        tg_last_message = tg_last_messages[k]  # int, для открепления в Telegram
+    for group in group_data.index:
+        vk_chat = group_data.loc[group, 'vk_chat_id']  # int by default
+        tg_chat = group_data.loc[group, 'tg_chat_id']
+        msg = ""
 
         try:
-            # Если нет беседы группы, то просто обновляем бд и пропускаем составление сообщения ей
-            if not chat_ids[k] and not tg_chat_ids[k]:
-                daily_cron(group)
+            # обновление данных - изменения в учебном состоянии (семестр/сессия)
+            is_exam, is_study, daily_str = update_study_status(group)
+
+            # Если отключена отправка расписания в конфу - на этом всё, едем дальше.
+            if not group_data.loc[group, 'send_tables']:
                 continue
 
-            # иначе собираем данные для сообщений - изменения в параметрах группы
-            if chat_ids[k]:
-                peer_id = int(chat_ids[k])
-            if tg_chat_ids[k]:
-                tg_chat = int(tg_chat_ids[k])
+            # Собираем сообщение с расписанием: календарь если прописан календарь (независимо от учебного статуса),
+            # иначе обычное расписание если учеба, плюс оповещение об экзаменах/консультациях, если таковые есть.
+            gcal_over_tables = bool(group_data.loc[group, 'gcal_over_tables'])
+            gcal_over_exam = bool(group_data.loc[group, 'gcal_over_exam'])
 
-            # обновление данных - изменения в учебном состоянии (семестр/сессия)
-            is_exam, is_study, daily_str = daily_cron(group)
+            table = read_calendar(group) if gcal_over_tables else read_table(group) if is_study else ""
+            if table.split()[-1] not in ['Пусто', '\nПусто']:
+                msg += table
 
-            # если и то и то =True -> есть расписание сессии, но семестр еще идет (заканчивается, скорее всего)
-            if is_exam and is_study:
-                is_exam = 0  # тогда оставляем пока обычное расписание
+            if is_exam and not gcal_over_exam:
+                exam_msg = get_exam_notification(group)
+                if exam_msg:
+                    msg += f"\n{exam_msg}"
 
-            please_donate, attachment = donator_daily_cron(group)  # ежедневная пикча и уведомление о ее отключении
+            # Проверка на содержательность сообщения
+            if not daily_str and not msg:
+                continue
 
-            # сообщение отправляется либо с календарем, либо с расписоном. от этого две сборки сообщения
-            if gcal_lnks[k]:  # если есть календарь
-                calendar_message = read_calendar(group)
-                if calendar_message.split()[-1] != 'Пусто':  # только дни когда что-то есть
-                    # Отправка ВК
-                    if peer_id:
-                        response = send_message(message=please_donate + daily_str + calendar_message,
-                                                peer_id=peer_id,
-                                                attachment=attachment)
-                        pin_message(response, peer_id)
-                        logger.warning(f'Календарь отправлен группе {group}')
+            msg = f"{daily_str}\n{msg}"
 
-                    # Отправка ТГ
-                    if tg_chat:
-                        if tg_last_message:  # Открепляем предыдущее, если оно было todo check
-                            unpin_tg_message(tg_chat, tg_last_message)
-                        msg = send_tg_message(tg_chat, please_donate + daily_str + calendar_message)
-                        pin_tg_message(msg)
-                        logger.warning(f'Календарь отправлен в ТГ группе {group}')
+            # ежедневная пикча для донатеров
+            attachment = ""
+            if group_data.loc[group, 'is_donator'] and group_data.loc[group, 'with_dayofday']:
+                attachment = get_day_photo()
 
-                    calendar_counter += 1
+            # Отправка сообщения в нужный чат
+            if vk_chat:
+                response = send_vk_message(message=msg, peer_id=vk_chat, attachment=attachment)
+                pin_vk_message(response, vk_chat)
+                log_msg_vk += [f"{group} - {'календарь' if gcal_over_tables else 'расписание'}\n"]
 
-            else:  # если нет календаря
-                table_message = daily_str
+            if tg_chat:
+                if group_data.loc[group, 'tg_last_msg']:  # Открепляем предыдущее, если оно было
+                    unpin_tg_message(tg_chat, group_data.loc[group, 'tg_last_msg'])
+                msg_ = send_tg_message(tg_chat, msg)
+                pin_tg_message(msg_)
+                log_msg_tg += [f"{group} - {'календарь' if gcal_over_tables else 'расписание'}\n"]
 
-                if is_exam:  # если идут экзамены, добавляем экзамен на сегодня в сообщение
-                    exam_notification = get_exam_notification(group)
-                    if not exam_notification:  # если на сегодня нет экзаменов, то пробуем посмотреть на завтра
-                        exam_notification = get_exam_notification(group, day=date.today()+timedelta(days=1))
+        except Exception as send_tables_err:
+            log_msg += f"{group} - ОШИБКА {send_tables_err}\n" \
+                       f"--------- vk: {vk_chat}\n" \
+                       f"--------- tg: {tg_chat}\n" \
+                       f"--------- msg: {msg}\n\n"
+            continue
 
-                    if exam_notification:
-                        table_message += exam_notification
+    log_msg = f"Выполнена рассылка расписаний\n" \
+              f"VK ({len(log_msg_vk)}):\n{''.join(log_msg_vk)}\n\n" \
+              f"TG ({len(log_msg_tg)}):\n{''.join(log_msg_tg)}\n\n" \
+              f"{log_msg}"
 
-                elif is_study:  # иначе, если обычный учебный день - расписание
-                    if read_table(group).split()[-1] != 'Пусто':
-                        table_message += read_table(group)
-
-                if table_message:  # если есть хоть что-то в сообщении на день, форматируем и отправляем
-                    # Отправка ВК
-                    if peer_id:
-                        table_message = please_donate.join(table_message)  # please_donate в начало
-                        response = send_message(message=table_message, peer_id=peer_id,
-                                                attachment=attachment)
-
-                        if response[0].get('conversation_message_id'):
-                            pin_message(response, peer_id)  # пробуем закрепить сообщение
-
-                        logger.warning(f'Расписание отправлено группе {group}')
-
-                    # Отправка ТГ
-                    if tg_chat:
-                        if tg_last_message:
-                            unpin_tg_message(tg_chat, tg_last_message)
-                        msg = send_tg_message(tg_chat, table_message)
-                        pin_tg_message(msg)
-                        logger.warning(f'Расписание отправлено в ТГ группе {group}')
-
-                    schedule_counter += 1
-
-        except Exception as e:
-            err_message = f'Ошибка крона в конфе {peer_id}, группа {group}: {e}\n{traceback.format_exc()}'
-            send_message(err_message, 2000000001)
-            send_tg_message(tg_admin_chat, err_message)
-
-    stats_message = f'Отправлено {calendar_counter + schedule_counter} сообщений из ' \
-                    f'{sum(chat_id is not None for chat_id in chat_ids)}.\n' \
-                    f'Расписаний: {schedule_counter}\n' \
-                    f'Календарей: {calendar_counter}'
-    send_message(stats_message, 2000000001)
-    send_tg_message(tg_admin_chat, stats_message)
+    send_tg_message(tg_admin_chat, log_msg)
+    send_vk_message(log_msg, 2000000001)
+    return 0
 
 
 def get_group(user_id, source='vk') -> str:  # принимает user_id и возвращает его группу
@@ -434,19 +502,46 @@ def get_group(user_id, source='vk') -> str:  # принимает user_id и в�
     return group
 
 
+def get_anekdot_user_ids(source='vk') -> list:  # список юзеров для рассылки анекдотов
+    """
+    Получение списка пользователей, подписанных на анекдоты.
+
+    :param str source: 'vk' / 'tg' - источник сообщения
+    :return: список [(user_id, count), ...]
+    """
+    with sqlite3.connect(f'{path}admindb/databases/anekdot_ids.db') as con:
+        cursor = con.cursor()
+        data = []
+        cursor.execute(f'CREATE TABLE IF NOT EXISTS {source}_users(id text, count text, source text)')
+
+        for row in cursor.execute(f'SELECT * FROM {source}_users'):
+            data.append(tuple((int(row[0]), int(row[1]))))
+    con.close()
+    return data
+
+
 def anekdots():
     """
     Отправка анекдотов в цикле всем подписанным
     """
+    ids = get_anekdot_user_ids(source='vk')
+    for id in ids:
+        try:
+            msg = "Ежедневные анекдоты:\n" if id[1] > 1 else "Ежедневный анекдот:\n"
+            msg += '\n'.join([get_anekdot(random.randint(0, num_of_anekdots)) for k in range(id[1])])
+            send_vk_message(msg, id[0])
+        except Exception as e:
+            send_vk_message(f"Ошибка отправки {id[1]} анекдотов юзеру @{id[0]}: {e}", 2000000001)
 
-    all_ids = {'vk': get_anekdot_user_ids(source='vk'),
-               'tg': get_anekdot_user_ids(source='tg')}
-
-    for source, ids in all_ids.items():
-        for id in ids:
-            send_message('Ежедневный анекдот:', id[0])
-            for i in range(id[1]):
-                send_anekdot(id[0], random.randint(0, num_of_base), target=source)
+    ids = get_anekdot_user_ids(source='tg')
+    for id in ids:
+        try:
+            msg = "Ежедневные анекдоты:\n" if id[1] > 1 else "Ежедневный анекдот:\n"
+            msg += '\n'.join([get_anekdot(random.randint(0, num_of_anekdots)) for k in range(id[1])])
+            send_tg_message(msg, id[0])
+        except Exception as e:
+            send_tg_message(tg_admin_chat, f"Ошибка отправки {id[1]} анекдотов юзеру @{id[0]}: {e}")
+    return 0
 
 
 def get_custom_personal_tables_time() -> list:
@@ -462,6 +557,39 @@ def get_custom_personal_tables_time() -> list:
         res = cursor.execute(f'SELECT DISTINCT time FROM `tg_users` WHERE time IS NOT NULL').fetchall()
         res2 = cursor.execute(f'SELECT DISTINCT time FROM `vk_users` WHERE time IS NOT NULL').fetchall()
     return list(set(res + res2))
+
+
+def get_user_table_ids(source='vk') -> dict:  # список юзеров для рассылки расписания
+    """
+    Получение списка пользователей, подписанных на ежедневное расписание, а также параметров рассылки
+    :param str source: 'vk' / 'tg' - источник сообщения
+    todo refactor in dataframe format
+    :return: {"time": {"type":[user_ids], ...}, ...};
+        "time"=None - дефолтное время, "type"='None' дефолтный режим рассылки.
+    """
+
+    with sqlite3.connect(f'{path}admindb/databases/table_ids.db') as con:
+        cursor = con.cursor()
+        data = []
+
+        cursor.execute(f'CREATE TABLE IF NOT EXISTS `{source}_users` (id text, count text, type text, time text)')
+
+        query = f'SELECT id, count, type, time FROM `{source}_users`'
+        for row in cursor.execute(query):
+            data.append(tuple((int(row[0]), tuple((int(row[1]), str(row[2]), str(row[3]))))))
+    con.close()
+
+    # Форматируем в {"time": {"type":[user_ids], ...}, ...}
+    # Для ВК формат тот же, для совместимости, однако функционала пока нет todo
+    result = {}
+    for user_id, user_settings in data:
+        table_mode = user_settings[1]
+        table_time = user_settings[2]
+
+        data = result.setdefault(table_time, {})
+        data.setdefault(table_mode, []).append(user_id)
+
+    return result
 
 
 def send_personal_tables(table_time='None'):
@@ -511,7 +639,7 @@ def send_personal_tables(table_time='None'):
                         continue  # нелепый фикс непонятно чего из телеграма
 
                     # состояние группы (семестр/сессия)
-                    is_exam, is_study, daily_str = daily_cron(group)
+                    is_exam, is_study, daily_str = update_study_status(group)
 
                     if is_exam and is_study:  # is_exam может =1 пораньше, для открытия расписона сессии
                         is_exam = 0
@@ -562,14 +690,14 @@ def send_personal_tables(table_time='None'):
                                     pin_tg_message(msgg, chat_type='private')
 
                             else:
-                                send_message(message, user_id)
+                                send_vk_message(message, user_id)
 
                             logger.warning(f'Расписание отправлено юзеру {user_id} из гр. {group}')
 
                 except Exception:
                     error_message = f'Произошла ошибка при отправке расписания: {traceback.format_exc()}\n' \
                                     f'Юзер {user_id}, группа {group}'
-                    send_message(error_message, 2000000001)
+                    send_vk_message(error_message, 2000000001)
                     send_tg_message(tg_admin_chat, error_message)
 
 
@@ -584,7 +712,7 @@ def check_toast():
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        all_groups = cur.execute("SELECT group_id, chat_id, tg_chat_id FROM group_gcals WHERE with_toast=1").fetchall()
+        all_groups = cur.execute("SELECT group_id, vk_chat_id, tg_chat_id FROM group_gcals WHERE send_toast=1").fetchall()
 
         for i in range(len(all_groups)):
             is_last_day, toast_time = get_last_lesson(all_groups[i][0])
@@ -604,7 +732,7 @@ def send_toast(chat_id, tg_chat_id=None):
     :return: 0
     """
     toast_message = f'Еженедельный случайный тост:\n{get_random_toast(header=False)}'
-    send_message(toast_message, chat_id)
+    send_vk_message(toast_message, chat_id)
     if tg_chat_id:
         send_tg_message(tg_chat_id, toast_message)
     logger.warning(f'Тост отправлен группе с peer_id={chat_id}; в telegram - {tg_chat_id}')
@@ -618,7 +746,7 @@ def initialization():
     vk_session = vk_api.VkApi(token=token)
     vk = vk_session.get_api()
 
-    send_message('Планировочный дед активирован', 2000000001)
+    send_vk_message('Планировочный дед активирован', 2000000001)
     send_tg_message(-1001668185586, 'Планировочный дед активирован')
     logger.warning('Планировочный дед активирован')
     return 0
@@ -650,5 +778,5 @@ try:
         time.sleep(30)
 except Exception as e:
     global_err = f'Произошла ошибка при выполнении cron_table: {str(e)}\n{traceback.format_exc()}'
-    send_message(global_err, 2000000001)
+    send_vk_message(global_err, 2000000001)
     send_tg_message(tg_admin_chat, global_err)

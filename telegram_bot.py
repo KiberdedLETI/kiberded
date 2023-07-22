@@ -26,14 +26,14 @@ import sys
 import pickle
 from requests.exceptions import ReadTimeout, ConnectionError
 
-from bot_functions.bots_common_funcs import read_calendar, day_of_day_toggle, read_table, get_day, \
-    compile_group_stats, add_user_to_table, get_exams, get_prepods, get_subjects, group_is_donator, \
-    add_user_to_anekdot, set_table_mode, get_tables_settings
-from bot_functions.anekdot import get_random_anekdot, get_random_toast, create_link_to_telegram
+from bot_functions.bots_common_funcs import read_calendar, read_table, get_day, \
+    compile_group_stats, add_user_to_table, get_exams, get_prepods, group_is_donator, \
+    add_user_to_anekdot, set_table_mode, get_tables_settings, get_donators, create_link_to_telegram
+from fun.anekdot import get_random_anekdot, get_random_toast
 from fun.minigames import get_coin_flip_result, start_classical_rock_paper_scissors, \
     stop_classical_rock_paper_scissors, classical_rock_paper_scissors
 from shiza.databases_shiza_helper import change_user_group, create_database, change_user_additional_group, \
-    check_group_exists
+    check_group_exists, add_donator_group
 
 
 # init
@@ -747,12 +747,8 @@ def change_additional_group_step(message):
                                               f'Проверь правильность номера или обратись к администраторам')
                 return False
 
-        group_exists, user_existed, msg = change_user_additional_group(message.text, message.chat.id, source='telegram')
+        user_existed, msg = change_user_additional_group(message.text, message.chat.id, source='telegram')
 
-        if not group_exists:
-            add_db_response, admin_add_db_response = create_database(message.text)
-            send_message(admin_chat, text=admin_add_db_response)
-            send_message(message.chat.id, text=add_db_response)
         send_message(message.chat.id, text=msg)
         if not additional_group:
             send_message(admin_chat, f'Юзер {message.chat.id} (@{message.from_user.username}) добавил доп. группу: '
@@ -785,9 +781,9 @@ def add_new_chat_step(message):
             send_message(tg_id, f'Ошибка - нет такой группы: {group}. Проверь данные и попробуй еще раз')
             return 0
 
-        old_chat_id = cur.execute('SELECT chat_id FROM group_gcals WHERE group_id=?', [group]).fetchone()[0]
+        old_chat_id = cur.execute('SELECT vk_chat_id FROM group_gcals WHERE group_id=?', [group]).fetchone()[0]
         if old_chat_id:
-            return_str = f'Беседа группы {group} уже есть ВКонтакте - chat_id={old_chat_id}\n' \
+            return_str = f'Беседа группы {group} уже есть ВКонтакте - vk_chat_id={old_chat_id}\n' \
                          f'Чтобы добавить беседу и в Телеграм, напиши в беседе ВК команду "@kiberded_bot телеграм"'
         else:
             old_chat_id = cur.execute('SELECT tg_chat_id '
@@ -904,10 +900,10 @@ def add_telegram_user_id(vk_id, tg_id, id_type='user'):
         grp_q = f'SELECT group_id FROM user_ids WHERE user_id=?'
         grp_alt_q = f'SELECT group_id FROM user_ids WHERE telegram_id=?'
     elif id_type == 'group':
-        del_q = f'DELETE FROM group_gcals WHERE tg_chat_id=? AND chat_id IS NULL'
-        old_q = f'SELECT tg_chat_id FROM group_gcals WHERE chat_id=?'
-        upd_q = f'UPDATE group_gcals SET tg_chat_id=? WHERE chat_id=?'
-        grp_q = f'SELECT group_id FROM group_gcals WHERE chat_id=?'
+        del_q = f'DELETE FROM group_gcals WHERE tg_chat_id=? AND vk_chat_id IS NULL'
+        old_q = f'SELECT tg_chat_id FROM group_gcals WHERE vk_chat_id=?'
+        upd_q = f'UPDATE group_gcals SET tg_chat_id=? WHERE vk_chat_id=?'
+        grp_q = f'SELECT group_id FROM group_gcals WHERE vk_chat_id=?'
         grp_alt_q = f'SELECT group_id FROM group_gcals WHERE tg_chat_id=?'  # вот этот запрос пока не нужен, но все же
     else:
         raise ValueError('id_type must be "user" or "group"')
@@ -942,7 +938,7 @@ def add_telegram_user_id(vk_id, tg_id, id_type='user'):
         return f"Аккаунт в Телеграме успешно привязан к https://vk.com/id{vk_id}, группа {group}.", group
 
     elif id_type == 'group':
-        return f"Группа в Телеграме успешно привязана к chat_id={vk_id}, группа {group}.", group
+        return f"Группа в Телеграме успешно привязана к vk_chat_id={vk_id}, группа {group}.", group
 
 
 @bot.message_handler(commands=['start'])
@@ -962,7 +958,7 @@ def send_welcome(message):
         if server_hash == user_hash:  # Совпадает - добавляем пользователя/беседу
             if int(user_id) > 2000000000:  # источник сообщения - беседа todo если нет беседы вк, предлагать добавить в телеге
                 reply, user_group = add_telegram_user_id(str(user_id), str(message.chat.id), id_type='group')
-                msg_source = 'chat_id='
+                msg_source = 'vk_chat_id='
 
             else:  # источник сообщения - пользователь
                 reply, user_group = add_telegram_user_id(str(user_id), str(message.chat.id))
@@ -1132,6 +1128,41 @@ def add_dayofday_picture_next_step(message):  # обработка добавл�
                                         f'{message.date}_{message.chat.id}_{message.id}.pickle')
 
 
+@bot.message_handler(commands=['add_donator'], is_admin=True)
+def add_donator(message):
+    dump_message(message)
+    print(message)
+
+    msg = send_message(message.chat.id, 'Напиши номер группы, которую нужно добавить в донатеры')
+    bot.register_next_step_handler(msg, add_donator_next_step)
+
+
+def add_donator_next_step(message):
+    group_to_add = message.text
+    if group_to_add.isdecimal() and len(group_to_add) == 4:
+
+        try:  # Добавление группы
+            admin_msg, group_msg, group_chat = add_donator_group(group_to_add, source='tg')
+        except Exception as e:
+            send_message(admin_chat, f"Ошибка добавления группы-донатера {group_to_add}: {e}")
+            return 0
+
+        # Оповещение группы и админов
+        notif_status = False
+        notif_e = ''
+        if group_chat:
+            try:
+                send_message(group_chat, group_msg)
+            except Exception as notif_e:
+                pass
+            notif_status = True
+
+        admin_msg += f"Сообщение группе {group_to_add}: {'' if not notif_status else 'не '}отправлено"
+        admin_msg += f':\n{notif_e}' if notif_e else ''
+        send_message(admin_chat, admin_msg)
+    return 0
+
+
 # Команды во всех беседах:
 @bot.message_handler(commands=['help'], chat_types=['group', 'supergroup'], is_registered=True)
 def help_group(message):
@@ -1168,17 +1199,7 @@ def deds(message):
 @bot.message_handler(commands=['donaters', 'донатеры'], chat_id=[admin_chat])
 def donaters(message):
     dump_message(message)
-
-    ans = 'Список донатеров:'
-    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
-        cur = con.cursor()
-        for row in cur.execute('SELECT group_id, last_donate, with_dayofday, with_toast FROM group_gcals'):
-            if row[1]:
-                ans += f'\n{row[0]} - до {row[1]}:\n' \
-                       f'Пикчи {"подключены" if row[2] else "отключены"}\n' \
-                       f'Тост {"подключен" if row[3] else "отключен"}\n'
-    con.close()
-    send_message(message.chat.id, ans)
+    send_message(message.chat.id, get_donators())
 
 
 # Обработка текстовых сообщений в лс
@@ -1282,14 +1303,13 @@ def callback_query(call):
             kb_message = get_tables_settings(call.from_user.id)
 
         elif endpoint == 'donate':
-            donate_status, deadline = group_is_donator(group)
+            donate_status = group_is_donator(group)
             if donate_status:
                 # kb = 'keyboard_settings_donator' todo
                 kb = 'keyboard_other'
                 kb_message = f'Спасибо за поддержку проекта! Здесь можно будет управлять функциями, ' \
                              f'доступными группам-донатерам. Нажимай на кнопки, чтобы ' \
                              f'включить/выключить фичу.' \
-                             f'\nДонатный функционал отключается: {deadline}' \
                              '\nЗадонатить можно переводом на карту сбербанка: ' \
                              '\n4274 3200 7296 2973'
             else:

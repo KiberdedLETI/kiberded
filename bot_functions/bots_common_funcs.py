@@ -6,11 +6,12 @@ import re
 import time
 import pytz
 import requests
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import sqlite3
 import sys
 import os
 import toml
+from hashlib import sha256
 
 # init
 try:
@@ -210,6 +211,54 @@ def get_exams(group) -> str:
     return str_to_vk
 
 
+def get_exam_notification(group, day=date.today()) -> str:
+    """
+    Сообщение с экзаменом/консультацией на заданный день из таблицы exam_schedule (при наличии)
+
+    :param str group: группа
+    :param date day: день. По умолчанию - сегодня и завтра
+    :return: сообщение с расписанием
+    """
+
+    # По умолчанию смотрим сегодня-завтра
+    exam_days = [day] if day != date.today() else [date.today(), date.today() + timedelta(days=1)]
+    exam_msg = ''
+
+    with sqlite3.connect(f'{path}databases/{group}.db') as con:
+        cur = con.cursor()
+        if cur.execute("SELECT name FROM sqlite_master "  # если нет таблицы с экзаменами, то ничего не присылаем
+                       "WHERE type='table' AND name='exam_schedule'").fetchone() is not None:
+
+            for exam_day in exam_days:
+                exam = cur.execute('SELECT time, subject, name, classroom '
+                                   'FROM exam_schedule WHERE date=?', [exam_day]).fetchone()
+
+                if exam is not None:  # Экзамен
+                    exam_msg = f'в {exam[0]} экзамен по {exam[1]}' \
+                               f'\nПреподаватель - {exam[2]}' \
+                               f'\nАудитория {exam[3]}' \
+                               f'\nУдачи!'
+
+                else:  # Консультация
+                    consult = cur.execute('SELECT subject, name, consult_date, consult_time, consult_classroom '
+                                          'FROM exam_schedule '
+                                          'WHERE consult_date=?', [exam_day]).fetchone()
+                    if consult is not None:
+                        exam_msg = f'в {consult[3]} консультация по {consult[0]}' \
+                                   f'\nПреподаватель - {consult[1]}'
+                        if consult[4] != '':
+                            exam_msg += f'\nАудитория {consult[4]}'
+
+                if exam_msg:
+                    if day == date.today():
+                        exam_msg = f"Сегодня {exam_msg}\n"
+                    elif day == date.today() + timedelta(days=1):
+                        exam_msg = f"Завтра {exam_msg}"
+                    else:
+                        exam_msg = f"{exam_day} {exam_msg}"
+    return exam_msg
+
+
 def get_prepods(subject, group_id, is_old=False) -> str:
     """
     Получение данных о преподавателях заданного предмета
@@ -232,7 +281,6 @@ def get_prepods(subject, group_id, is_old=False) -> str:
             for row in cursor.execute(query, [subject]):
                 str_to_vk += f'{row[0]} - {row[1]}\n'
         except Exception as e:
-            logger.error(f'Ошибка чтения преподов: {str(e)}')
             str_to_vk += 'Возникла какая-то ошибка'
     return str_to_vk
 
@@ -253,6 +301,21 @@ def get_subjects(group) -> list:
     return subjects
 
 
+def get_donators():
+    """
+    Статистика по группам-донатерам
+    """
+    ans = 'Список донатеров:'
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        cur = con.cursor()
+        for row in cur.execute('SELECT group_id, with_dayofday, with_toast FROM group_gcals WHERE is_donator=TRUE'):
+            ans += f'\n{row[0]}:\n' \
+                   f'- Пикчи {"подключены" if row[1] else "отключены"}\n' \
+                   f'- Тост {"подключен" if row[2] else "отключен"}\n'
+    con.close()
+    return ans
+
+
 def group_is_donator(group) -> bool:
     """
     Смотрит донатный статус группы
@@ -263,13 +326,9 @@ def group_is_donator(group) -> bool:
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        last_donate = cur.execute("SELECT last_donate FROM group_gcals WHERE group_id=?", [group]).fetchone()[0]
-        if last_donate:  # bool 0/1
-            donate_date = datetime.strptime(last_donate, '%Y-%m-%d').date()  # переводим в дату
-            donate_deadline = donate_date
-            if datetime.now(pytz.timezone('Europe/Moscow')).date() <= donate_deadline:  # донат в силе
-                return True, donate_deadline
-    return False, 0  # не знаю нужен ли второй параметр
+        if cur.execute("SELECT is_donator FROM group_gcals WHERE group_id=?", [group]).fetchone()[0]:  # bool 0/1
+            return True
+    return False
 
 
 def get_tables_settings(user_id, source='tg'):
@@ -393,10 +452,26 @@ def add_user_to_anekdot(user_id, count, source='vk') -> str:
     return str_to_vk
 
 
+def create_link_to_telegram(user_id, hash_key="", source=""):
+    """
+    Создает ссылку для авторизации пользователя в боте в телеграме. Ссылка содержит id пользователя и токен
+
+    :param hash_key: Дополнительный ключ для создания токена ИЗ КОНФИГА
+    :param user_id: id пользователя ВКонтакте
+    :param str source: Источник перехода: "" - пользователь, "group" - беседа
+    :return: link, user_id, token
+    """
+
+    user_id = str(user_id)
+    user_str = bytearray(f"KDed{user_id[::-1]}{hash_key}", 'utf-8')
+    m = sha256(user_str).hexdigest()[:48]  # В ТГ ограничение 64 символа, а нам нужно еще user_id передать
+    tg_link = f"https://telegram.me/kiberded_leti_bot?start{source}={user_id}_{m}"
+    return tg_link, user_id, m
+
+
 def compile_group_stats(peer_id, admin_stats=False, source='vk') -> str:  # Здесь, потому что используется в обоих ботах
     """
     Сборка статистики группы: количество участников, статус группы, почта, календарь
-    TODO отдельный подсчет бесед в телеграме (+ записывать их в group_gcals, а не user_ids)
 
     :param int peer_id: id беседы
     :param bool admin_stats: if True, собирает данные всего бота, а не по одной группе
@@ -404,11 +479,11 @@ def compile_group_stats(peer_id, admin_stats=False, source='vk') -> str:  # Зд
     :return: сообщение со статистикой группы/бота
     """
 
-    id_col = 'chat_id' if source == 'vk' else 'tg_chat_id'
+    id_col = 'vk_chat_id' if source == 'vk' else 'tg_chat_id'
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        all_stats = cur.execute(f'SELECT gcal_link, mail, last_donate, with_dayofday, group_id, with_toast '
+        all_stats = cur.execute(f'SELECT gcal_link, mail, is_donator, with_dayofday, group_id, with_toast '
                                 f'FROM group_gcals WHERE {id_col}=?', [peer_id]).fetchall()
 
         all_users = cur.execute('SELECT group_id FROM user_ids '
@@ -443,11 +518,11 @@ def compile_group_stats(peer_id, admin_stats=False, source='vk') -> str:  # Зд
             all_users_vk = cur.execute('SELECT group_id FROM user_ids WHERE user_id IS NOT NULL').fetchall()
             all_users_tg = cur.execute('SELECT group_id FROM user_ids WHERE telegram_id IS NOT NULL').fetchall()
             all_groups = cur.execute('SELECT DISTINCT group_id FROM user_ids').fetchall()
-            all_chats = cur.execute('SELECT group_id FROM group_gcals WHERE chat_id IS NOT NULL').fetchall()
+            all_chats = cur.execute('SELECT group_id FROM group_gcals WHERE vk_chat_id IS NOT NULL').fetchall()
             all_tg_chats = cur.execute('SELECT group_id FROM group_gcals WHERE tg_chat_id IS NOT NULL').fetchall()
             all_mail = cur.execute('SELECT group_id FROM group_gcals WHERE mail IS NOT NULL').fetchall()
             all_gcals = cur.execute('SELECT group_id FROM group_gcals WHERE gcal_link IS NOT NULL').fetchall()
-            all_donators = cur.execute('SELECT group_id FROM group_gcals WHERE last_donate IS NOT NULL').fetchall()
+            all_donators = cur.execute('SELECT group_id FROM group_gcals WHERE is_donator IS NOT NULL').fetchall()
             ans += '\n\nГлобальная статистика:\n' \
                    f'Всего пользователей {len(all_users_total)}:\n' \
                    f'-- из ВКонтакте: {len(all_users_vk)}\n' \

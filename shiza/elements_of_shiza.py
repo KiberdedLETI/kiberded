@@ -25,7 +25,7 @@ from shiza.databases_shiza_helper import watch_all_databases, edit_all_databases
     get_group, generate_subject_keyboards, edit_admin_database, add_moderator, create_database, get_database_to_watch, \
     change_user_group, get_common_group, edit_email, edit_gcal, add_preset_books, view_email, view_gcal, delete_email, \
     delete_gcal, get_stock_groups, change_user_additional_group, get_common_additional_group, check_group_exists, \
-    load_table_cache, load_calendar_cache
+    load_table_cache, load_calendar_cache, add_donator_group
 
 # common init
 logger = logging.getLogger('chat_bot')
@@ -422,7 +422,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                                        f'\n{books_message}'
                                         try:
                                             send_message(peer_id=values_check[0], message=notification)
-                                        except Exception as e:  # если нету пользователя, которого назначили
+                                        except Exception as e:  # если нет пользователя, которого назначили
                                             if '[901]' in str(e):
                                                 send_message(peer_id=user_id,
                                                              message='Сообщение новому модератору не '
@@ -468,71 +468,44 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                                  keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
                                 break
 
-                    elif shiza_command == "add_donator":  # kinda deprecated
+                    # Добавление группы в донатеры
+                    elif shiza_command == "add_donator":
                         if freedom == 'admin':
                             send_message(peer_id=user_id, keyboard=open_keyboard('keyboard_end'),
-                                         message=f'Напиши группу, из которой пришел донат, и срок действия '
-                                                 f'доната в днях (по умолчанию месяц) через "/" '
-                                                 f'(9281/60 например):')
+                                         message=f'Напиши группу, из которой пришел донат:')
 
                             for event in longpoll.listen():
                                 if event.type == VkBotEventType.MESSAGE_NEW and \
                                         event.obj.message["peer_id"] == user_id:
-                                    donate_input = str(event.obj.message['text']).split('/')
-                                    if donate_input[0].isdecimal():
-                                        group_to_add = donate_input[0]
-                                        donate_period = 30
-                                        donate_chat = []  # пустая переменная для оповещения в конфу
-                                        if len(donate_input) == 2 and donate_input[1].isdecimal():
-                                            donate_period = int(donate_input[1])
-                                        with sqlite3.connect(f"{path}databases/group_ids.db") as con:
-                                            cur = con.cursor()
-                                            if cur.execute('SELECT * FROM group_gcals WHERE group_id=?',
-                                                           [group_to_add]).fetchall():
-                                                cur.execute('UPDATE group_gcals SET last_donate=? WHERE group_id=?',
-                                                            (date.today()+timedelta(days=donate_period), group_to_add))
-                                                donate_chat = cur.execute('SELECT chat_id FROM group_gcals WHERE group_id=?', [group_to_add]).fetchall()
-                                            else:
-                                                raise ValueError(f'Нет такой группы: {group_to_add}')
-                                        with sqlite3.connect(f'{path}databases/admins.db') as con:
-                                            cur = con.cursor()
-                                            moder_info = cur.execute('SELECT id FROM users WHERE group_id=?', [group_to_add]).fetchall()
-                                            moder_message = ''
-                                            if moder_info:
-                                                moder_info = moder_info[0]
-                                                for i in range(len(moder_info)):
-                                                    moder_message += f'@id{moder_info[i]}\n'
 
+                                    group_to_add = str(event.obj.message['text'])
+                                    if group_to_add.isdecimal() and len(group_to_add) == 4:
+
+                                        admin_msg, group_msg, group_chat = add_donator_group(group_to_add, source='vk')
+
+                                        # Ответ админу
                                         send_message(peer_id=user_id,
-                                                     message=f'Группа {group_to_add} успешно добавлена!'
-                                                             f'Донат подключен до '
-                                                             f'{date.today() + timedelta(days=donate_period)}',
+                                                     message=admin_msg,
                                                      keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
-                                        notif_success = False
-                                        if donate_chat:  # оповещение группы
-                                            donate_chat = donate_chat[0]
-                                            donate_notif = f'Спасибо за поддержку! \nКто-то из ' \
-                                                           f'{group_to_add} помог нам рублем, теперь вам' \
-                                                           f' до {date.today() + timedelta(days=donate_period)}' \
-                                                           f' доступны некоторые приколы, настроить ' \
-                                                           f' которые может модератор группы в ' \
-                                                           f'Прочее -> Поддержать проект.\n'
-                                            for i in range(len(donate_chat)):
-                                                try:
-                                                    send_message(peer_id=donate_chat[0][-1:],
-                                                                 message=donate_notif)
-                                                    notif_success = True
-                                                except vk_api.ApiError:  # не отправить в конфу, ну и ладно
-                                                    pass
-                                                except TypeError:  # нет конфы, ну и ладно
-                                                    pass
 
+                                        # Оповещение группы
+                                        notif_success = False
+                                        if group_chat:
+                                            try:
+                                                send_message(peer_id=group_chat,
+                                                             message=group_msg)
+                                                notif_success = True
+                                            except vk_api.ApiError:  # не отправить в конфу, ну и ладно
+                                                pass
+                                            except TypeError:  # нет конфы, ну и ладно
+                                                pass
+
+                                        # Оповещение админского чатика ВК
                                         send_message(peer_id=2000000001,
-                                                     message=f'Добавлена группа-донатер {group_to_add}.\n'
-                                                             f'Донат подключен до '
-                                                             f'{date.today()+timedelta(days=donate_period)}'
-                                                             f'\nУведомление в конфу {donate_chat}:'
-                                                             f' {"" if notif_success else "не"} отправлено')
+                                                     message=f'{admin_msg}\n'
+                                                             f'Уведомление в конфу {group_chat}: '
+                                                             f'{"" if notif_success else "не"} отправлено')
+
                                     # Важно! Это всегда в конце, иначе будет всплывать KeyError из-за payload
                                     elif event.obj.message['payload']:
                                         send_message(peer_id=user_id, message=f'Редактор БД. Что требуется?',
@@ -543,11 +516,14 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                         send_message(peer_id=user_id, keyboard=open_keyboard('keyboard_end'),
                                      message='Напиши почту/пароль без пробелов через "/" в формате '
                                              '\nmailaddress@email.ru/password\nПроверяй правильность данных!')
+
                         for event in longpoll.listen():
                             if event.type == VkBotEventType.MESSAGE_NEW and \
                                     event.obj.message["peer_id"] == user_id:
+
                                 data_to_add = str(event.obj.message["text"]).strip(' /').split('/')
                                 if len(data_to_add[0].split('@')) == 2 and len(data_to_add) == 2:
+
                                     edit_email(group, data_to_add[0], data_to_add[1])
                                     subprocess.Popen(["systemctl", "restart", "mail_bot"], stdout=subprocess.PIPE)
                                     send_message(peer_id=user_id,
@@ -680,9 +656,9 @@ def change_group_func(user_id):
                 send_message(peer_id=user_id, message='Секунду, ищем группу...')
 
                 # проверка на существование группы
-                with sqlite3.connect(f'{path_db}admindb/databases/all_groups.db') as con:
+                with sqlite3.connect(f'{path_db}admindb/databases/group_ids.db') as con:
                     cur = con.cursor()
-                    group_data = cur.execute('SELECT etu_id, studyingType FROM all_groups WHERE fullNumber=?',
+                    group_data = cur.execute('SELECT etu_id, studying_type FROM group_gcals WHERE group_id=?',
                                              [values_check]).fetchone()
 
                 if group_data:
@@ -713,7 +689,7 @@ def change_group_func(user_id):
                         send_message(peer_id=2000000001,
                                      message=f'@id{user_id} пришел к нам из дикой {values_check}. '
                                              f'Неплохо бы назначить им модератора')
-                        # Создаем БД если модера не было
+                        # Создаем БД если модератора не было, на всякий случай
                         add_db_response, admin_add_db_response = create_database(values_check)
                         send_message(peer_id=2000000001, message=admin_add_db_response)
                         send_message(peer_id=user_id, message=add_db_response)
@@ -751,9 +727,10 @@ def change_additional_group_func(user_id):  # смена/установка но
             if len(values_check) == 4 and values_check.isdecimal():  # проверка формата
                 send_message(peer_id=user_id, message='Секунду, ищем группу...')
                 # проверка на существование такой группы
-                with sqlite3.connect(f'{path_db}admindb/databases/all_groups.db') as con:
+                with sqlite3.connect(f'{path_db}admindb/databases/group_ids.db') as con:
                     cur = con.cursor()
-                    group_data = cur.execute('SELECT etu_id, studyingType FROM all_groups WHERE fullNumber=?', [values_check]).fetchone()
+                    group_data = cur.execute('SELECT etu_id, studying_type FROM group_gcals WHERE group_id=?',
+                                             [values_check]).fetchone()
                 if group_data:
                     if group_data[1] == 'заоч':
                         send_message(peer_id=user_id,
@@ -768,19 +745,12 @@ def change_additional_group_func(user_id):  # смена/установка но
                                              f'Проверь правильность номера или обратись к администраторам')
                         return 0
 
-                    group_exists, user_existed, answer_cg = change_user_additional_group(values_check, user_id)
+                    user_existed, answer_cg = change_user_additional_group(values_check, user_id)
                     # это можно потом поменять если будет флуд, пока по приколу пусть будет
-                    if group_exists:
-                        change_group_notif = f'@id{user_id} сменил(-а) доп.группу с {group} на {values_check}'
-                        send_message(peer_id=2000000001, message=change_group_notif)
-                    else:  # Вот этого вообще быть тут не должно, но на всякий случай
-                        send_message(peer_id=2000000001,
-                                     message=f'@id{user_id} добавил дикую {values_check}, которой почему-то не было(??)'
-                                             f'\nНеплохо бы назначить им модератора (сообщение-анахронизм...)')
-                        # Создаем БД если модера не было
-                        add_db_response, admin_add_db_response = create_database(values_check)
-                        send_message(peer_id=2000000001, message=admin_add_db_response)
-                        send_message(peer_id=user_id, message=add_db_response)
+                    change_group_notif = f'@id{user_id} сменил(-а) доп.группу с {group} на {values_check}'
+                    send_message(peer_id=2000000001, message=change_group_notif)
+
+
                     send_message(peer_id=user_id, message=answer_cg,
                                  keyboard=open_keyboard(f'{user_group}_main'))
                 else:
@@ -790,7 +760,7 @@ def change_additional_group_func(user_id):  # смена/установка но
                                          f'Изменения не внесены.')
             else:
                 values_check = None
-                group_exists, user_existed, answer_cg = change_user_additional_group(values_check, user_id)
+                user_existed, answer_cg = change_user_additional_group(values_check, user_id)
                 send_message(peer_id=user_id,
                              message='Дополнительная группа удалена. Если не хотел ее убирать - '
                                      'проверь правильность введенного номера')
@@ -812,7 +782,7 @@ def add_chat(group, chat_id, freedom):  # добавление чата в group
     with sqlite3.connect(f'{path_db}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
 
-        old_chat_id, tg_chat_id = cur.execute('SELECT chat_id, tg_chat_id '
+        old_chat_id, tg_chat_id = cur.execute('SELECT vk_chat_id, tg_chat_id '
                                               'FROM group_gcals '
                                               'WHERE group_id=?', [group]).fetchone()
         if old_chat_id:  # если уже была куда-то добавлена эта группа
@@ -821,8 +791,8 @@ def add_chat(group, chat_id, freedom):  # добавление чата в group
                        f'(chat_id={old_chat_id}), переназначить чат группы может только модератор группы. ' \
                        f'Обратись к кому-нибудь из администраторов.'
 
-        cur.execute("UPDATE group_gcals SET chat_id=? WHERE group_id=?", (chat_id, group))
-        gr_inf = cur.execute("SELECT group_id FROM group_gcals WHERE chat_id=?", [chat_id]).fetchone()[0]
+        cur.execute("UPDATE group_gcals SET vk_chat_id=? WHERE group_id=?", (chat_id, group))
+        gr_inf = cur.execute("SELECT group_id FROM group_gcals WHERE vk_chat_id=?", [chat_id]).fetchone()[0]
 
     if tg_chat_id is not None:
         tg_msg = f' Обнаружена беседа группы в Телеграме. Синхронизация бесед пока недоступна - в ТГ не будут ' \

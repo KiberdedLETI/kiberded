@@ -2,7 +2,7 @@
 """
 Парсинг данных с api ИС "Расписание" ЛЭТИ, а также настройка бота - учебный/сессионный/каникулярный режимы в группе
 
-Полезные ссылки:
+Полезные ссылки (потому что ЛЭТИ все никак не напишет документацию своей апишки):
     расписание во вкладке преподы + отдельно кнопка преподы во вкладке "расписание"
     https://digital.etu.ru/schedule/?department=каф.Физики&initials=Харитонский+Петр+Владимирович&schedule=teacher
     https://digital.etu.ru/schedule/?department={departament}&initials={surname}+{name}+{midname}&schedule=teacher
@@ -245,17 +245,6 @@ def parse_prepods_schedule():
     return 0
 
 
-def get_prepod(surname, initials=None):
-    """
-    Ищет преподавателя по фамилии или инициалам, возвращает id и ФИО для подтверждения
-
-    :param str surname:
-    :param str initials:
-    :return:
-    """
-    raise NotImplementedError('В разработке')
-
-
 def get_calendar(group_id, day=today) -> str:
     """
     Составление расписания из .ical календаря
@@ -326,7 +315,6 @@ def get_calendar(group_id, day=today) -> str:
 
     if answer == f'Расписание на {str(day)}':
         answer += '\nПусто'
-
     return answer
 
 
@@ -637,20 +625,22 @@ def load_prepods_table_cache():
     return 0
 
 
-def get_exam_data(group) -> dict:
+def get_exam_data(group):
     """
-    Заглядывает в раздел с расписанием сессии, возвращает его данные если там что-то есть
+    Получение расписания сессии с API ЛЭТИ
+
     :param str group: номер группы
-    :return: JSON с данными или {}
+    :return: JSON с данными или 0
     """
 
     return_str = {}
 
-    with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
         try:
             etu_id, course, study_type = \
-                cur.execute("SELECT etu_id, course, studyingType FROM all_groups WHERE fullNumber=?", [group]).fetchall()[0]
+                cur.execute("SELECT etu_id, course, studying_type FROM group_gcals WHERE group_id=?",
+                            [group]).fetchall()[0]
         except IndexError:
 
             return {}
@@ -674,31 +664,31 @@ def get_exam_data(group) -> dict:
     return return_json
 
 
-def parse_exams(group, exam_json_data=None, set_default_next_sem=False) -> str:
+def parse_exams(group, set_default_next_sem=False):
     """
-    Функция, переводящая Деда в сессионный режим (если isExam) - тут и кнопки, и сам парсинг расписона сессии
+    Парсер расписания сессии
 
     :param group: группа
-    :param exam_json_data: данные сессии из get_exam_data
-    :param set_default_next_sem: if True, чистит Деда от прошедшей сессии
+    :param set_default_next_sem: if True, чистит Деда от прошедшей сессии, и на этом все.
     :return: сообщение с оповещением об изменениях в беседу группы
     """
 
-    return_data = ''  # для крона, оповещения об изменениях в расписоне сессии
+    return_data = ''  # Для крона, оповещения об изменениях в расписании сессии
+    got_exams = False  # Флаг получения информации об экзаменах
 
-    if exam_json_data is None:
-        exam_json_data = get_exam_data(group)
-        if not exam_json_data:
-            return return_data
+    exam_json_data = get_exam_data(group)
+    if not exam_json_data:
+        return return_data, got_exams
 
     if set_default_next_sem:  # если кончилась сессия, стираем таблицу
         with sqlite3.connect(f'{path}databases/{group}.db') as con:
             cur = con.cursor()
             cur.execute('DROP TABLE IF EXISTS exam_schedule')
         con.close()
-        return return_data
+        return return_data, got_exams
 
-    with sqlite3.connect(f'{path}databases/{group}.db') as con:  # часть, где делаем расписание экзаменов
+    # Парсер JSON с данными
+    with sqlite3.connect(f'{path}databases/{group}.db') as con:
         cur = con.cursor()
         cur.execute(
             'CREATE TABLE '
@@ -746,10 +736,11 @@ def parse_exams(group, exam_json_data=None, set_default_next_sem=False) -> str:
                       consult_date, consult_start_time, consult_classroom)]
         # инициалы, № ауд., дата экза, время экза (! нестабильно), название (если title в последнем арг. - полное)
 
+    # Загрузка данных в БД
     with con:
         cur.execute('DROP TABLE IF EXISTS exam_schedule')
         if not new_data:  # если нет экзаменов
-            return return_data
+            return return_data, got_exams
         cur.execute('CREATE TABLE exam_schedule '
                     '(date text, time text, subject text, name text, classroom text, '
                     'consult_date text, consult_time text, consult_classroom text)')
@@ -758,148 +749,92 @@ def parse_exams(group, exam_json_data=None, set_default_next_sem=False) -> str:
         new_data = cur.execute('SELECT * FROM exam_schedule ORDER BY date').fetchall()
     con.close()
 
-    diff = list(set(new_data).difference(set(old_data)))  # сравниваем данные
+    diff = list(set(new_data) - (set(old_data)))  # сравниваем данные
     if diff:
         for i in range(len(diff)):
             return_data += ' '.join(diff[i])
             return_data += '\n'
         if not old_data:
             return_data = f'Появилось расписание сессии:\n{return_data}'
+            got_exams = True
         else:
             return_data = f'Произошли изменения в расписании экзаменов:\n{return_data}'
-    return return_data
+            got_exams = True
+    return return_data, got_exams
 
 
-def parse_group_params(group, set_default_next_sem=False):
+def update_group_params():
     """
-    Достает даты семестра и сессии для группы
-
-    :param group: группа
-    :param set_default_next_sem: if True, настраивает деда под следующий семестр, проставляя значения по умолчанию
-    :return: 0
+    Обновляет group_ids.db в связи с появлением новых групп - загружает соответствующие им id на ИС "Расписание" ЛЭТИ
+    :return: сообщение с оповещением для админской беседы, список групп для удаления (нужно рассылать оповещения)
     """
 
-    # номер группы и её id в ИС "Расписание" отличаются - в базе соответствующие разные значения
-    with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:
-        cur = con.cursor()
-        etu_id = cur.execute("SELECT etu_id FROM all_groups WHERE fullNumber=?", [group]).fetchone()[0]
-    con.close()
+    # Получаем данные
+    url = 'https://digital.etu.ru/api/general/dicts/groups?scheduleId=publicated&withSemesterSeasons=true'
+    data = requests.get(url, headers=headers).json()
 
-    # получение данных
-    url = f'https://digital.etu.ru/api/schedule/objects/publicated?groups={etu_id}'
-    all_data = requests.get(url, headers=headers).json()
-    semester = all_data[0]["semester"]
-    semester_season = all_data[0]['semesterSeasons'][0]['season']
-    semester_start = all_data[0]['semesterSeasons'][0]['GroupSemesterSeason']['semesterStart']
-    semester_end = all_data[0]['semesterSeasons'][0]['GroupSemesterSeason']['semesterEnd']
-    exam_start = all_data[0]['semesterSeasons'][0]['GroupSemesterSeason']['examStart']
-    exam_end = all_data[0]['semesterSeasons'][0]['GroupSemesterSeason']['examEnd']
+    # Извлекаем и прописываем даты семестра
+    dates = ["semesterStart", "semesterEnd", "examStart", "examEnd"]
+    for el in range(len(data)):
+        for d in dates:
+            try:
+                print(data[el]["semesterSeasons"][0]["GroupSemesterSeason"][d])
+                data[el][d] = datetime.strptime(data[el]["semesterSeasons"][0]["GroupSemesterSeason"][d][:10], '%Y-%m-%d').date()
+            except TypeError:  # значение даты None или неправильный путь (мб нет GroupSemesterSeason)
+                data[el][d] = None
 
-    # проверки дат. Нули потом превращаются в дефолтные даты
-    if semester_start:  # проверка на то, есть ли у группы семестр (у магистров м.б. ошибки просто)
-        semester_start = semester_start.split('T')[0]
-        semester_end = semester_end.split('T')[0]
-        # если семестра нет, не обрезаем дату, а null далее заменятся на дефолтные даты
+    # Преобразуем в датафрейм для удобства обработки
+    df = pd.DataFrame(data)
+    df = df[['id', 'fullNumber', 'course', 'semester', 'studyingType', 'educationLevel',
+             "semesterStart", "semesterEnd", "examStart", "examEnd"]]
 
-    if exam_end:  # проверка на то, есть ли сессия у группы, если есть, добавляем
-        exam_start = exam_start.split('T')[0]
-        exam_end = exam_end.split('T')[0]
-        if datetime.today().date() > datetime.strptime(exam_end, '%Y-%m-%d').date():
-            set_default_next_sem = True  # если на сайте старое расписание, проставляем дефолтные на след. семестр
+    # Помимо основных бэкапов, создаем простую копию БД group_ids, на случай необходимости быстрого восстановления
+    os.system(f"cp {path}admindb/databases/group_ids.db {path}admindb/databases/group_ids_before_update.db")
 
-    elif not exam_end:  # если сессии нет, не обрезаем дату, а null далее заменятся на дефолтные даты
-        # todo учитывать группы без сессии вообще (чтобы не включался режим сессии)
-        if datetime.today().date() > datetime.strptime(semester_end, '%Y-%m-%d').date()+timedelta(days=25):
-            set_default_next_sem = True  # если на сайте старое расписание, проставляем дефолтные на след. семестр
-
-    group_dates = [semester_start, semester_end, exam_start, exam_end]
-
-    # дефолтные значения если пусто на сайте ЛЭТИ
-    year = date.today().year
-    default_spring = [f'{year}-02-05', f'{year}-06-15', f'{year}-06-16', f'{year}-07-07']
-    default_autumn = [f'{year}-09-01', f'{year}-12-30', f'{year + 1}-01-03', f'{year + 1}-01-30']
-
-    for i in range(len(group_dates)):
-        if group_dates[i]:  # если дата не None обрезаем ее до чисто даты (без времени)
-            group_dates[i] = group_dates[i][:10]
-        if set_default_next_sem:  # если дефолтные на следующий сем
-            if semester_season == 'autumn':
-                group_dates[i] = default_spring[i]
-            elif semester_season == 'spring':
-                group_dates[i] = default_autumn[i]
-        elif not group_dates[i] and not set_default_next_sem:  # если не на след. семестр и нету чего-то на этот сем
-            if semester_season == 'spring':
-                group_dates[i] = default_spring[i]
-            elif semester_season == 'autumn':
-                group_dates[i] = default_autumn[i]
-
-    semester_end = datetime.strptime(semester_end, '%Y-%m-%d').date()  # для сравнения
-    semester_start = datetime.strptime(semester_start, '%Y-%m-%d').date()  # для сравнения
-    is_study = 1 if semester_start <= date.today() < semester_end else 0
-    is_exam = 0
-    if exam_end:  # если есть даты сессии
-        if date.today()+timedelta(days=30) >= semester_end \
-                and date.today() <= datetime.strptime(exam_end, '%Y-%m-%d').date():
-            exam_data = get_exam_data(group)
-            if exam_data:
-                is_exam = 1
-                parse_exams(group, exam_json_data=exam_data)
-
-        if semester_end <= date.today() <= datetime.strptime(exam_end, '%Y-%m-%d').date():
-            is_exam = 1
-
-    group_dates.extend([is_exam, is_study, group])  # group это для запроса в sqlite
+    # Сравниваем с базой и обновляем при необходимости
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        cur.executemany(
-            "UPDATE group_gcals SET semester_start=?, semester_end=?, exam_start=?, exam_end=?, isExam=?, isStudy=?"
-            " WHERE group_id=?", [group_dates])
+        old = pd.read_sql('SELECT etu_id, course, semester, studying_type, group_id FROM group_gcals', con)
+
+        new_gs = set(df[['id', 'fullNumber']].itertuples(index=False, name=None))
+        old_gs = set(old[['etu_id', 'group_id']].itertuples(index=False, name=None))
+        to_add = new_gs - old_gs
+        to_remove = old_gs - new_gs
+
+        # Сперва обновляем (только, остальное все равно потом) etu_id у тех, кто НЕ в обеих группах (был и остается)
+        staying = list(df.loc[~df.id.isin([el[0] for el in to_add]), ['id', 'fullNumber']].itertuples(index=False, name=None))
+        cur.executemany("UPDATE group_gcals SET etu_id=? WHERE group_id=?", staying)
+        con.commit()
+
+        # Теперь разбираемся с изменениями
+        # Старые группы (к удалению)
+        if to_remove:
+            cur.executemany(f"DELETE FROM group_gcals WHERE etu_id=? AND group_id=?", to_remove)
+            con.commit()
+            # todo уведомления группы об удалении
+
+        # Новые группы
+        if to_add:
+            to_add = list(df.loc[df.index.isin([el[0] for el in to_add])].itertuples(index=False, name=None))
+            cur.executemany("INSERT INTO group_gcals "
+                            "(etu_id, group_id, course, semester, studying_type, level, "
+                            "semester_start, semester_end, exam_start, exam_end) "
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", to_add)
+            con.commit()
+
+        # Обновляем все остальное. etu_id не трогаем - уже обновлено выше.
+        df = list(df[['course', 'semester', 'studyingType', "semesterStart", "semesterEnd", "examStart", "examEnd",
+                      "fullNumber"]].itertuples(index=False, name=None))
+        cur.executemany("UPDATE group_gcals SET course=?, semester=?, studying_type=?, "
+                        "semester_start=?, semester_end=?, exam_start=?, exam_end=? WHERE group_id=?", df)
+        con.commit()
     con.close()
 
-    # если оказалось, что на сайте старое расписание, апдейтим номер семестра в all_groups - но это пока нигде не нужно
-    if set_default_next_sem:  # номер сема апдейтится по сравнению с сайтом, а не бд (semester)
-        with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:
-            cur = con.cursor()
-            cur.execute('UPDATE all_groups SET semester=? WHERE fullNumber=?', (semester+1, group))
-        con.close()
-
-        # deprecated - do not touch
-        # with sqlite3.connect(f'{path}databases/{group}.db') as con:
-        #     cur = con.cursor()
-        #     cur.execute("DROP TABLE IF EXISTS schedule")
-        #     # cur.execute("DROP TABLE IF EXISTS prepods") пока не надо, будет ломаться
-
-    return 0
-
-
-def parse_etu_ids() -> str:
-    """
-    Обновляет all_groups.db в связи с появлением новых групп - загружает соответствующие им id на ИС "Расписание" ЛЭТИ
-
-    :return: сообщение с оповещением для отладочной беседы
-    """
-
-    url = 'https://digital.etu.ru/api/general/dicts/groups?scheduleId=publicated&withSemesterSeasons=true'
-    all_data = requests.get(url, headers=headers).json()
-    all_groups = []
-    for i in range(len(all_data)):
-        all_groups.append((str(all_data[i]["fullNumber"]), str(all_data[i]["id"]), int(all_data[i]["course"]),
-                           int(all_data[i]["semester"]), str(all_data[i]["studyingType"])))
-
-    with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:
-        cur = con.cursor()
-        all_groups_old = cur.execute('SELECT * FROM all_groups').fetchall()
-        diff = list(set(all_groups) - set(all_groups_old))
-        if not diff:  # если нету новых etu_ids
-            raise KeyError('Новых etu_id не обнаружено')
-        cur.execute('DROP TABLE IF EXISTS all_groups')
-        cur.execute("CREATE TABLE all_groups ("
-                    "fullNumber text, etu_id text, course int, semester int, studyingType text)")
-        cur.executemany("INSERT INTO all_groups (fullNumber, etu_id, course, semester, studyingType) "
-                        "VALUES (?, ?, ?, ?, ?)", all_groups)
-    con.close()
-
-    message = f'Обновлена БД all_groups, загружены новые etu_ids.\n' \
-              f'Групп было: {len(all_groups_old)}\nГрупп стало: {len(all_groups)}.\n' \
-              f'Новые группы: {[group[0] for group in diff]}'
-    return message
+    add_groups = [el[1] for el in to_add]
+    remove_groups = [el[1] for el in to_remove]
+    message = f'Обновлена БД all_groups'
+    if to_add:
+        message += f'\nДобавлены группы ({len(add_groups)} шт.): {", ".join(add_groups)}'
+    if to_remove:
+        message += f'\nУдалены группы ({len(remove_groups)} шт.): {", ".join(remove_groups)}'
+    return message, remove_groups
