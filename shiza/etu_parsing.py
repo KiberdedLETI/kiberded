@@ -810,7 +810,7 @@ def update_group_params():
         # Старые группы (к удалению)
         if to_remove:
             remove_groups = [(el[1],) for el in to_remove]
-            cur.executemany(f"DELETE FROM group_gcals WHERE group_id=?", to_remove)
+            cur.executemany(f"DELETE FROM group_gcals WHERE group_id=?", remove_groups)
             con.commit()
             # todo уведомления группы об удалении
 
@@ -832,10 +832,10 @@ def update_group_params():
     con.close()
 
     add_groups = [el[1] for el in to_add]
-    remove_groups = [el[1] for el in to_remove]
     message = f'Обновлена БД all_groups'
     if to_add:
         message += f'\nДобавлены группы ({len(add_groups)} шт.): {", ".join(add_groups)}'
     if to_remove:
+        remove_groups = [el[1] for el in to_remove]
         message += f'\nУдалены группы ({len(remove_groups)} шт.): {", ".join(remove_groups)}'
     return message, remove_groups
