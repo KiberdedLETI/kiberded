@@ -2,7 +2,7 @@
 """
 Парсинг данных с api ИС "Расписание" ЛЭТИ, а также настройка бота - учебный/сессионный/каникулярный режимы в группе
 
-Полезные ссылки:
+Полезные ссылки (потому что ЛЭТИ все никак не напишет документацию своей апишки):
     расписание во вкладке преподы + отдельно кнопка преподы во вкладке "расписание"
     https://digital.etu.ru/schedule/?department=каф.Физики&initials=Харитонский+Петр+Владимирович&schedule=teacher
     https://digital.etu.ru/schedule/?department={departament}&initials={surname}+{name}+{midname}&schedule=teacher
@@ -879,6 +879,9 @@ def update_group_params():
     df = pd.DataFrame(data)
     df = df[['id', 'fullNumber', 'course', 'semester', 'studyingType', 'educationLevel',
              "semesterStart", "semesterEnd", "examStart", "examEnd"]]
+
+    # Помимо основных бэкапов, создаем простую копию БД group_ids, на случай необходимости быстрого восстановления
+    os.system(f"cp {path}admindb/databases/group_ids.db {path}admindb/databases/group_ids_before_update.db")
 
     # Сравниваем с базой и обновляем при необходимости
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:

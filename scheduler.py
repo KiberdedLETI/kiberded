@@ -282,20 +282,17 @@ def cron():
     :return:
     """
 
-    # В начале курса, а также в первых месяцах новых семестров обновляем etu_ids
-    if date.today().strftime('%m-%d') == '09-01':
+    # В первые и последние месяцы семестров пару раз в неделю обновляем etu_ids и даты семестра/сессии
+    if date.today().strftime('%m') in ['01', '02', '05', '06', '08', '09', '12'] and date.today().weekday() in [0, 4]:
         try:
-            send_vk_message(f"Парсинг etu_id's. Проверь корректность данных!!!:\n", 2000000001)
-            admin_message, deleted_groups = update_group_params()  # обновлять эти айди нужно перед обновлением всех БД и прочего
-            send_vk_message(admin_message, 2000000001)
-            # send_tg_message(tg_admin_chat, admin_message)
+            send_tg_message(tg_admin_chat, "Парсинг etu_id's. Проверь корректность данных!!!:\n")
+            admin_message, deleted_groups = update_group_params()
+            send_tg_message(tg_admin_chat, admin_message)
         except KeyError as e:
-            send_vk_message(e, 2000000001)
-            # send_tg_message(tg_admin_chat, e)
+            send_tg_message(tg_admin_chat, e)
         except Exception as e:
             err_message = f'Ошибка парсинга etu_id: {e}\n{traceback.format_exc()}'
-            send_vk_message(err_message, 2000000001)
-            # send_tg_message(tg_admin_chat, err_message)
+            send_tg_message(tg_admin_chat, err_message)
             logger.critical(f"{err_message}")
 
     # Раз в месяц обновляем расписание преподавателей
