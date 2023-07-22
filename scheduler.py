@@ -429,13 +429,18 @@ def cron():
             gcal_over_tables = bool(group_data.loc[group, 'gcal_over_tables'])
             gcal_over_exam = bool(group_data.loc[group, 'gcal_over_exam'])
 
-            msg += read_calendar(group) if gcal_over_tables else read_table(group) if is_study else ""
-            msg += f"\n{get_exam_notification(group)}" if is_exam and not gcal_over_exam else ""
+            table = read_calendar(group) if gcal_over_tables else read_table(group) if is_study else ""
+            if table.split()[-1] not in ['Пусто', '\nПусто']:
+                msg += table
 
-            # Проверка на содержательность сообщения (есть ли какое-то из расписаний)
-            # TODO
-            # if calendar_message.split()[-1] != 'Пусто'
-            # if read_table(group).split()[-1] != 'Пусто':
+            if is_exam and not gcal_over_exam:
+                exam_msg = get_exam_notification(group)
+                if exam_msg:
+                    msg += f"\n{exam_msg}"
+
+            # Проверка на содержательность сообщения
+            if not daily_str and not msg:
+                continue
 
             msg = f"{daily_str}\n{msg}"
 
@@ -707,7 +712,7 @@ def check_toast():
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        all_groups = cur.execute("SELECT group_id, chat_id, tg_chat_id FROM group_gcals WHERE with_toast=1").fetchall()
+        all_groups = cur.execute("SELECT group_id, vk_chat_id, tg_chat_id FROM group_gcals WHERE send_toast=1").fetchall()
 
         for i in range(len(all_groups)):
             is_last_day, toast_time = get_last_lesson(all_groups[i][0])
