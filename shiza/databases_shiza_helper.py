@@ -17,7 +17,7 @@ import requests
 from icalendar import Calendar
 import pytz
 from datetime import datetime, timedelta
-from shiza.etu_parsing import parse_group_params, parse_exams, load_calendar_cache, load_table_cache
+from shiza.etu_parsing import parse_exams, load_calendar_cache, load_table_cache
 from datetime import date
 import math
 from transliterate import translit
@@ -407,15 +407,6 @@ def create_database(group, is_global_parsing=False, keep_old_data_override=False
 
         generate_main_keyboard(group)  # создаем главную клавиатуру
         generate_links_keyboard(group)  # создаем клавиатуру с ссылками для тг
-
-        try:  # Обработка ошибки номера группы
-            parse_group_params(group)  # парсим даты семестра
-        except Exception as e:
-            if is_global_parsing:
-                pass
-            else:
-                raise e
-
         book_notif_user, book_notif_admin = add_preset_books(group, is_global_parsing)  # добавляем набор книжек
         generate_subject_ids(group)  # генерация таблицы subject_ids для тг
         generate_subject_keyboards(group)  # генерируем клавиатуры предметов и преподов для вк

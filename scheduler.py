@@ -22,10 +22,9 @@ from fun.anekdot import get_random_toast
 from bot_functions.bots_common_funcs import get_last_lesson, read_calendar, read_table, get_day, set_table_mode, \
     get_exam_notification
 from shiza.etu_parsing import update_group_params, load_calendar_cache, load_table_cache, \
-    parse_prepods_schedule, load_prepods_table_cache
-from shiza.daily_functions import daily_cron
+    parse_prepods_schedule, load_prepods_table_cache, parse_exams
 from shiza.databases_shiza_helper import generate_prepods_keyboards, generate_departments_keyboards, \
-    create_departments_db
+    create_departments_db, remove_old_data
 import sys
 import pickle
 import pandas as pd
@@ -274,6 +273,100 @@ def get_groups() -> pd.DataFrame:
     return df
 
 
+def update_study_status(group):
+    """
+    Ежедневная проверка состояния группы (is_Study, is_Exam) с сопутствующим запуском разных функций парсинга данных
+
+    :param group: группа
+    :return: is_exam, is_study (bool 0/1), сообщение с оповещением об изменении
+    """
+
+    # также парсит периодически расписание на предмет обновлений.
+    today = date.today()
+    daily_return_str = ''
+    session_str = ''  # Возможно здесь по умолчанию можно сделать сообщение об ошибке
+
+    # достаем из БД параметры "идет ли семестр" и "идет ли сессия"
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        cur = con.cursor()
+        all_dates = cur.execute(f'SELECT group_id, semester_start, semester_end, exam_start, exam_end, isStudy, isExam '
+                                f'FROM group_gcals WHERE group_id=?', [group]).fetchall()[0]
+
+    # переводим в дату, чтобы можно было сравнить
+    semester_start = datetime.strptime(all_dates[1], '%Y-%m-%d').date()
+    semester_end = datetime.strptime(all_dates[2], '%Y-%m-%d').date()
+    is_study_old = all_dates[4]
+    is_exam_old = all_dates[5]
+
+    # обновляем bool isStudy и isExam
+    is_study = 1 if semester_start <= today <= semester_end else 0
+
+    try:  # isExam внутри try, потому что не у всех групп есть сессия (exam_start, exam_end)
+        exam_start = datetime.strptime(all_dates[3], '%Y-%m-%d').date()
+        exam_end = datetime.strptime(all_dates[4], '%Y-%m-%d').date()
+        is_exam = 1 if exam_start <= today <= exam_end else 0  # обновляем данные
+
+        # если семестр скоро закончится, пробуем подтянуть данные сессии
+        if today+timedelta(days=14) >= semester_end and today <= exam_start:
+            session_str, is_exam = parse_exams(group)
+
+    except TypeError:  # нет exam_start/end
+        is_exam = 0
+
+    # записываем новые is_study и is_exam
+    with con:
+        cur.execute("UPDATE group_gcals SET isStudy=?, isExam=? WHERE group_id=?", [is_study, is_exam, group])
+    con.close()
+
+    # В период сессии обновляем расписание сессии, еженедельно
+    if today.weekday() == 2 and is_exam:
+        daily_return_str += parse_exams(group)
+
+    # пытаемся (чуть-чуть) заранее подгружать расписание до начала семестра/сессии todo
+    #if semester_start-timedelta(days=2) <= today:  # осенью эт получается 30-08, зимой ~ начало февраля, норм
+        #parse_group_params(group)  # пытаемся заранее подгружать даты нового сема
+
+    # дальше реакции на 4 варианта изменения параметров - началась сессия/конец сессии, начался сем/конец сема*
+    if is_exam != is_exam_old:
+        # Начались экзамены
+        if is_exam:
+            # session str получено при обновлении is_exam
+            daily_return_str = f'Началась сессия! Выживут не все, но будет весело.\n{session_str}\n' \
+                               f'Расписание экзаменов всегда можно посмотреть во вкладке "Расписание" ' \
+                               f'чат-бота.\n\nУдачи!\n'
+
+        # Кончились экзамены
+        else:
+            parse_exams(group, set_default_next_sem=True)  # удаляем расписание экзаменов
+            daily_return_str = f'С окончанием сессии! До встречи в следующем семестре. ' \
+                               f'А пока, Дед переходит в спящий режим.'
+
+    if is_study != is_study_old:  # todo не работает в личке
+        # Начался семестр
+        if is_study:
+            # стираем старые БД; генерируем новое.
+            refresh_db_status, admin_book_str = create_database(group, keep_old_data_override=True, override_bool=True)
+            daily_return_str = f'С началом семестра! Теперь Дед будет ежедневно присылать утром расписание' \
+                               f' на день.\nРасписание, список предметов и преподавателей, а также всякие' \
+                               f' методички всегда можно посмотреть в чат-боте.\nУспехов!\n{refresh_db_status}\n' \
+                               f'P.S. Методички предыдущего семестра, при наличии, должны быть доступны ближайший ' \
+                               f'месяц, специально для любителей допсы.'
+        # Кончился семестр
+        else:
+            daily_return_str = 'С окончанием семестра! Дед переходит в спящий режим, расписания больше не будут ' \
+                               'присылаться. \nУдачи!'
+
+    if is_study and today-timedelta(days=28) >= semester_start:  # если кончилась допса
+        data_removed = remove_old_data(group)
+        if data_removed:
+            daily_return_str = f'Из базы данных удалены методички предыдущего семестра.\nКто не закрылся - F.'
+
+    if daily_return_str:
+        daily_return_str += f'\n'  # форматирование итогового сообщения
+    return is_exam, is_study, daily_return_str
+
+
+
 def cron():
     """
     Большая функция, в которой отправляются расписания и прочие штуки по беседам групп,
@@ -303,7 +396,7 @@ def cron():
         generate_departments_keyboards()  # Генерация клавиатур с обновленным списком кафедр
         generate_prepods_keyboards()
 
-    # структура сообщения: донатное (добавляется последним) + daily_cron() + расписание/календарь (все при наличии)
+    # структура сообщения: донатное (добавляется последним) + update_study_status() + расписание/календарь (все при наличии)
 
     load_calendar_cache()  # На всякий обновляем кэш календаря и расписания перед отправкой
     load_table_cache()
@@ -325,7 +418,7 @@ def cron():
 
         try:
             # обновление данных - изменения в учебном состоянии (семестр/сессия)
-            is_exam, is_study, daily_str = daily_cron(group)
+            is_exam, is_study, daily_str = update_study_status(group)
 
             # Если отключена отправка расписания в конфу - на этом всё, едем дальше.
             if not group_data.loc[group, 'send_tables']:
@@ -541,7 +634,7 @@ def send_personal_tables(table_time='None'):
                         continue  # нелепый фикс непонятно чего из телеграма
 
                     # состояние группы (семестр/сессия)
-                    is_exam, is_study, daily_str = daily_cron(group)
+                    is_exam, is_study, daily_str = update_study_status(group)
 
                     if is_exam and is_study:  # is_exam может =1 пораньше, для открытия расписона сессии
                         is_exam = 0
