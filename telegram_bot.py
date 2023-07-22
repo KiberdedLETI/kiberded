@@ -747,12 +747,8 @@ def change_additional_group_step(message):
                                               f'Проверь правильность номера или обратись к администраторам')
                 return False
 
-        group_exists, user_existed, msg = change_user_additional_group(message.text, message.chat.id, source='telegram')
+        user_existed, msg = change_user_additional_group(message.text, message.chat.id, source='telegram')
 
-        if not group_exists:
-            add_db_response, admin_add_db_response = create_database(message.text)
-            send_message(admin_chat, text=admin_add_db_response)
-            send_message(message.chat.id, text=add_db_response)
         send_message(message.chat.id, text=msg)
         if not additional_group:
             send_message(admin_chat, f'Юзер {message.chat.id} (@{message.from_user.username}) добавил доп. группу: '

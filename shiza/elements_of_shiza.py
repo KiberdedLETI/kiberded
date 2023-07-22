@@ -422,7 +422,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                                        f'\n{books_message}'
                                         try:
                                             send_message(peer_id=values_check[0], message=notification)
-                                        except Exception as e:  # если нету пользователя, которого назначили
+                                        except Exception as e:  # если нет пользователя, которого назначили
                                             if '[901]' in str(e):
                                                 send_message(peer_id=user_id,
                                                              message='Сообщение новому модератору не '
@@ -516,11 +516,14 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                         send_message(peer_id=user_id, keyboard=open_keyboard('keyboard_end'),
                                      message='Напиши почту/пароль без пробелов через "/" в формате '
                                              '\nmailaddress@email.ru/password\nПроверяй правильность данных!')
+
                         for event in longpoll.listen():
                             if event.type == VkBotEventType.MESSAGE_NEW and \
                                     event.obj.message["peer_id"] == user_id:
+
                                 data_to_add = str(event.obj.message["text"]).strip(' /').split('/')
                                 if len(data_to_add[0].split('@')) == 2 and len(data_to_add) == 2:
+
                                     edit_email(group, data_to_add[0], data_to_add[1])
                                     subprocess.Popen(["systemctl", "restart", "mail_bot"], stdout=subprocess.PIPE)
                                     send_message(peer_id=user_id,
@@ -686,7 +689,7 @@ def change_group_func(user_id):
                         send_message(peer_id=2000000001,
                                      message=f'@id{user_id} пришел к нам из дикой {values_check}. '
                                              f'Неплохо бы назначить им модератора')
-                        # Создаем БД если модера не было
+                        # Создаем БД если модератора не было, на всякий случай
                         add_db_response, admin_add_db_response = create_database(values_check)
                         send_message(peer_id=2000000001, message=admin_add_db_response)
                         send_message(peer_id=user_id, message=add_db_response)
@@ -742,19 +745,12 @@ def change_additional_group_func(user_id):  # смена/установка но
                                              f'Проверь правильность номера или обратись к администраторам')
                         return 0
 
-                    group_exists, user_existed, answer_cg = change_user_additional_group(values_check, user_id)
+                    user_existed, answer_cg = change_user_additional_group(values_check, user_id)
                     # это можно потом поменять если будет флуд, пока по приколу пусть будет
-                    if group_exists:
-                        change_group_notif = f'@id{user_id} сменил(-а) доп.группу с {group} на {values_check}'
-                        send_message(peer_id=2000000001, message=change_group_notif)
-                    else:  # Вот этого вообще быть тут не должно, но на всякий случай
-                        send_message(peer_id=2000000001,
-                                     message=f'@id{user_id} добавил дикую {values_check}, которой почему-то не было(??)'
-                                             f'\nНеплохо бы назначить им модератора (сообщение-анахронизм...)')
-                        # Создаем БД если модера не было
-                        add_db_response, admin_add_db_response = create_database(values_check)
-                        send_message(peer_id=2000000001, message=admin_add_db_response)
-                        send_message(peer_id=user_id, message=add_db_response)
+                    change_group_notif = f'@id{user_id} сменил(-а) доп.группу с {group} на {values_check}'
+                    send_message(peer_id=2000000001, message=change_group_notif)
+
+
                     send_message(peer_id=user_id, message=answer_cg,
                                  keyboard=open_keyboard(f'{user_group}_main'))
                 else:
@@ -764,7 +760,7 @@ def change_additional_group_func(user_id):  # смена/установка но
                                          f'Изменения не внесены.')
             else:
                 values_check = None
-                group_exists, user_existed, answer_cg = change_user_additional_group(values_check, user_id)
+                user_existed, answer_cg = change_user_additional_group(values_check, user_id)
                 send_message(peer_id=user_id,
                              message='Дополнительная группа удалена. Если не хотел ее убирать - '
                                      'проверь правильность введенного номера')
@@ -786,7 +782,7 @@ def add_chat(group, chat_id, freedom):  # добавление чата в group
     with sqlite3.connect(f'{path_db}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
 
-        old_chat_id, tg_chat_id = cur.execute('SELECT chat_id, tg_chat_id '
+        old_chat_id, tg_chat_id = cur.execute('SELECT vk_chat_id, tg_chat_id '
                                               'FROM group_gcals '
                                               'WHERE group_id=?', [group]).fetchone()
         if old_chat_id:  # если уже была куда-то добавлена эта группа
@@ -795,8 +791,8 @@ def add_chat(group, chat_id, freedom):  # добавление чата в group
                        f'(chat_id={old_chat_id}), переназначить чат группы может только модератор группы. ' \
                        f'Обратись к кому-нибудь из администраторов.'
 
-        cur.execute("UPDATE group_gcals SET chat_id=? WHERE group_id=?", (chat_id, group))
-        gr_inf = cur.execute("SELECT group_id FROM group_gcals WHERE chat_id=?", [chat_id]).fetchone()[0]
+        cur.execute("UPDATE group_gcals SET vk_chat_id=? WHERE group_id=?", (chat_id, group))
+        gr_inf = cur.execute("SELECT group_id FROM group_gcals WHERE vk_chat_id=?", [chat_id]).fetchone()[0]
 
     if tg_chat_id is not None:
         tg_msg = f' Обнаружена беседа группы в Телеграме. Синхронизация бесед пока недоступна - в ТГ не будут ' \

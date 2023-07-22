@@ -794,7 +794,7 @@ def add_moderator(user_id, group_num):
 
 def check_group_exists(group_num):
     """
-    Проверка наличия группы в БД по all_groups и директории с БД
+    Проверка наличия группы в БД по group_gcals и директории с БД
 
     :param str group_num: номер группы
     :return: True, если группа есть, иначе False
@@ -803,7 +803,7 @@ def check_group_exists(group_num):
     if f"{group_num}.db" not in os.listdir(f'{path}databases/'):
         return False
 
-    with sqlite3.connect(f'{path}admindb/databases/all_groups.db') as con:
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
         return True if cur.execute('SELECT etu_id FROM group_gcals WHERE group_id=?', [group_num]).fetchone() else False
 
@@ -858,7 +858,7 @@ def change_user_additional_group(group_id, user_id, source='vk'):  # меняе�
     :param group_id: номер группы
     :param user_id: id пользователя
     :param str source: источник изменения группы ('vk' или 'tg')
-    :return: bool существует ли БД для данной группы; bool был ли юзер в боте; сообщение о добавлении группы
+    :return: bool был ли юзер в боте; сообщение о добавлении группы
     """
 
     id_col = 'user_id' if source == 'vk' else 'telegram_id'
@@ -869,8 +869,6 @@ def change_user_additional_group(group_id, user_id, source='vk'):  # меняе�
             user_existed = True
         con.close()
         answer = f'Дополнительная группа успешно изменена на {group_id}'
-        group_exists = True
-        return group_exists, user_existed, answer
     else:
         with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
             cur = con.cursor()
@@ -878,8 +876,8 @@ def change_user_additional_group(group_id, user_id, source='vk'):  # меняе�
             user_existed = True
         con.close()
         answer = f'Дополнительная группа успешно удалена.'
-        group_exists = True
-        return group_exists, user_existed, answer
+
+    return user_existed, answer
 
 
 # генерация таблицы с предметами и их id для тг
@@ -1500,14 +1498,14 @@ def add_preset_books(group, is_global_parsing=False) -> str:  # добавлен
         if is_global_parsing:
             admin_str = f'Отсутствуют - нет {filename}.xlsx'
         else:
-            admin_str = f'Нету методичек для {group}, cеместр {semester}'
-    except ValueError as e:  # нету листа в файле
+            admin_str = f'Нет методичек для {group}, cеместр {semester}'
+    except ValueError as e:  # нет листа в файле
         user_str = f'Списка учебников по умолчанию не найдено. Раздел "Методички" создан пустым, ' \
                    'добавлять туда файлы может модератор группы, см. статью на странице сообщества.'
         if is_global_parsing:
             admin_str = f'Отсутствуют - нет "{sheet_code}" в {filename}.xlsx'
         else:
-            admin_str = f'Нету листа методичек в {filename}.xlsx для {group}, cеместр {semester}\n{e}'
+            admin_str = f'Нет листа методичек в {filename}.xlsx для {group}, cеместр {semester}\n{e}'
     except Exception as e:  # пока оставлю на другие ошибки
         user_str = f'Списка учебников по умолчанию не найдено. Раздел "Методички" создан пустым, ' \
                      'добавлять туда файлы может модератор группы, см. статью на странице сообщества.'

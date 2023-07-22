@@ -315,7 +315,6 @@ def get_calendar(group_id, day=today) -> str:
 
     if answer == f'Расписание на {str(day)}':
         answer += '\nПусто'
-
     return answer
 
 
