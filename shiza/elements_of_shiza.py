@@ -132,7 +132,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
     longpoll = VkBotLongPoll(vk_session, group_id)
     send_message(peer_id=user_id,
                  message=f'Редактор БД запущен. Права доступа: {freedom}',
-                 keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                 keyboard=open_keyboard(f'kb_shiza_{freedom}'))
 
     for event in longpoll.listen():
         logger.warning(f'Новый event в шизе databases: {str(event.type)}')
@@ -150,11 +150,11 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                         return 0
 
                     elif shiza_endpoint == "start_databases":  # Запуск
-                        kb = f'keyboard_shiza_{freedom}'
+                        kb = f'kb_shiza_{freedom}'
                         kb_message = 'Редактор БД. Что требуется?'
 
                     elif shiza_endpoint == 'view_email':
-                        kb = 'keyboard_email'
+                        kb = 'kb_email'
                         kb_message = f'{view_email(group)}\n.\n' \
                                      f'Бот умеет присылать оповещения о письмах на почте в беседу группы, для этого необходимо: ' \
                                      f'\n1) Добавить бота в беседу группы. Помимо оповещений, он еще будет ежедневно ' \
@@ -168,7 +168,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                      f'"Кибердед: инструкция по применению" на странице сообщества.'
 
                     elif shiza_endpoint == 'view_calendar':
-                        kb = 'keyboard_gcal'
+                        kb = 'kb_gcal'
                         kb_message = f'{view_gcal(group)}\n.\n' \
                                      f'Бот умеет присылать мероприятия из iCalendar-календаря ' \
                                      f'(Google-календарь, Яндекс-календарь и проч.), в который можно ' \
@@ -182,7 +182,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                      f'"Кибердед: инструкция по применению" на странице сообщества.'
 
                     elif shiza_endpoint == "add_preset_books_info":
-                        kb = 'keyboard_books'
+                        kb = 'kb_books'
                         kb_message = 'Здесь ты можешь выбрать для своей группы методички по умолчанию - ' \
                                      'это список файлов, созданный кем-то под твою группу (а может еще не' \
                                      ' созданный, тогда раздел с методичками будет пустой).\n' \
@@ -192,7 +192,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                      'на странице сообщества.'
 
                     else:  # обработка всех остальных пэйлоадов
-                        kb = f'keyboard_shiza_{freedom}'
+                        kb = f'kb_shiza_{freedom}'
                         kb_message = 'Ошибка редактора - неизвестная клавиатура'
                         logger.error(f'Ошибка навигации шизы - {payload["place"]}\n'
                                      f'Весь пэйлоад: {payload}')
@@ -222,10 +222,10 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                          attachment=f'doc{user_id}_{file.get("doc").get("id")}')
                             os.remove(f'{path}cache/{payload["database"]}.xlsx')
                             send_message(peer_id=user_id, message='Не забудь выключить редактор БД.',
-                                         keyboard=open_keyboard('keyboard_end'))
+                                         keyboard=open_keyboard('kb_end'))
                         else:
                             send_message(peer_id=user_id,
-                                         keyboard=open_keyboard(f'keyboard_shiza_{freedom}'),
+                                         keyboard=open_keyboard(f'kb_shiza_{freedom}'),
                                          message='Ошибка доступа')
 
                     elif shiza_command == "edit_database":  # todo лень было переделывать, но тут некрасиво
@@ -235,7 +235,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
 
                         elif isAdmin:  # админская шиза
                             send_message(peer_id=user_id, message='Меняй БД на базе имеющихся файлов',
-                                         keyboard=open_keyboard('keyboard_end'))
+                                         keyboard=open_keyboard('kb_end'))
 
                             for event in longpoll.listen():  # Получение присланного файла из диалога
                                 if event.type == VkBotEventType.MESSAGE_NEW and \
@@ -255,7 +255,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                             edit_admin_database(database=payload["database"], path=path,
                                                                 url=url)
                                             send_message(peer_id=user_id, message=f'Готово!',
-                                                         keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                                         keyboard=open_keyboard(f'kb_shiza_{freedom}'))
                                         except ValueError as e:
                                             send_message(peer_id=user_id,
                                                          message=f'Ошибка в базе данных: {e}\n'
@@ -265,7 +265,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                             os.remove(f"{path}cache/{payload['database']}.db")
                                             send_message(peer_id=user_id,
                                                          message=f'Ошибка редактора - недопустимый формат',
-                                                         keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                                         keyboard=open_keyboard(f'kb_shiza_{freedom}'))
                                             send_message(peer_id=2000000001,
                                                          message=f'@id{user_id} ломает админскую базу '
                                                                  f'{payload["database"]}\n{e}')
@@ -274,7 +274,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
 
                                     elif event.obj.message['payload']:
                                         send_message(peer_id=user_id, message=f'Редактор БД. Что требуется?',
-                                                     keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                                     keyboard=open_keyboard(f'kb_shiza_{freedom}'))
                                     break
 
                         else:  # обычная шиза
@@ -290,7 +290,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                             os.remove(f'{path}cache/{payload["database"]}.xlsx')
                             send_message(peer_id=user_id, message='Загрузи новый .xslx файл, оформленный '
                                                                   'строго по шаблону',
-                                         keyboard=open_keyboard('keyboard_end'))
+                                         keyboard=open_keyboard('kb_end'))
 
                             for event in longpoll.listen():  # Получение присланного файла из диалога
                                 if event.type == VkBotEventType.MESSAGE_NEW and \
@@ -308,7 +308,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                             edit_database(database=payload["database"], path=path, url=url,
                                                           group=group)
                                             send_message(peer_id=user_id, message=f'Готово!',
-                                                         keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                                         keyboard=open_keyboard(f'kb_shiza_{freedom}'))
                                         except ValueError as e:
                                             send_message(peer_id=user_id,
                                                          message=f'Ошибка в базе данных: {e}\n'
@@ -319,7 +319,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                             os.remove(f"{path}cache/{payload['database']}.db")
                                             send_message(peer_id=user_id, message=f'Ошибка редактора - '
                                                                                   f'недопустимый формат',
-                                                         keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                                         keyboard=open_keyboard(f'kb_shiza_{freedom}'))
                                             send_message(peer_id=2000000001, message=f'@id{user_id} ломает базу'
                                                                                      f' {payload["database"]}\n{e}')
                                             logger.error(f'Ошибка редактирования БД: '
@@ -327,7 +327,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
 
                                     elif event.obj.message['payload']:
                                         send_message(peer_id=user_id, message=f'Редактор БД. Что требуется?',
-                                                     keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                                     keyboard=open_keyboard(f'kb_shiza_{freedom}'))
                                     break
 
                     elif shiza_command == 'reset_database':
@@ -365,24 +365,24 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
 
                             send_message(peer_id=2000000001, message=parsing_message)
                             send_message(peer_id=user_id, message=f'Готово!',
-                                         keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                         keyboard=open_keyboard(f'kb_shiza_{freedom}'))
 
                         else:
                             send_message(peer_id=user_id, message=f'Ошибка доступа',
-                                         keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                         keyboard=open_keyboard(f'kb_shiza_{freedom}'))
 
                     elif shiza_command == "add_moderator":
 
                         # В зависимости от уровня доступа, можно назначить модератора в любую группу или в свою
                         if freedom != 'admin':
-                            send_message(peer_id=user_id, keyboard=open_keyboard('keyboard_end'),
+                            send_message(peer_id=user_id, keyboard=open_keyboard('kb_end'),
                                          message=f'Ты можешь дать кому-нибудь из своей группы права на редактирование '
                                                  f'расписания, напиши кого добавить в формате user_id(без @id)'
                                                  f'например (@id) {user_id} (это ты). Id можно посмотреть в адресной '
                                                  f'строке браузера')
 
                         elif freedom == 'admin':
-                            send_message(peer_id=user_id, keyboard=open_keyboard('keyboard_end'),
+                            send_message(peer_id=user_id, keyboard=open_keyboard('kb_end'),
                                          message=f'Напиши кого добавить в формате user_id/group, '
                                                  f'например {user_id}/{group} (это ты)')
 
@@ -398,7 +398,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                         values_check[1].isdecimal() and freedom == 'admin':
                                     add_mod_response = add_moderator(values_check[0], values_check[1])
                                     send_message(peer_id=user_id, message=add_mod_response,
-                                                 keyboard=open_keyboard('keyboard_end'))
+                                                 keyboard=open_keyboard('kb_end'))
                                     if add_mod_response == f'Пользователь @id{values_check[0]} добавлен в модераторы':
                                         send_message(peer_id=2000000001,
                                                      message=f'@id{user_id} добавил модератора '
@@ -452,26 +452,26 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                                                      'отправлено - отсутствует получатель')
 
                                         send_message(peer_id=user_id, message=add_mod_response,
-                                                     keyboard=open_keyboard('keyboard_end'))
+                                                     keyboard=open_keyboard('kb_end'))
                                         send_message(peer_id=2000000001,
                                                      message=f'В группе {group} @id{user_id} добавил модератора'
                                                              f' {add_mod_response.split()[1]}')
                                     else:
                                         send_message(peer_id=user_id, message=f'Ошибка - @id{values_check[0]} '
                                                                               f'не состоит в группе {group}.',
-                                                     keyboard=open_keyboard('keyboard_end'))
+                                                     keyboard=open_keyboard('kb_end'))
                                         break
 
                                 # Важно! Это всегда в конце, иначе будет всплывать KeyError из-за payload
                                 elif event.obj.message['payload']:
                                     send_message(peer_id=user_id, message=f'Редактор БД. Что требуется?',
-                                                 keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                                 keyboard=open_keyboard(f'kb_shiza_{freedom}'))
                                 break
 
                     # Добавление группы в донатеры
                     elif shiza_command == "add_donator":
                         if freedom == 'admin':
-                            send_message(peer_id=user_id, keyboard=open_keyboard('keyboard_end'),
+                            send_message(peer_id=user_id, keyboard=open_keyboard('kb_end'),
                                          message=f'Напиши группу, из которой пришел донат:')
 
                             for event in longpoll.listen():
@@ -486,7 +486,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                         # Ответ админу
                                         send_message(peer_id=user_id,
                                                      message=admin_msg,
-                                                     keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                                     keyboard=open_keyboard(f'kb_shiza_{freedom}'))
 
                                         # Оповещение группы
                                         notif_success = False
@@ -509,11 +509,11 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                     # Важно! Это всегда в конце, иначе будет всплывать KeyError из-за payload
                                     elif event.obj.message['payload']:
                                         send_message(peer_id=user_id, message=f'Редактор БД. Что требуется?',
-                                                     keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                                     keyboard=open_keyboard(f'kb_shiza_{freedom}'))
                                     break
 
                     elif shiza_command == 'edit_email':  # добавление почты
-                        send_message(peer_id=user_id, keyboard=open_keyboard('keyboard_end'),
+                        send_message(peer_id=user_id, keyboard=open_keyboard('kb_end'),
                                      message='Напиши почту/пароль без пробелов через "/" в формате '
                                              '\nmailaddress@email.ru/password\nПроверяй правильность данных!')
 
@@ -537,11 +537,11 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                             # Важно! Это всегда в конце, иначе будет всплывать KeyError из-за payload
                             elif event.obj.message['payload']:
                                 send_message(peer_id=user_id, message=f'Редактор БД. Что требуется?',
-                                             keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                             keyboard=open_keyboard(f'kb_shiza_{freedom}'))
                             break
 
                     elif shiza_command == 'edit_calendar':  # добавление календаря
-                        send_message(peer_id=user_id, keyboard=open_keyboard('keyboard_end'),
+                        send_message(peer_id=user_id, keyboard=open_keyboard('kb_end'),
                                      message='Напиши ссылку на календарь:')
                         for event in longpoll.listen():
                             if event.type == VkBotEventType.MESSAGE_NEW and \
@@ -565,14 +565,14 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                             # Важно! Это всегда в конце, иначе будет всплывать KeyError из-за payload
                             elif event.obj.message['payload']:
                                 send_message(peer_id=user_id, message=f'Редактор БД. Что требуется?',
-                                             keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                             keyboard=open_keyboard(f'kb_shiza_{freedom}'))
                             break
 
                     elif shiza_command == 'delete_email':  # удаление почты
                         send_message(peer_id=user_id, message=f'Удаляем следующие данные:\n{view_email(group)}')
                         delete_email(group)
                         send_message(peer_id=user_id, message='Готово!',
-                                     keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                     keyboard=open_keyboard(f'kb_shiza_{freedom}'))
                         send_message(peer_id=2000000001,
                                      message=f'Ивент в шизе: @id{user_id} из {group} удаляет почту')
                         subprocess.Popen(["systemctl", "restart", "mail_bot"], stdout=subprocess.PIPE)
@@ -581,7 +581,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                         send_message(peer_id=user_id, message=f'Удаляем следующие данные:\n{view_gcal(group)}')
                         delete_gcal(group)
                         send_message(peer_id=user_id, message='Готово!',
-                                     keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                     keyboard=open_keyboard(f'kb_shiza_{freedom}'))
                         send_message(peer_id=2000000001,
                                      message=f'Ивент в шизе: @id{user_id} из {group} удаляет календарь')
                     elif shiza_command == 'view_email':
@@ -594,30 +594,30 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                         message_moder, message_admin = add_preset_books(group)
                         generate_subject_keyboards(group)  # генерируем клавиатуры предметов и преподов
                         send_message(peer_id=user_id, message=message_moder,
-                                     keyboard=open_keyboard(f'keyboard_shiza_{freedom}'))
+                                     keyboard=open_keyboard(f'kb_shiza_{freedom}'))
                         send_message(peer_id=2000000001, message=f'Ивент в шизе: {message_admin}')
 
                     else:
                         message_ans = 'Ошибка редактора - неизвестная команда'
-                        kb = f'keyboard_shiza_{freedom}'
+                        kb = f'kb_shiza_{freedom}'
                         logger.error(f'Ошибка шизы - неизвестная команда: {payload["command"]}')
                         send_message(peer_id=user_id, keyboard=kb, message=message_ans)
 
                 # выход из шизы при нажатии кнопок клавиатуры
                 elif payload["type"] in ['action', 'navigation']:  # команды из основного бота
-                    send_message(peer_id=user_id, keyboard=open_keyboard(f'keyboard_other'),
+                    send_message(peer_id=user_id, keyboard=open_keyboard(f'kb_other'),
                                  message='Работа редактора прекращена')
                     return 0
 
             # Обработка ошибок
 
             except KeyError:  # Обработка криво введенных текстовых данных
-                send_message(peer_id=user_id, keyboard=open_keyboard(f'keyboard_shiza_{freedom}'),
+                send_message(peer_id=user_id, keyboard=open_keyboard(f'kb_shiza_{freedom}'),
                              message=f'Ошибка - проверь правильность введенных данных. '
                                      f'Взаимодействуй с ботом кнопками на клавиатуре')
 
             except ValueError as e:  # Еще обработка кривых текстовых данных
-                send_message(peer_id=user_id, keyboard=open_keyboard(f'keyboard_shiza_{freedom}'),
+                send_message(peer_id=user_id, keyboard=open_keyboard(f'kb_shiza_{freedom}'),
                              message=f'Ошибка - {e}. '
                                      f'Взаимодействуй с ботом кнопками на клавиатуре')
 
@@ -628,7 +628,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                     logger.error(f'Ошибка шизы: {e}\n{traceback.format_exc()}')
                     if freedom == 'admin':
                         error_message += f'\n{e}\n{traceback.format_exc()}'
-                send_message(peer_id=user_id, keyboard=open_keyboard(f'keyboard_other'), message=error_message)
+                send_message(peer_id=user_id, keyboard=open_keyboard(f'kb_other'), message=error_message)
                 return 0
 
 
@@ -695,7 +695,7 @@ def change_group_func(user_id):
                         send_message(peer_id=user_id, message=add_db_response)
                     send_message(peer_id=user_id, message=answer_cg, keyboard=open_keyboard(f'{values_check}_main'))
                 else:
-                    send_message(peer_id=user_id, keyboard=open_keyboard('keyboard_change_group'),  # TODO remove
+                    send_message(peer_id=user_id, keyboard=open_keyboard('kb_change_group'),  # TODO remove
                                  message=f'Ошибка. Группа {values_check} не найдена. '
                                          f'Проверь правильность номера или обратись к администраторам')
             else:
@@ -818,10 +818,6 @@ def add_chat(group, chat_id, freedom):  # добавление чата в group
     return chat_message
 
 
-def empty_thread():  # пустой поток на случай ошибки в пэйлоаде или где-то еще
-    return 0
-
-
 def set_tables_time_vk(user_id):
     """
     Настройка подписки на расписания (время рассылки)
@@ -855,3 +851,7 @@ def set_tables_time_vk(user_id):
             msg = f'Время рассылки расписания установлено: {time_}. Изменения вступят в силу со следующего дня'
             send_message(peer_id=user_id, message=msg)
             return True
+
+
+def empty_thread():  # пустой поток на случай ошибки в пэйлоаде или где-то еще
+    return 0

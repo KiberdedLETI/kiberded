@@ -18,7 +18,7 @@ from telebot import types
 import sqlite3
 from datetime import datetime, timedelta
 import pytz
-from keyboards_telegram.create_keyboards import payload_to_callback, keyboard_prepod_schedule
+from keyboards_telegram.create_keyboards import payload_to_callback, kb_prepod_schedule
 from fuzzywuzzy import process
 import logging
 import toml
@@ -423,17 +423,7 @@ def group_study_status(group) -> str:
             return_message = 'study'
         elif isExam:
             return_message = 'exam'
-
-    # если расписание уже появилось, но семестр еще не начался, открываем его todo пока не запускать
-    # !!! ЕСЛИ ТУТ ЧТО-ТО ТРОНУЛ - ПОМЕНЯЙ И В chat_bot.py!!!
-    # with sqlite3.connect(f'{path}databases/{group}.db') as con:
-    #     cur = con.cursor()
-    #     # if cur.execute("SELECT * FROM sqlite_master WHERE name ='exam_schedule' and type='table';").fetchone():
-    #     #     return 'exam'
-    #     if cur.execute("SELECT * FROM sqlite_master WHERE name ='schedule' and type='table';").fetchone():
-    #         return 'study'
-
-    return return_message  # в результате получится либо keyboard_table либо keyboard_table_exam либо keyboard_table_
+    return return_message  # в результате получится либо kb_table либо kb_table_exam либо kb_table_
 
 
 def open_keyboard(name):
@@ -681,7 +671,7 @@ def change_group(message):
         additional_group = get_additional_group(message.chat.id)
 
         if message.chat.id in moderators:
-            kb = open_keyboard('keyboard_change_additional_group')
+            kb = open_keyboard('kb_change_additional_group')
             send_message(message.chat.id,
                          f'Текущая группа: {group}.\n Текущая доп.группа: {additional_group}.\n'
                          'Для изменения дополнительной группы нажми на кнопку ниже.\n'
@@ -690,7 +680,7 @@ def change_group(message):
                          disable_web_page_preview=True)
 
         else:
-            kb = open_keyboard('keyboard_change_groups')
+            kb = open_keyboard('kb_change_groups')
             send_message(message.chat.id,
                          f'Текущая группа: {group}.\n Текущая доп.группа: {additional_group}.\n'
                          'Для изменения нажми на одну из кнопок ниже:', reply_markup=kb)
@@ -1039,7 +1029,7 @@ def auth_message(message):
 def minigames(message):
     dump_message(message)
 
-    markup = open_keyboard('keyboard_minigames')
+    markup = open_keyboard('kb_minigames')
     send_message(message.chat.id, 'Выбери игру', reply_markup=markup)
 
 
@@ -1219,13 +1209,13 @@ def text_query(message):
     # Выбор клавиатуры и сообщения
     if message.text == 'Расписание 🗓':
         if additional_group and group_study_status(group):
-            kb = f'keyboard_table_{group_study_status(group)}_additional'
+            kb = f'kb_table_{group_study_status(group)}_additional'
         else:
-            kb = f'keyboard_table_{group_study_status(group)}'
+            kb = f'kb_table_{group_study_status(group)}'
         kb_message = f'Сегодня у нас: {get_day()}'  # get_day() по умолчанию today
 
     elif message.text == 'Календарь 📆':
-        kb = 'keyboard_calendar'
+        kb = 'kb_calendar'
         kb_message = f'Что нам готовит день грядущий? \nСегодня {today} - {get_day()}'
 
     elif message.text == 'Литература 📚':
@@ -1237,7 +1227,7 @@ def text_query(message):
         kb_message = 'Выбирай предмет'
 
     elif message.text == 'Прочее ⚙':
-        kb = 'keyboard_other'
+        kb = 'kb_other'
         kb_message = 'Тут будут всякие штуки и шутки'
 
     elif message.text == 'Полезные ссылки 🔗':
@@ -1287,33 +1277,33 @@ def callback_query(call):
             kb_message = f'Расписание группы {additional_group}\nЕсли что, сегодня {get_day()}'
 
         elif endpoint == 'table_prepods':
-            kb = f'keyboard_search_department'
+            kb = f'kb_search_department'
             kb_message = 'Выбери действие'
 
         elif endpoint == 'settings':
-            kb = 'keyboard_other'
+            kb = 'kb_other'
             kb_message = 'Пока что настроек нет. Номер группы можно изменить через /change_group'
 
         elif endpoint == 'other':  # Назад в Прочее, костыль навигации
-            kb = 'keyboard_other'
+            kb = 'kb_other'
             kb_message = f'Тут будут всякие штуки и шутки'
 
         elif endpoint == 'table_settings':  # Назад в настройки рассылки, костыль навигации
-            kb = 'keyboard_table_settings'
+            kb = 'kb_table_settings'
             kb_message = get_tables_settings(call.from_user.id)
 
         elif endpoint == 'donate':
             donate_status = group_is_donator(group)
             if donate_status:
-                # kb = 'keyboard_settings_donator' todo
-                kb = 'keyboard_other'
+                # kb = 'kb_settings_donator' todo
+                kb = 'kb_other'
                 kb_message = f'Спасибо за поддержку проекта! Здесь можно будет управлять функциями, ' \
                              f'доступными группам-донатерам. Нажимай на кнопки, чтобы ' \
                              f'включить/выключить фичу.' \
                              '\nЗадонатить можно переводом на карту сбербанка: ' \
                              '\n4274 3200 7296 2973'
             else:
-                kb = 'keyboard_other'
+                kb = 'kb_other'
                 kb_message = 'Бот живет и развивается исключительно за счет сообщества' \
                              ' вокруг него.' \
                              '\nЗадонатить можно переводом на карту сбербанка: ' \
@@ -1341,16 +1331,16 @@ def callback_query(call):
 
         if command == 'table_today':
             if additional_group:
-                kb = f'keyboard_table_{group_study_status(group)}_additional'
+                kb = f'kb_table_{group_study_status(group)}_additional'
             else:
-                kb = f'keyboard_table_{group_study_status(group)}'
+                kb = f'kb_table_{group_study_status(group)}'
             message_ans = read_table(group)
 
         elif command == 'table_tomorrow':
             if additional_group:
-                kb = f'keyboard_table_{group_study_status(group)}_additional'
+                kb = f'kb_table_{group_study_status(group)}_additional'
             else:
-                kb = f'keyboard_table_{group_study_status(group)}'
+                kb = f'kb_table_{group_study_status(group)}'
             message_ans = read_table(group, get_day(today + timedelta(days=1)))
 
         elif command == 'table_weekday':
@@ -1359,23 +1349,23 @@ def callback_query(call):
 
         elif command == 'table_exam':
             if additional_group:
-                kb = f'keyboard_table_{group_study_status(group)}_additional'
+                kb = f'kb_table_{group_study_status(group)}_additional'
             else:
-                kb = f'keyboard_table_{group_study_status(group)}'
+                kb = f'kb_table_{group_study_status(group)}'
             message_ans = get_exams(group)
 
         elif command == 'table_today_2':
             if additional_group:
-                kb = f'keyboard_table_{group_study_status(group)}_additional'
+                kb = f'kb_table_{group_study_status(group)}_additional'
             else:
-                kb = f'keyboard_table_{group_study_status(group)}'
+                kb = f'kb_table_{group_study_status(group)}'
             message_ans = f'Расписание группы {additional_group}\n' + read_table(additional_group)
 
         elif command == 'table_tomorrow_2':
             if additional_group:
-                kb = f'keyboard_table_{group_study_status(group)}_additional'
+                kb = f'kb_table_{group_study_status(group)}_additional'
             else:
-                kb = f'keyboard_table_{group_study_status(group)}'
+                kb = f'kb_table_{group_study_status(group)}'
             message_ans = f'Расписание группы {additional_group}\n' + \
                           read_table(additional_group, get_day(today + timedelta(days=1)))
 
@@ -1386,22 +1376,22 @@ def callback_query(call):
 
         elif command == 'table_exam_2':
             if additional_group:
-                kb = f'keyboard_table_{group_study_status(group)}_additional'
+                kb = f'kb_table_{group_study_status(group)}_additional'
             else:
-                kb = f'keyboard_table_{group_study_status(group)}'
+                kb = f'kb_table_{group_study_status(group)}'
             message_ans = f'Расписание группы {additional_group}\n' + get_exams(additional_group)
 
         elif command == 'table_empty':  # todo открывать расписание пораньше?
-            kb = f'keyboard_table_{group_study_status(group)}'
+            kb = f'kb_table_{group_study_status(group)}'
             message_ans = 'Расписание на новый семестр еще не выложено, ' \
                           'следи за апдейтами на digital.etu.ru/schedule ' \
                           '\nРасписание в боте появляется на следующий день после выхода'
 
         elif command == 'table_back':
             if additional_group:
-                kb = f'keyboard_table_{group_study_status(group)}_additional'
+                kb = f'kb_table_{group_study_status(group)}_additional'
             else:
-                kb = f'keyboard_table_{group_study_status(group)}'
+                kb = f'kb_table_{group_study_status(group)}'
             message_ans = f'Сегодня у нас: {get_day()}'  # get_day() по умолчанию today
 
         elif command == 'get_books':
@@ -1433,7 +1423,7 @@ def callback_query(call):
                              f'https://t.me/evgeniy_setrov или https://t.me/TSheyd'
                 kb = ''
             else:
-                kb = 'keyboard_calendar'
+                kb = 'kb_calendar'
                 message_ans = read_calendar(group)  # по умолчанию read_calendar('today')
 
         elif command == 'calendar_tomorrow':
@@ -1444,7 +1434,7 @@ def callback_query(call):
                              f'https://t.me/evgeniy_setrov или https://t.me/TSheyd'
                 kb = ''
             else:
-                kb = 'keyboard_calendar'
+                kb = 'kb_calendar'
                 message_ans = read_calendar(group, 'tomorrow')
 
         # закомментированное - это то, что отсутствует в create_keyboards, так что надо смотреть аккуратнее
@@ -1453,31 +1443,31 @@ def callback_query(call):
         # pass
 
         elif command == 'random_anecdote':
-            kb = 'keyboard_other'
+            kb = 'kb_other'
             message_ans = get_random_anekdot()
 
         elif command == 'random_toast':
-            kb = 'keyboard_other'
+            kb = 'kb_other'
             message_ans = get_random_toast()
 
         elif command == 'anecdote_subscribe':
-            kb = 'keyboard_other'
+            kb = 'kb_other'
             message_ans = add_user_to_anekdot(call.from_user.id, '1', source='tg')
 
         elif command == 'anecdote_unsubscribe':
-            kb = 'keyboard_other'
+            kb = 'kb_other'
             message_ans = add_user_to_anekdot(call.from_user.id, '-1', source='tg')
 
         elif command == 'table_subscribe':
-            kb = 'keyboard_table_settings'
+            kb = 'kb_table_settings'
             message_ans = add_user_to_table(call.from_user.id, '1', source='tg')
 
         elif command == 'table_unsubscribe':
-            kb = 'keyboard_other'
+            kb = 'kb_other'
             message_ans = add_user_to_table(call.from_user.id, '-1', source='tg')
 
         elif command == 'set_tables_mode':
-            kb = 'keyboard_set_tables_mode_cal' if groups[group]['calendar'] else 'keyboard_set_tables_mode'
+            kb = 'kb_set_tables_mode_cal' if groups[group]['calendar'] else 'kb_set_tables_mode'
             message_ans = f'Доступные режимы рассылки расписания:' \
                           f'\n{"Календарь - расписание из календаря" if groups[group]["calendar"] else ""}' \
                           f'\nЕжедневное - каждый день расписание на завтра (если завтра есть пары)' \
@@ -1486,7 +1476,7 @@ def callback_query(call):
 
         elif command == 't_mode_set':
             mode = payload['mode']
-            kb = 'keyboard_table_settings'
+            kb = 'kb_table_settings'
             message_ans = set_table_mode(call.from_user.id, mode)
 
         elif command == 'set_tables_time':
@@ -1507,18 +1497,18 @@ def callback_query(call):
 
         elif command == 'search_department':
             list_id = payload['list_id']
-            kb = f'keyboard_departments_{list_id}'
+            kb = f'kb_departments_{list_id}'
             message_ans = f'Выбери кафедру преподавателя:'
 
         elif command == 'search_prepod':
             list_id = payload['list_id']
             department_id = payload['department_id']
-            kb = f'keyboard_prepods_{department_id}_{list_id}'
+            kb = f'kb_prepods_{department_id}_{list_id}'
             message_ans = f'Выбери преподавателя:'
 
         elif command == 'choose_department':
             department_id = payload['id']
-            kb = f'keyboard_prepods_{department_id}_0'
+            kb = f'kb_prepods_{department_id}_0'
             message_ans = f'Выбери преподавателя:'
 
         elif command == 'choose_prepod':  # TODO copy to quotes
@@ -1551,11 +1541,11 @@ def callback_query(call):
             message_ans = get_prepod_schedule(prepod_id, weekday)
 
         elif command == 'minigames':
-            kb = 'keyboard_minigames'
+            kb = 'kb_minigames'
             message_ans = 'Выбери мини-игру:'
 
         elif command == 'heads_or_tails_toss':
-            kb = 'keyboard_heads_or_tails_retoss'
+            kb = 'kb_heads_or_tails_retoss'
             message_ans = get_coin_flip_result(call.from_user.id)
 
         elif command == 'start_classical_RPC':
@@ -1564,7 +1554,7 @@ def callback_query(call):
             message_ans = 'Игра началась!'
 
         elif command == 'classical_RPC':
-            kb = 'keyboard_minigames'
+            kb = 'kb_minigames'
             id = payload['id']
             choose = payload['choose']
             if choose == 'c':  # отмена типа
@@ -1592,7 +1582,7 @@ def callback_query(call):
                 if kb.startswith('SPECIAL'):  # обработка специальных случаев
                     kb = kb.split(';')
                     if kb[1] == 'choose_prepod':
-                        markup = keyboard_prepod_schedule(kb[2], get_day())
+                        markup = kb_prepod_schedule(kb[2], get_day())
                     elif kb[1] == 'start_classical_RPC':
                         markup = markup  # тут все норм
                     else:

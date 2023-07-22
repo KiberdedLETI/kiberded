@@ -221,16 +221,6 @@ def group_study_status(group) -> str:
             return_message = 'study'
         elif isExam:
             return_message = 'exam'
-
-    # если расписание уже появилось, но семестр еще не начался, открываем его todo пока не запускать
-    # !!! ЕСЛИ ТУТ ЧТО-ТО ТРОНУЛ - ПОМЕНЯЙ И В telegram_bot.py!!!
-    # with sqlite3.connect(f'{path}databases/{group}.db') as con:
-    #     cur = con.cursor()
-    #     # if cur.execute("SELECT * FROM sqlite_master WHERE name ='exam_schedule' and type='table';").fetchone():
-    #     #     return 'exam' пока не буду добавлять, т.к. сессионный функционал не готов
-    #     if cur.execute("SELECT * FROM sqlite_master WHERE name ='schedule' and type='table';").fetchone():
-    #         return 'study'
-
     return return_message  # в результате получится либо kb_table либо kb_table_exam либо kb_table_
 
 

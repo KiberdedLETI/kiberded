@@ -69,7 +69,7 @@ def payload_to_callback(payload) -> str:
 
 # ГЛАВНЫЕ КЛАВИАТУРЫ
 # Основная клавиатура с календарем
-def keyboard_main_cal():
+def kb_main_cal():
     logger.info(f'Генерируем основную клавиатуру с календарем')
     markup = ReplyKeyboardMarkup(resize_keyboard=True)  # основная клавиатура - не inline
     btn_table = KeyboardButton('Расписание 🗓')  # callback_data соответственно тоже нет
@@ -86,7 +86,7 @@ def keyboard_main_cal():
 
 
 # Основная клавиатура без календаря
-def keyboard_main():
+def kb_main():
     logger.info(f'Генерируем основную клавиатуру без календаря')
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
     btn_table = KeyboardButton('Расписание 🗓')
@@ -103,7 +103,7 @@ def keyboard_main():
 
 # ВЛОЖЕННЫЕ КЛАВИАТУРЫ (inline)
 # Клавиатура "Расписания" пустая
-def keyboard_table_():
+def kb_table_():
     logger.info(f'Генерируем клавиатуру "Расписания" пустую')
     markup = InlineKeyboardMarkup()
 
@@ -119,12 +119,12 @@ def keyboard_table_():
 
 
 # Клавиатура "Расписания" пустая с доп. группой (точно такая же)
-def keyboard_table__additional():
-    return keyboard_table_()
+def kb_table__additional():
+    return kb_table_()
 
 
 # Клавиатура "Расписания" СЕССИЯ
-def keyboard_table_exam():
+def kb_table_exam():
     logger.info(f'Генерируем клавиатуру "Расписания" СЕССИЯ')
     markup = InlineKeyboardMarkup()
 
@@ -140,7 +140,7 @@ def keyboard_table_exam():
 
 
 # Клавиатура "Расписания" СЕССИЯ additional
-def keyboard_table_exam_additional():
+def kb_table_exam_additional():
     logger.info(f'Генерируем клавиатуру "Расписания" СЕССИЯ additional')
     markup = InlineKeyboardMarkup()
 
@@ -162,7 +162,7 @@ def keyboard_table_exam_additional():
 
 
 # Клавиатура "Расписания" обычная
-def keyboard_table_study():
+def kb_table_study():
     logger.info(f'Генерируем клавиатуру "Расписания" обычную')
     markup = InlineKeyboardMarkup()
 
@@ -200,7 +200,7 @@ def keyboard_table_study():
 
 
 # Клавиатура "Расписания" обычная additional
-def keyboard_table_study_additional():
+def kb_table_study_additional():
     logger.info(f'Генерируем клавиатуру "Расписания" обычную additional')
     markup = InlineKeyboardMarkup()
 
@@ -256,7 +256,7 @@ def keyboard_table_study_additional():
 
 
 # Клавиатура "Расписания" смешанная (экзамены + расписание)
-def keyboard_table_mixed():
+def kb_table_mixed():
     logger.info(f'Генерируем клавиатуру "Расписания" смешанную')
     markup = InlineKeyboardMarkup()
 
@@ -301,7 +301,7 @@ def keyboard_table_mixed():
 
 
 # Клавиатура "Расписания" смешанная (экзамены + расписание) additional
-def keyboard_table_mixed_additional():
+def kb_table_mixed_additional():
     logger.info(f'Генерируем клавиатуру "Расписания" смешанную additional')
     markup = InlineKeyboardMarkup()
 
@@ -370,7 +370,7 @@ def keyboard_table_mixed_additional():
 
 
 # Клавиатура "Календарь"
-def keyboard_calendar():
+def kb_calendar():
     logger.info(f'Генерируем клавиатуру "Календарь"')
     markup = InlineKeyboardMarkup()
 
@@ -394,7 +394,7 @@ def keyboard_calendar():
 
 
 # Клавиатура "Прочее"
-def keyboard_other():
+def kb_other():
     logger.info(f'Генерируем клавиатуру "Прочее"')
     markup = InlineKeyboardMarkup()
 
@@ -447,7 +447,7 @@ def keyboard_other():
     btn_donate = InlineKeyboardButton('Поддержать проект', callback_data=callback_data)
 
     markup.row(btn_random_anecdote, btn_random_toast)
-    markup.row(btn_anecdote_subscribe,btn_anecdote_unsubscribe)
+    markup.row(btn_anecdote_subscribe, btn_anecdote_unsubscribe)
     markup.row(btn_table_subscribe)
     markup.row(btn_settings, btn_donate)
 
@@ -456,7 +456,7 @@ def keyboard_other():
 
 
 # Клавиатура "Полезные ссылки" с почтой
-def keyboard_links_mail():
+def kb_links_mail():
     logger.info(f'Генерируем клавиатуру "Полезные ссылки"')
     markup = InlineKeyboardMarkup()
 
@@ -476,7 +476,7 @@ def keyboard_links_mail():
 
 
 # Клавиатура "Полезные ссылки" без почты
-def keyboard_links():
+def kb_links():
     logger.info(f'Генерируем клавиатуру "Полезные ссылки"')
     markup = InlineKeyboardMarkup()
 
@@ -928,7 +928,7 @@ def kb_table_other_odd_2():
 # Мини-клавиатуры
 
 # мини-клавиатура изменения групп
-def keyboard_change_groups():
+def kb_change_groups():
     logger.info(f'Генерируем клавиатуру изменения групп')
 
     markup = InlineKeyboardMarkup()
@@ -955,7 +955,7 @@ def keyboard_change_groups():
 
 
 # мини-клавиатура изменения доп.группы (для модераторов и админов)
-def keyboard_change_additional_group():
+def kb_change_additional_group():
     logger.info(f'Генерируем клавиатуру изменения доп.группы')
 
     markup = InlineKeyboardMarkup()
@@ -974,7 +974,7 @@ def keyboard_change_additional_group():
 
 
 # мини-клавиатура поиска препода
-def keyboard_search_department():
+def kb_search_department():
     logger.info(f'Генерируем мини-клавиатуру поиска препода')
 
     markup = InlineKeyboardMarkup()
@@ -1017,7 +1017,7 @@ def keyboard_search_department():
 
 
 # мини-клавиатура миниигр
-def keyboard_minigames():
+def kb_minigames():
     logger.info(f'Генерируем мини-клавиатуру миниигр')
 
     markup = InlineKeyboardMarkup()
@@ -1051,7 +1051,7 @@ def keyboard_minigames():
 
 
 # мини-клавиатура перекидывания решки
-def keyboard_heads_or_tails_retoss():
+def kb_heads_or_tails_retoss():
     logger.info(f'Генерируем мини-клавиатуру перекидывания решки')
 
     markup = InlineKeyboardMarkup()
@@ -1076,9 +1076,9 @@ def keyboard_heads_or_tails_retoss():
     return markup
 
 
-def keyboard_table_settings():
+def kb_table_settings():
     """
-    Клавиатура настройки рассылки расписаний (keyboard_table_settings)
+    Клавиатура настройки рассылки расписаний (kb_table_settings)
 
     доступные опции:
     - Время отправки
@@ -1132,7 +1132,7 @@ def keyboard_table_settings():
     return markup
 
 
-def keyboard_set_tables_mode():
+def kb_set_tables_mode():
     """
     Клавиатура настройки рассылки расписаний (set_tables_mode)
     Кнопки:
@@ -1178,7 +1178,8 @@ def keyboard_set_tables_mode():
     logger.info(f'Клавиатура настройки рассылок готова.\n')
     return markup
 
-def keyboard_set_tables_mode_cal():
+
+def kb_set_tables_mode_cal():
     """
     Клавиатура настройки рассылки расписаний (set_tables_mode) с опцией выбора Календаря
     Кнопки:
@@ -1234,7 +1235,7 @@ def keyboard_set_tables_mode_cal():
 
 
 # огромная клавиатура с кнопками для расписания преподов. создается при импорте
-def keyboard_prepod_schedule(prepod_id, day):
+def kb_prepod_schedule(prepod_id, day):
     markup = InlineKeyboardMarkup()
 
     rus_to_eng_days = {'Понедельник (чёт)': 'Monday (even)',
@@ -1295,32 +1296,32 @@ def keyboard_prepod_schedule(prepod_id, day):
 
 if __name__ == '__main__':
     keyboards = [
-        'keyboard_main_cal',
-        'keyboard_main',
-        'keyboard_table_',
-        'keyboard_table__additional',
-        'keyboard_table_exam',
-        'keyboard_table_exam_additional',
-        'keyboard_table_study',
-        'keyboard_table_study_additional',
-        'keyboard_table_mixed',
-        'keyboard_table_mixed_additional',
-        'keyboard_calendar',
-        'keyboard_other',
-        'keyboard_links_mail',
-        'keyboard_links',
+        'kb_main_cal',
+        'kb_main',
+        'kb_table_',
+        'kb_table__additional',
+        'kb_table_exam',
+        'kb_table_exam_additional',
+        'kb_table_study',
+        'kb_table_study_additional',
+        'kb_table_mixed',
+        'kb_table_mixed_additional',
+        'kb_calendar',
+        'kb_other',
+        'kb_links_mail',
+        'kb_links',
         'kb_table_other_even',
         'kb_table_other_even_2',
         'kb_table_other_odd',
         'kb_table_other_odd_2',
-        'keyboard_change_groups',
-        'keyboard_change_additional_group',
-        'keyboard_search_department',
-        'keyboard_minigames',
-        'keyboard_heads_or_tails_retoss',
-        'keyboard_table_settings',
-        'keyboard_set_tables_mode',
-        'keyboard_set_tables_mode_cal'
+        'kb_change_groups',
+        'kb_change_additional_group',
+        'kb_search_department',
+        'kb_minigames',
+        'kb_heads_or_tails_retoss',
+        'kb_table_settings',
+        'kb_set_tables_mode',
+        'kb_set_tables_mode_cal'
     ]
     for keyboard in keyboards:
         try:
@@ -1328,5 +1329,3 @@ if __name__ == '__main__':
                 f.write(json.dumps(json.loads(eval(keyboard)().to_json()), ensure_ascii=False, indent=4))
         except:
             logger.critical(f'Ошибка при генерации клавиатуры {keyboard}\ntraceback: {traceback.format_exc()}')
-
-

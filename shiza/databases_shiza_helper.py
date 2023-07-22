@@ -1190,7 +1190,7 @@ def generate_main_keyboard(group):  # создает главную клавиа
         main_kb_data = cur.execute("SELECT gcal_link, mail FROM group_gcals WHERE group_id=?", [group]).fetchall()[0]
     con.close()
     mail = ''
-    kb_template = 'keyboard_main'  # важно! сперва добавляется _mail, потом _cal (так устроены названия шаблонов)
+    kb_template = 'kb_main'  # важно! сперва добавляется _mail, потом _cal (так устроены названия шаблонов)
     kb_template_mail = ''
     kb_template_cal = ''
     if main_kb_data[1]:
@@ -1224,7 +1224,7 @@ def generate_links_keyboard(group):  # создает клавиатуру с с
         main_kb_data = cur.execute("SELECT mail FROM group_gcals WHERE group_id=?", [group]).fetchall()[0]
     con.close()
     mail = ''
-    kb_template = 'keyboard_links'
+    kb_template = 'kb_links'
     kb_template_mail = ''
     if main_kb_data[0]:
         mail = main_kb_data[0].split(sep='@')[-1]
@@ -1273,7 +1273,7 @@ def generate_departments_keyboards():  # создает клавиатуры д�
     """
     Создает набор клавиатур (на момент октября 2022 года - это 60 кафедр -> 2 клавиатуры 8*3+1*3 + еще одна).
     Внизу есть кнопки навигации между клавиатурами (вперед-назад)
-    Создает файлы keyboard_departments_0.json, ...1.json, ...
+    Создает файлы kb_departments_0.json, ...1.json, ...
     :return: 0 если все ок
     """
     with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
@@ -1341,7 +1341,7 @@ def generate_departments_keyboards():  # создает клавиатуры д�
         callback_data = payload_to_callback(payload)
         btn_back = InlineKeyboardButton('Назад', callback_data=callback_data)
         markup.add(btn_back)
-        with open(f'{path}keyboards_telegram/keyboard_departments_{i}.json', 'w',
+        with open(f'{path}keyboards_telegram/kb_departments_{i}.json', 'w',
                   encoding='utf-8') as f:  # записываем в соотв. JSON
             f.write(markup.to_json())
     return 0
@@ -1351,7 +1351,7 @@ def generate_prepods_keyboards():  # создает клавиатуры для 
     """
     Создает набор клавиатур (на момент октября 2022 года - это 60 кафедр -> минимум 60 клавиатур).
     Внизу есть кнопки навигации между клавиатурами (вперед-назад), если преподов больше 8
-    Создает файлы keyboard_prepods_{id}_{num}.json, где id - номер кафедры, num - порядковый номер с нуля, если больше 8
+    Создает файлы kb_prepods_{id}_{num}.json, где id - номер кафедры, num - порядковый номер с нуля, если больше 8
     :return: 0 если все ок
     """
     # получение списка кафедр
@@ -1420,7 +1420,7 @@ def generate_prepods_keyboards():  # создает клавиатуры для 
                        }
             callback_next = payload_to_callback(payload)
             markup.add(InlineKeyboardButton('Назад к выбору кафедры', callback_data=callback_next))
-            with open(f'{path}keyboards_telegram/keyboard_prepods_{id}_{i}.json', 'w',
+            with open(f'{path}keyboards_telegram/kb_prepods_{id}_{i}.json', 'w',
                       encoding='utf-8') as f:  # записываем в соотв. JSON
                 f.write(markup.to_json())
         if len(buttons) == 0:  # на случай отсутствия преподов, например как в военке
@@ -1431,7 +1431,7 @@ def generate_prepods_keyboards():  # создает клавиатуры для 
                        }
             callback_next = payload_to_callback(payload)
             markup.add(InlineKeyboardButton('Назад к выбору кафедры', callback_data=callback_next))
-            with open(f'{path}keyboards_telegram/keyboard_prepods_{id}_{0}.json', 'w',
+            with open(f'{path}keyboards_telegram/kb_prepods_{id}_{0}.json', 'w',
                       encoding='utf-8') as f:  # записываем в соотв. JSON
                 f.write(markup.to_json())
     return 0
