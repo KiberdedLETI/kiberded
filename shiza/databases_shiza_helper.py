@@ -633,7 +633,7 @@ def edit_gcal(group, gcal=''):  # добавление календаря (пр�
                 gcal = old_gcal
         
         cur.execute(f"UPDATE group_gcals "
-                    f"SET gcal_link=? "
+                    f"SET gcal_link=?, gcal_over_tables=TRUE, gcal_over_exams=TRUE "
                     f"WHERE group_id=? "
                     f"AND vk_chat_id IS NOT NULL", (gcal, group))
     con.close()
@@ -666,7 +666,8 @@ def delete_gcal(group):
     """
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        cur.execute('UPDATE group_gcals SET gcal_link=null WHERE group_id=?', [group])
+        cur.execute('UPDATE group_gcals SET gcal_link=null, gcal_over_tables=FALSE, gcal_over_exams=FALSE '
+                    'WHERE group_id=?', [group])
     con.close()
 
     # Удаляем кэш календаря
