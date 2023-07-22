@@ -809,7 +809,8 @@ def update_group_params():
         # Теперь разбираемся с изменениями
         # Старые группы (к удалению)
         if to_remove:
-            cur.executemany(f"DELETE FROM group_gcals WHERE etu_id=? AND group_id=?", to_remove)
+            remove_groups = [(el[1],) for el in to_remove]
+            cur.executemany(f"DELETE FROM group_gcals WHERE group_id=?", to_remove)
             con.commit()
             # todo уведомления группы об удалении
 
