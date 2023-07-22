@@ -811,9 +811,10 @@ def update_group_params():
         if to_remove:
             remove_groups = [(el[1],) for el in to_remove]
             cur.executemany(f"DELETE FROM group_gcals WHERE group_id=?", remove_groups)
-            cur.executemany(f"DELETE FROM user_ids WHERE group_id=?", remove_groups)
             con.commit()
-            # TODO уведомления группы об удалении
+        cur.execute(f"DELETE FROM user_ids WHERE group_id NOT IN (SELECT DISTINCT group_id FROM group_gcals)")
+        con.commit()
+        # TODO уведомления группы и пользователей об удалении
 
         # Новые группы
         if to_add:
