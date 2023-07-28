@@ -22,7 +22,8 @@ find $bk_dir/$dir_keyboards_telegram -type f -mtime +30 -delete
 find $bk_dir/$dir_messages_telegram -type f -mtime +30 -delete
 
 percent="$(df -hl | awk '/^\/dev\/vda2/ { sum+=$5 } END { print sum }')"
-python3 /root/kiberded/server/send.py Использованного пространства на сервере: $percent%
 
 cd /root/kiberded/server
+python3 /root/kiberded/server/send.py Использованного пространства на сервере: $percent%
+
 python3 daily_backup.py
