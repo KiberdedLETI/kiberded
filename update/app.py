@@ -322,41 +322,37 @@ async def get_webhook_info(x_github_event: str, payload):
         repository_full_name = payload['repository']['full_name']
         commits = payload['commits']
         message = f'[github] Пользователь {pusher_name} сделал push репозитория {repository_full_name}\n\n'
-        global_added = []
-        global_removed = []
-        global_modified = []
+
+        global_added = set()
+        global_removed = set()
+        global_modified = set()
 
         for commit in commits:
             commit_author_name = commit['author']['name']
             commit_message = commit['message']
 
-            global_added.extend(commit['added'])
-            global_removed.extend(commit['removed'])
-            global_modified.extend(commit['modified'])
+            global_added.update(commit['added'])
+            global_removed.update(commit['removed'])
+            global_modified.update(commit['modified'])
 
             message += f'\t{commit_author_name}: {commit_message}\n\n'
-
-        all_files = []
 
         if global_added:
             message += f'Список добавленных файлов:\n'
             message += '\n'.join(list(set(global_added)))
-            all_files.extend(global_added)
 
         if global_removed:
             message += f'Список удаленных файлов:\n'
             message += '\n'.join(list(set(global_removed)))
-            all_files.extend(global_removed)
 
         if global_modified:
             message += f'Список модифицированных файлов:\n'
             message += '\n'.join(list(set(global_modified)))
-            all_files.extend(global_modified)
 
         reboot_deds = {}
         if repository_full_name == 'KiberdedLETI/kiberded':
             all_dependencies = get_all_dependencies()
-            for file in all_files:
+            for file in global_added.union(global_removed, global_modified):
                 try:
                     dependence = all_dependencies[file]
                 except Exception as e:
