@@ -330,37 +330,28 @@ async def get_webhook_info(x_github_event: str, payload):
             commit_author_name = commit['author']['name']
             commit_message = commit['message']
 
-            commit_added = commit['added']
-            commit_removed = commit['removed']
-            commit_modified = commit['modified']
+            global_added.extend(commit['added'])
+            global_removed.extend(commit['removed'])
+            global_modified.extend(commit['modified'])
 
-            for file in commit_added:
-                global_added.append(file)
-            for file in commit_removed:
-                global_removed.append(file)
-            for file in commit_modified:
-                global_modified.append(file)
             message += f'\t{commit_author_name}: {commit_message}\n\n'
 
         all_files = []
 
         if global_added:
             message += f'Список добавленных файлов:\n'
-            for file in global_added:
-                all_files.append(file)
-                message += f'{file}\n'
+            message += '\n'.join(list(set(global_added)))
+            all_files.extend(global_added)
 
         if global_removed:
             message += f'Список удаленных файлов:\n'
-            for file in global_removed:
-                all_files.append(file)
-                message += f'{file}\n'
+            message += '\n'.join(list(set(global_removed)))
+            all_files.extend(global_removed)
 
         if global_modified:
             message += f'Список модифицированных файлов:\n'
-            for file in global_modified:
-                all_files.append(file)
-                message += f'{file}\n'
+            message += '\n'.join(list(set(global_modified)))
+            all_files.extend(global_modified)
 
         reboot_deds = {}
         if repository_full_name == 'KiberdedLETI/kiberded':
