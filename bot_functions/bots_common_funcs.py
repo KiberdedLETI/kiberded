@@ -17,7 +17,6 @@ from hashlib import sha256
 try:
     config = toml.load('configuration.toml')
 except FileNotFoundError:
-    # todo logging?
     sys.exit()
 
 path = config.get('Kiberded').get('path')
@@ -491,9 +490,9 @@ def compile_group_stats(peer_id, admin_stats=False, source='vk') -> str:  # Зд
         all_users = cur.execute('SELECT group_id FROM user_ids '
                                 'WHERE group_id=?', [all_stats[0][4]]).fetchall()
         all_g_users_vk = cur.execute('SELECT group_id FROM user_ids '
-                                     'WHERE group_id=? AND user_id IS NOT NULL', [all_stats[0][4]]).fetchall()
+                                     'WHERE group_id=? AND vk_id IS NOT NULL', [all_stats[0][4]]).fetchall()
         all_g_users_tg = cur.execute('SELECT group_id FROM user_ids '
-                                     'WHERE group_id=? AND telegram_id IS NOT NULL', [all_stats[0][4]]).fetchall()
+                                     'WHERE group_id=? AND tg_id IS NOT NULL', [all_stats[0][4]]).fetchall()
 
     ans = f'Статистика группы {all_stats[0][4]}:\n'
     if all_stats:
@@ -517,8 +516,8 @@ def compile_group_stats(peer_id, admin_stats=False, source='vk') -> str:  # Зд
     if admin_stats:
         with con:
             all_users_total = cur.execute('SELECT group_id FROM user_ids').fetchall()
-            all_users_vk = cur.execute('SELECT group_id FROM user_ids WHERE user_id IS NOT NULL').fetchall()
-            all_users_tg = cur.execute('SELECT group_id FROM user_ids WHERE telegram_id IS NOT NULL').fetchall()
+            all_users_vk = cur.execute('SELECT group_id FROM user_ids WHERE vk_id IS NOT NULL').fetchall()
+            all_users_tg = cur.execute('SELECT group_id FROM user_ids WHERE tg_id IS NOT NULL').fetchall()
             all_groups = cur.execute('SELECT DISTINCT group_id FROM user_ids').fetchall()
             all_chats = cur.execute('SELECT group_id FROM group_gcals WHERE vk_chat_id IS NOT NULL').fetchall()
             all_tg_chats = cur.execute('SELECT group_id FROM group_gcals WHERE tg_chat_id IS NOT NULL').fetchall()

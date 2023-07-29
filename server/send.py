@@ -148,7 +148,7 @@ def send_tg_message(chat_id, text, **kwargs) -> telebot.types.Message:
 def get_user(group):  # принимает номер группы и возвращает user_id, если есть
     with sqlite3.connect(f'{path}/admindb/databases/admins.db') as con:
         cur = con.cursor()
-        users = cur.execute('SELECT id FROM users WHERE group_id=?', [group]).fetchall()
+        users = cur.execute('SELECT vk_id FROM users WHERE group_id=?', [group]).fetchall()
     return users
 
 
@@ -162,7 +162,7 @@ def get_chat(group):  # принимает номер группы и возвр
 def get_users():  # возвращает user_id всех пользователей
     with sqlite3.connect(f'{path}/admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        users = cur.execute('SELECT user_id FROM user_ids').fetchall()
+        users = cur.execute('SELECT vk_id FROM user_ids').fetchall()
     return users
 
 

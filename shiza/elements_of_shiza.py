@@ -435,7 +435,7 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
                                         cur = con.cursor()
                                         id_check = cur.execute(
-                                            "SELECT group_id FROM user_ids WHERE user_id=? AND group_id=?",
+                                            "SELECT group_id FROM user_ids WHERE vk_id=? AND group_id=?",
                                             (values_check[0], group)).fetchone()
                                     if id_check:
                                         add_mod_response = add_moderator(values_check[0], group)

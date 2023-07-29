@@ -191,17 +191,17 @@ def update_list_registered_users():  # ее нужно вызывать кажд
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         con.row_factory = lambda cur, row: int(row[0])
         cur = con.cursor()
-        cur.execute(f'SELECT telegram_id FROM user_ids WHERE telegram_id IS NOT NULL')
+        cur.execute(f'SELECT tg_id FROM user_ids WHERE tg_id IS NOT NULL')
         users = set(cur.fetchall())
 
         cur.execute(f'SELECT tg_chat_id FROM group_gcals WHERE tg_chat_id IS NOT NULL')  # беседы
         groups = set(cur.fetchall())
 
-        cur.execute(f'SELECT telegram_id FROM user_ids WHERE user_id IS NULL AND telegram_id IS NOT NULL')
+        cur.execute(f'SELECT tg_id FROM user_ids WHERE vk_id IS NULL AND tg_id IS NOT NULL')
         unauth_users = set(cur.fetchall())
         list_unauthorized_users.update(unauth_users)
 
-        cur.execute(f'SELECT telegram_id FROM user_ids WHERE user_id IS NOT NULL AND telegram_id IS NOT NULL')
+        cur.execute(f'SELECT tg_id FROM user_ids WHERE vk_id IS NOT NULL AND tg_id IS NOT NULL')
         auth_users = set(cur.fetchall())
         new_auth_users = auth_users & list_unauthorized_users  # убираем авторизовавшихся
 
@@ -222,7 +222,7 @@ def update_moderators():  # ее нужно вызывать каждый раз
         """
     with sqlite3.connect(f'{path}admindb/databases/admins.db') as con:
         cur = con.cursor()
-        cur.execute(f'SELECT telegram_id FROM users WHERE telegram_id IS NOT NULL')
+        cur.execute(f'SELECT tg_id FROM users WHERE tg_id IS NOT NULL')
         users = cur.fetchall()
     con.close()
 
@@ -240,7 +240,7 @@ def update_admins():  # ее нужно вызывать каждый раз п�
         """
     with sqlite3.connect(f'{path}admindb/databases/admins.db') as con:
         cur = con.cursor()
-        cur.execute(f'SELECT telegram_id FROM users WHERE freedom=?', ['admin'])
+        cur.execute(f'SELECT tg_id FROM users WHERE freedom=?', ['admin'])
         users = cur.fetchall()
     con.close()
 
@@ -358,29 +358,18 @@ def get_subject_from_id(id, group):
 def get_group(user_id):
     """
     Принимает user_id и возвращает группу этого пользователя.
-    Оставил это внутри бота пока - возможно чуть быстрее?
 
-    :param user_id: id пользователя (в таблице записан как telegram_id для предотвращения путаницы с вк)
+    :param user_id: id пользователя (в таблице записан как tg_id для предотвращения путаницы с вк)
     :return: номер группы
     """
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        cur.execute("SELECT group_id FROM user_ids WHERE telegram_id=?", [user_id])
+        cur.execute("SELECT group_id FROM user_ids WHERE tg_id=?", [user_id])
         group = cur.fetchone()
 
     if group:
         group = group[0]
-    # так как у нас есть регистрация, то группа есть всегда
-    """
-    else:
-        msg = bot.send_message(user_id, 'Необходимо установить группу. '
-                                        'Напиши номер группы в формате ХХХХ, например 9281')
-
-        # ожидание следующего сообщения и обработка функцией change_group_step
-        bot.register_next_step_handler(msg, sync_group)
-    
-    """
     return group
 
 
@@ -389,13 +378,13 @@ def get_additional_group(user_id):
     Принимает user_id и возвращает дополнительную группу пользователя, при наличии.
     Оставил это внутри бота пока - возможно чуть быстрее?
 
-    :param user_id: id пользователя (в таблице записан как telegram_id для предотвращения путаницы с вк)
+    :param user_id: id пользователя (в таблице записан как tg_id для предотвращения путаницы с вк)
     :return: номер доп. группы
     """
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        cur.execute("SELECT additional_group_id FROM user_ids WHERE telegram_id=?", [user_id])
+        cur.execute("SELECT additional_group_id FROM user_ids WHERE tg_id=?", [user_id])
         extra_group = cur.fetchone()
     if extra_group and extra_group[0] != '':
         extra_group = extra_group[0]
@@ -513,7 +502,7 @@ def add_prepod_to_history(prepod_id, user_id):
     """
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        query = f"SELECT prepod_history FROM user_ids WHERE telegram_id=?"
+        query = f"SELECT prepod_history FROM user_ids WHERE tg_id=?"
         prepod_history = cur.execute(query, [user_id]).fetchone()[0]
         if prepod_history:
             prepod_history = prepod_history.split(',')
@@ -525,7 +514,7 @@ def add_prepod_to_history(prepod_id, user_id):
             prepod_history = ','.join(prepod_history)
         else:
             prepod_history = str(prepod_id)
-        query = f"UPDATE user_ids SET prepod_history=? WHERE telegram_id=?"
+        query = f"UPDATE user_ids SET prepod_history=? WHERE tg_id=?"
         cur.execute(query, [prepod_history, user_id])
         con.commit()
     return 0
@@ -561,7 +550,7 @@ def get_prepods_history(call):
     """
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        query = f"SELECT prepod_history FROM user_ids WHERE telegram_id=?"
+        query = f"SELECT prepod_history FROM user_ids WHERE tg_id=?"
         prepod_history = cur.execute(query, [call.from_user.id]).fetchone()[0]
         if prepod_history:
             prepod_history = prepod_history.split(',')
@@ -884,11 +873,11 @@ def add_telegram_user_id(vk_id, tg_id, id_type='user'):
     """
 
     if id_type == 'user':
-        del_q = f'DELETE FROM user_ids WHERE telegram_id=? AND user_id IS NULL'
-        old_q = f'SELECT telegram_id FROM user_ids WHERE user_id=?'
-        upd_q = f'UPDATE user_ids SET telegram_id=? WHERE user_id=?'
-        grp_q = f'SELECT group_id FROM user_ids WHERE user_id=?'
-        grp_alt_q = f'SELECT group_id FROM user_ids WHERE telegram_id=?'
+        del_q = f'DELETE FROM user_ids WHERE tg_id=? AND vk_id IS NULL'
+        old_q = f'SELECT tg_id FROM user_ids WHERE vk_id=?'
+        upd_q = f'UPDATE user_ids SET tg_id=? WHERE vk_id=?'
+        grp_q = f'SELECT group_id FROM user_ids WHERE vk_id=?'
+        grp_alt_q = f'SELECT group_id FROM user_ids WHERE tg_id=?'
     elif id_type == 'group':
         del_q = f'DELETE FROM group_gcals WHERE tg_chat_id=? AND vk_chat_id IS NULL'
         old_q = f'SELECT tg_chat_id FROM group_gcals WHERE vk_chat_id=?'
@@ -1048,7 +1037,7 @@ def add_book_next_step(message):  # обработка добавления кн
     try:
         with sqlite3.connect(f'{path}admindb/databases/admins.db') as con:
             cur = con.cursor()
-            cur.execute("SELECT group_id FROM users WHERE telegram_id=?", [message.chat.id])
+            cur.execute("SELECT group_id FROM users WHERE tg_id=?", [message.chat.id])
             group = cur.fetchone()[0]
     except:
         group = 'ERROR'
@@ -1086,7 +1075,7 @@ def add_dayofday_picture_next_step(message):  # обработка добавл�
     try:
         with sqlite3.connect(f'{path}admindb/databases/admins.db') as con:
             cur = con.cursor()
-            cur.execute("SELECT group_id FROM users WHERE telegram_id=?", [message.chat.id])
+            cur.execute("SELECT group_id FROM users WHERE tg_id=?", [message.chat.id])
             group = cur.fetchone()[0]
     except:
         group = 'ERROR'

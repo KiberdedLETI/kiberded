@@ -151,7 +151,7 @@ def pin_tg_message(message, chat_type='group') -> bool:
     if chat_type == 'group':
         query = f'UPDATE group_gcals SET tg_last_msg={message.message_id} WHERE tg_chat_id={message.chat.id}'
     elif chat_type == 'private':
-        query = f'UPDATE user_ids SET tg_last_msg={message.message_id} WHERE telegram_id={message.chat.id}'
+        query = f'UPDATE user_ids SET tg_last_msg={message.message_id} WHERE tg_id={message.chat.id}'
     else:
         raise Exception('неверный аргумент type в pin_tg_message')
 
@@ -518,7 +518,7 @@ def get_group(user_id, source='vk') -> str:  # принимает user_id и в�
     :return: номер группы
     """
 
-    id_col = 'user_id' if source == 'vk' else 'telegram_id'
+    id_col = 'vk_id' if source == 'vk' else 'tg_id'
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
@@ -635,7 +635,7 @@ def send_personal_tables(table_time='None'):
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        tg_last_messages = cur.execute('SELECT telegram_id, tg_last_msg '
+        tg_last_messages = cur.execute('SELECT tg_id, tg_last_msg '
                                        'FROM user_ids '
                                        'WHERE tg_last_msg IS NOT NULL').fetchall()  # Чтобы откреплять сообщения в ЛС
     con.close()

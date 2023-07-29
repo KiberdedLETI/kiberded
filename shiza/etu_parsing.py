@@ -935,7 +935,7 @@ def update_groups_params():
             con.commit()
 
         # Собираем информацию о пользователях, у которых сбрасывается группа. Им нужно разослать уведомления
-        cur.execute(f"SELECT group_id, user_id, telegram_id FROM user_ids "
+        cur.execute(f"SELECT group_id, vk_id, tg_id FROM user_ids "
                     f"WHERE group_id NOT IN (SELECT DISTINCT group_id FROM group_gcals)")
         users_to_remove = pd.DataFrame(cur.fetchall(), columns=['group_id', 'vk_id', 'tg_id'])
 

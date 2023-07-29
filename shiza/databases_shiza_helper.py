@@ -39,7 +39,7 @@ def get_group(path, user_id) -> tuple:  # admindb группа (для freedom=a
 
     with sqlite3.connect(f'{path}admindb/databases/admins.db') as con:
         cursor = con.cursor()
-        group = cursor.execute("SELECT group_id FROM users WHERE id=?", [user_id]).fetchone()
+        group = cursor.execute("SELECT group_id FROM users WHERE vk_id=?", [user_id]).fetchone()
     con.close()
     return group  # Важно! Возвращает (group, ) todo а зачем так возвращает?
 
@@ -55,7 +55,7 @@ def get_common_group(path, user_id) -> str:  # группа из общего с
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cursor = con.cursor()
-        cursor.execute("SELECT group_id FROM user_ids WHERE user_id=?", [user_id])
+        cursor.execute("SELECT group_id FROM user_ids WHERE vk_id=?", [user_id])
         group = cursor.fetchone()
     if group is not None:
         group = group[0]
@@ -74,7 +74,7 @@ def get_common_additional_group(path, user_id) -> str:  # доп. группа �
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cursor = con.cursor()
-        cursor.execute("SELECT additional_group_id FROM user_ids WHERE user_id=?", [user_id])
+        cursor.execute("SELECT additional_group_id FROM user_ids WHERE vk_id=?", [user_id])
         group = cursor.fetchone()
     if group is not None:
         group = group[0]
@@ -657,7 +657,7 @@ def add_donator_group(group_to_add, source='vk'):
     # Получаем список модераторов группы для оповещения
     with sqlite3.connect(f'{path}databases/admins.db') as con:
         cur = con.cursor()
-        moder_info = cur.execute('SELECT id FROM users WHERE group_id=?',
+        moder_info = cur.execute('SELECT vk_id FROM users WHERE group_id=?',
                                  [group_to_add]).fetchall()
         moder_msg = ""
         if moder_info:
@@ -690,26 +690,26 @@ def add_moderator(user_id, group_num):
     return_message = ''
     con = sqlite3.connect(f'{path}admindb/databases/admins.db')
     cur = con.cursor()
-    if not cur.execute('SELECT * FROM users WHERE id=?', [user_id]).fetchall():
-        cur.execute('INSERT INTO users (id, group_id) VALUES (?, ?)', [user_id, group_num])
+    if not cur.execute('SELECT * FROM users WHERE vk_id=?', [user_id]).fetchall():
+        cur.execute('INSERT INTO users (vk_id, group_id) VALUES (?, ?)', [user_id, group_num])
 
-    cur.execute("UPDATE users SET freedom = 'moderator' WHERE id=?", [user_id])
+    cur.execute("UPDATE users SET freedom = 'moderator' WHERE vk_id=?", [user_id])
     con.commit()
     con.close()
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        if not cur.execute('SELECT * FROM user_ids WHERE user_id=?', [user_id]).fetchall():
-            cur.execute('INSERT INTO user_ids (user_id, group_id) VALUES (?, ?)', [user_id, group_num])
+        if not cur.execute('SELECT * FROM user_ids WHERE vk_id=?', [user_id]).fetchall():
+            cur.execute('INSERT INTO user_ids (vk_id, group_id) VALUES (?, ?)', [user_id, group_num])
         else:  # передвигаем юзера в нужную группу если что
-            cur.execute('UPDATE user_ids SET group_id=? WHERE user_id=?', (user_id, group_num))
+            cur.execute('UPDATE user_ids SET group_id=? WHERE vk_id=?', (user_id, group_num))
         return_message += f'Пользователь @id{user_id} добавлен в модераторы'
     con.close()
 
     # добавляем в общие айди
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        if not cur.execute('SELECT * FROM user_ids WHERE user_id=?', [user_id]).fetchall():
-            cur.execute('INSERT INTO user_ids (user_id, group_id) VALUES (?, ?)', [user_id, group_num])
+        if not cur.execute('SELECT * FROM user_ids WHERE vk_id=?', [user_id]).fetchall():
+            cur.execute('INSERT INTO user_ids (vk_id, group_id) VALUES (?, ?)', [user_id, group_num])
     return return_message
 
 
@@ -740,7 +740,7 @@ def change_user_group(group_id, user_id, source='vk'):  # меняет груп�
     :return: bool существует ли БД для данной группы; bool был ли юзер в боте; сообщение об изменении группы
     """
 
-    id_col = 'user_id' if source == 'vk' else 'telegram_id'
+    id_col = 'vk_id' if source == 'vk' else 'tg_id'
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
@@ -780,7 +780,7 @@ def change_user_additional_group(group_id, user_id, source='vk'):  # меняе�
     :return: bool был ли юзер в боте; сообщение о добавлении группы
     """
 
-    id_col = 'user_id' if source == 'vk' else 'telegram_id'
+    id_col = 'vk_id' if source == 'vk' else 'tg_id'
     if group_id != '0000':
         with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
             cur = con.cursor()

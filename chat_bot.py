@@ -78,8 +78,8 @@ def update_full_users_data():
                         'status': None}
 
         # Получаем все остальные данные
-        cur.execute("SELECT user_id, group_id, additional_group_id, answer_false_commands "
-                    "FROM user_ids WHERE user_id IS NOT NULL")
+        cur.execute("SELECT vk_id, group_id, additional_group_id, answer_false_commands "
+                    "FROM user_ids WHERE vk_id IS NOT NULL")
         for row in cur.fetchall():
             user_id, group_id, additional_group_id, answer_false_commands = row
 
@@ -100,8 +100,8 @@ def update_user_data(user_id=None):
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
         # Получаем все остальные данные
-        cur.execute("SELECT user_id, group_id, additional_group_id, answer_false_commands "
-                    "FROM user_ids WHERE user_id=?", (user_id,))
+        cur.execute("SELECT vk_id, group_id, additional_group_id, answer_false_commands "
+                    "FROM user_ids WHERE vk_id=?", (user_id,))
         user_id, group_id, additional_group_id, answer_false_commands = cur.fetchone()
         users[int(user_id)] = {
             'group': group_id,
@@ -173,7 +173,7 @@ def get_group(user_id, message: str):
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        cur.execute("SELECT group_id FROM user_ids WHERE user_id=?", [user_id])
+        cur.execute("SELECT group_id FROM user_ids WHERE vk_id=?", [user_id])
         group = cur.fetchone()
 
     if group:
@@ -193,7 +193,7 @@ def get_additional_group(user_id):
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        cur.execute("SELECT additional_group_id FROM user_ids WHERE user_id=?", [user_id])
+        cur.execute("SELECT additional_group_id FROM user_ids WHERE vk_id=?", [user_id])
         extra_group = cur.fetchone()
 
     if extra_group and extra_group[0] != '':
@@ -318,7 +318,7 @@ def check_err_notification_status(user_id) -> bool:
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cursor = con.cursor()
-        status = cursor.execute(f'SELECT answer_false_commands FROM user_ids WHERE user_id = {user_id}').fetchone()
+        status = cursor.execute(f'SELECT answer_false_commands FROM user_ids WHERE vk_id = {user_id}').fetchone()
     con.close()
     if status is not None:
         return status[0]
@@ -336,7 +336,7 @@ def get_freedom(user_id) -> str:
     freedom = 'user'
     with sqlite3.connect(f'{path}admindb/databases/admins.db') as con:
         cur = con.cursor()
-        upd_freedom = cur.execute("SELECT freedom FROM users WHERE id=?", [user_id]).fetchone()
+        upd_freedom = cur.execute("SELECT freedom FROM users WHERE vk_id=?", [user_id]).fetchone()
         if upd_freedom:
             freedom = upd_freedom[0]
     con.close()

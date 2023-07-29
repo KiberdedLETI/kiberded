@@ -219,7 +219,7 @@ def chat_params():  # достает всю таблицу group_gcals в мас
 def notify_moderator(error_message, group):
     with sqlite3.connect(f'{path}admindb/databases/admins.db') as con:
         cur = con.cursor()
-        moderator_id = cur.execute('SELECT id FROM users WHERE group_id=?', [group]).fetchone()
+        moderator_id = cur.execute('SELECT vk_id FROM users WHERE group_id=?', [group]).fetchone()
         if moderator_id:
             moderator_id = moderator_id[0]
             if moderator_id in notified_groups:
