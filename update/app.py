@@ -372,7 +372,7 @@ async def get_webhook_info(x_github_event: str, payload):
             reboot_deds.pop(index_update_daemon)
             reboot_deds.append('update_daemon')
         if reboot_deds:
-            message += f'\nНужно перезагрузить дедов :'
+            message += f'\n\nНужно перезагрузить дедов:\n'
             for ded in reboot_deds:
                 message += f'{ded}\n'
         return message, reboot_deds
