@@ -346,21 +346,18 @@ async def get_webhook_info(x_github_event: str, payload):
 
         if global_added:
             message += f'Список добавленных файлов:\n'
-            for file in global_added:
-                all_files.append(file)
-                message += f'{file}\n'
+            message += '\n'.join(list(set(global_added)))
+            all_files.extend(global_added)
 
         if global_removed:
             message += f'Список удаленных файлов:\n'
-            for file in global_removed:
-                all_files.append(file)
-                message += f'{file}\n'
+            message += '\n'.join(list(set(global_removed)))
+            all_files.extend(global_removed)
 
         if global_modified:
             message += f'Список модифицированных файлов:\n'
-            for file in global_modified:
-                all_files.append(file)
-                message += f'{file}\n'
+            message += '\n'.join(list(set(global_modified)))
+            all_files.extend(global_modified)
 
         reboot_deds = {}
         if repository_full_name == 'KiberdedLETI/kiberded':
