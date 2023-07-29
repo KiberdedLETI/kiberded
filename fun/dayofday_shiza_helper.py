@@ -43,14 +43,14 @@ def dayofday_db_updater():
         os.system(f'python3 {path}send2debug.py {message}')  # запуск скрипта для отправки сообщения в конфу
         con = sqlite3.connect(f'{path}admindb/databases/day_of_day.db')
         cur = con.cursor()
-        cur.execute('''CREATE TABLE IF NOT EXISTS count(count_field INTEGER)''')
-        cur.execute('''DELETE FROM count''')
-        cur.execute('''INSERT INTO count VALUES (?)''', [str(len(items))])
-        cur.execute('''CREATE TABLE IF NOT EXISTS photos(link text)''')
-        cur.execute('''DELETE FROM photos''')
+        cur.execute('CREATE TABLE IF NOT EXISTS count(count_field INTEGER)')
+        cur.execute('DELETE FROM count')
+        cur.execute('INSERT INTO count VALUES (?)', [str(len(items))])
+        cur.execute('CREATE TABLE IF NOT EXISTS photos(link text)')
+        cur.execute('DELETE FROM photos')
         for item in items:
             url = f'photo{item.get("owner_id")}_{item.get("id")}'
-            cur.execute('''INSERT INTO photos VALUES (?)''', [str(url)])
+            cur.execute('INSERT INTO photos VALUES (?)', [str(url)])
         os.system(f'python3 {path}send2debug.py База фоточек обновлена. Фоток на данный момент: {str(len(items))}')
         con.commit()
         con.close()

@@ -685,26 +685,26 @@ def add_moderator(user_id, group_num):
     return_message = ''
     con = sqlite3.connect(f'{path}admindb/databases/admins.db')
     cur = con.cursor()
-    if not cur.execute('''SELECT * FROM users WHERE id=?''', [user_id]).fetchall():
-        cur.execute('''INSERT INTO users (id, group_id) VALUES (?, ?)''', [user_id, group_num])
+    if not cur.execute('SELECT * FROM users WHERE id=?', [user_id]).fetchall():
+        cur.execute('INSERT INTO users (id, group_id) VALUES (?, ?)', [user_id, group_num])
 
-    cur.execute('''UPDATE users SET freedom = 'moderator' WHERE id=?''', [user_id])
+    cur.execute("UPDATE users SET freedom = 'moderator' WHERE id=?", [user_id])
     con.commit()
     con.close()
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        if not cur.execute('''SELECT * FROM user_ids WHERE user_id=?''', [user_id]).fetchall():
-            cur.execute('''INSERT INTO user_ids (user_id, group_id) VALUES (?, ?)''', [user_id, group_num])
+        if not cur.execute('SELECT * FROM user_ids WHERE user_id=?', [user_id]).fetchall():
+            cur.execute('INSERT INTO user_ids (user_id, group_id) VALUES (?, ?)', [user_id, group_num])
         else:  # передвигаем юзера в нужную группу если что
-            cur.execute('''UPDATE user_ids SET group_id=? WHERE user_id=?''', (user_id, group_num))
+            cur.execute('UPDATE user_ids SET group_id=? WHERE user_id=?', (user_id, group_num))
         return_message += f'Пользователь @id{user_id} добавлен в модераторы'
     con.close()
 
     # добавляем в общие айди
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        if not cur.execute('''SELECT * FROM user_ids WHERE user_id=?''', [user_id]).fetchall():
-            cur.execute('''INSERT INTO user_ids (user_id, group_id) VALUES (?, ?)''', [user_id, group_num])
+        if not cur.execute('SELECT * FROM user_ids WHERE user_id=?', [user_id]).fetchall():
+            cur.execute('INSERT INTO user_ids (user_id, group_id) VALUES (?, ?)', [user_id, group_num])
     return return_message
 
 
@@ -749,7 +749,7 @@ def change_user_group(group_id, user_id, source='vk'):  # меняет груп�
 
     with sqlite3.connect(f'{path}admindb/databases/admins.db') as con:  # если есть модер новой группы, то есть и её БД.
         cur = con.cursor()
-        if not cur.execute('''SELECT * FROM users WHERE group_id=?''', [group_id]).fetchall():
+        if not cur.execute('SELECT * FROM users WHERE group_id=?', [group_id]).fetchall():
             if f'{group_id}.db' not in os.listdir(f'{path}databases/'):
                 group_exists = False
             else:
