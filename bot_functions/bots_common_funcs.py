@@ -270,15 +270,17 @@ def get_prepods(subject, group_id, is_old=False) -> str:
     """
 
     str_to_vk = 'Преподы:\n'
-    if is_old:
-        query = f"SELECT name,subject_type FROM prepods_old WHERE subject=?"
-    else:
-        query = f"SELECT name,subject_type FROM prepods WHERE subject=?"
+    query = f"SELECT name,subject_type FROM `{'prepods_old' if is_old else 'prepods'}` WHERE subject=?"
 
     with sqlite3.connect(f'{path}databases/{group_id}.db') as con:
-        cursor = con.cursor()
+        cur = con.cursor()
+
+        if is_old:
+            if not cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='prepods_old'").fetchall():
+                return 'Данные о предыдущем семестре уже удалены.'
+
         try:
-            for row in cursor.execute(query, [subject]):
+            for row in cur.execute(query, [subject]):
                 str_to_vk += f'{row[0]} - {row[1]}\n'
         except Exception as e:
             str_to_vk += 'Возникла какая-то ошибка'
