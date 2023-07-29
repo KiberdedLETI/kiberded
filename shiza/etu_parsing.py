@@ -763,10 +763,10 @@ def parse_exams(group, set_default_next_sem=False):
     return return_data, got_exams
 
 
-def update_group_params():
+def update_groups_params():
     """
     Обновляет group_ids.db в связи с появлением новых групп - загружает соответствующие им id на ИС "Расписание" ЛЭТИ
-    :return: сообщение с оповещением для админской беседы, список групп для удаления (нужно рассылать оповещения)
+    :return: сообщение с оповещением для админской беседы, список групп для удаления, df пользователей для удаления
     """
 
     # Получаем данные
@@ -810,11 +810,20 @@ def update_group_params():
         # Старые группы (к удалению)
         remove_groups = [(el[1],) for el in to_remove]
         if to_remove:
+            cur.executemany(f"SELECT vk_chat_id, tg_chat_id, group_id FROM group_gcals "
+                            f"WHERE group_id=?", remove_groups)
+            groups_to_remove = pd.DataFrame(cur.fetchall(), columns=['vk_chat_id', 'tg_chat_id', 'group_id'])
+
             cur.executemany(f"DELETE FROM group_gcals WHERE group_id=?", remove_groups)
             con.commit()
+
+        # Собираем информацию о пользователях, у которых сбрасывается группа. Им нужно разослать уведомления
+        cur.execute(f"SELECT group_id, user_id, telegram_id FROM user_ids "
+                    f"WHERE group_id NOT IN (SELECT DISTINCT group_id FROM group_gcals)")
+        users_to_remove = pd.DataFrame(cur.fetchall(), columns=['group_id', 'vk_id', 'tg_id'])
+
         cur.execute(f"DELETE FROM user_ids WHERE group_id NOT IN (SELECT DISTINCT group_id FROM group_gcals)")
         con.commit()
-        # TODO уведомления группы и пользователей об удалении
 
         # Новые группы
         if to_add:
@@ -833,11 +842,20 @@ def update_group_params():
         con.commit()
     con.close()
 
+    # Удаляем файлы БД удаленных групп
+    for group in groups_to_remove.group_id.to_list():
+        try:
+            os.remove(f"{path}/databases/{group}.db")
+        except OSError:
+            pass
+
     add_groups = [el[1] for el in to_add]
     message = f'Обновлена БД all_groups'
     if to_add:
         message += f'\nДобавлены группы ({len(add_groups)} шт.): {", ".join(add_groups)}'
     if to_remove:
-        remove_groups = [el[1] for el in to_remove]
-        message += f'\nУдалены группы ({len(remove_groups)} шт.): {", ".join(remove_groups)}'
-    return message, remove_groups
+        message += (f'\nУдалены группы ({groups_to_remove.shape[0]} шт.): '
+                    f'{", ".join(groups_to_remove.group_id.to_list())}'
+                    f'\nУдалено пользователей ({users_to_remove.shape[0]}):'
+                    f'\n{users_to_remove.groupby("group_id").count()}')
+    return message, groups_to_remove, users_to_remove
