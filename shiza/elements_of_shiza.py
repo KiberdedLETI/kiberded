@@ -405,11 +405,11 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
                                                              f'группы {values_check[1]}: '
                                                              f'{add_mod_response.split()[1]}')
 
+                                        # Создаем БД если её вдруг не было, но вообще такого быть не должно
                                         if f'{group}.db' not in os.listdir(f'{path_db}databases/'):
                                             send_message(peer_id=user_id,
                                                          message=f'Создаем БД {values_check[1]}..')
-                                            add_db_response, admin_add_db_response = create_database(
-                                                values_check[1])  # Создаем БД только если модера и БД не было
+                                            add_db_response, admin_add_db_response = create_database(values_check[1])
                                             send_message(peer_id=2000000001, message=admin_add_db_response)
                                             send_message(peer_id=user_id, message=add_db_response)
 

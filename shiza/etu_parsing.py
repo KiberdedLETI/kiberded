@@ -47,28 +47,35 @@ lesson_length = 90
 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:45.0) Gecko/20100101 Firefox/45.0'}
 
 
-def get_departments_data() -> dict:
+def get_departments_data() -> pd.DataFrame:
     """
     Заглядывает в раздел с кафедрами, возвращает его данные
-    :return: JSON с данными {id: title}
+    :return: DataFrame [['id', 'title', 'type', 'facultyId']]
     """
-    url = f'https://digital.etu.ru/api/general/dicts/departments'
-    data = requests.get(url, headers=headers).json()
-    res = {d['id']: d['title'] for d in data}
-    return res
+
+    # Получение данных
+    try:
+        url = 'https://digital.etu.ru/api/general/dicts/departments'
+        df = pd.DataFrame(requests.get(url, headers=headers).json())
+        df = df[['id', 'title', 'type', 'facultyId']].set_index('id')
+        df['facultyId'] = df['facultyId'].fillna(0)
+        if df.empty:
+            raise ValueError('Не удалось получить данные о кафедрах (general/dicts/departments)')
+    except Exception as data_err:
+        raise ValueError(f"Неизвестная ошибка получения данных departments: {data_err}")
+    return df
 
 
-def parse_prepods():
+def parse_prepods_db():
     """
-    Парсит id и ФИО преподавателей в таблицу prepods
+    Создает и заполняет таблицы departments, prepods в БД prepods.db
     :return: 0
     """
 
     insert_data = pd.DataFrame(columns=['id', 'dep_id', 'initials', 'name', 'surname', 'midname', 'roles'])
+    departments_data = get_departments_data()
 
-    for dep, title in get_departments_data().items():
-        print(title)
-
+    for dep in departments_data.index.tolist():
         url = f'https://digital.etu.ru/api/general/dicts/teachers?departmentId={dep}'
         data = requests.get(url, headers=headers).json()
 
@@ -88,13 +95,21 @@ def parse_prepods():
             insert_data.loc[len(insert_data)] = [id, dep, initials, name, surname, midname, roles]
 
     insert_data = list(insert_data.itertuples(index=False, name=None))
-    # print(insert_data)
 
     with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
         cur = con.cursor()
-        cur.execute('DROP TABLE IF EXISTS prepods')
-        cur.execute('CREATE TABLE prepods (id integer, department_id integer, '
+
+        # Заполнение таблицы departments
+        cur.execute('CREATE TABLE IF NOT EXISTS '
+                    'departments (id INTEGER PRIMARY KEY, title TEXT, type TEXT, facultyId INTEGER)')
+        cur.execute('DELETE FROM departments')
+        departments_data.to_sql('departments', con, if_exists='append')  # appending to empty table to keep PK
+        con.commit()
+
+        # Заполнение таблицы prepods
+        cur.execute('CREATE TABLE IF NOT EXISTS prepods (id integer, department_id integer, '
                     'initials text, name text, surname text, midname text, roles text)')
+        cur.execute('DELETE FROM prepods')
         cur.executemany('INSERT INTO prepods VALUES (?, ?, ?, ?, ?, ?, ?)', insert_data)
         con.commit()
     con.close()
@@ -185,14 +200,12 @@ def parse_prepods_schedule_from_ics(url):
 
 def parse_prepods_schedule():
     """
-    Парсит расписание преподавателей
+    Заполняет таблицу schedule БД prepods.db
 
     :param int department_id: айди кафедры
     :param int id: айди препода
     :return:
     """
-
-    parse_prepods()  # Обновляем список преподов
 
     with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
         cur = con.cursor()
@@ -363,6 +376,110 @@ def load_calendar_cache(group=None):
         con.commit()
     con.close()
     return 0
+
+
+def get_group_schedule_from_ics(group, publicated=True):
+    """
+    Парсер расписания группы из .ics с digital.etu.ru/schedule
+
+    :param str group: номер группы (обычный, не etu_id)
+    :param bool publicated: if False, выгружает предварительное расписание (при наличии)
+    :return: 2 DataFrame - schedule / prepods для загрузки в базу
+    """
+
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:  # достаем странный айдишник
+        cur = con.cursor()
+        etu_id = cur.execute("SELECT etu_id FROM group_gcals WHERE group_id=?", [group]).fetchone()
+        if etu_id:  # если группа такая существует
+            etu_id = etu_id[0]
+    con.close()
+
+    try:  # парсер в расписон и преподов
+        url = (f'https://digital.etu.ru/api/schedule/ics-export/group?'
+               f'groups={etu_id}{"&scheduleId=publicated" if publicated else ""}')
+        try:
+            data_from_url = requests.get(url, headers=headers).text.encode('iso-8859-1')  # тут чето может сломаться
+            data_ics = data_from_url.decode('utf-8').replace('\\r\\', '')
+            full_cal = Calendar.from_ical(data_ics)
+        except requests.exceptions.ConnectTimeout:
+            time.sleep(5)
+            data_from_url = requests.get(url, headers=headers).text.encode('iso-8859-1')
+            data_ics = data_from_url.decode('utf-8').replace('\\r\\', '')
+            full_cal = Calendar.from_ical(data_ics)
+        except ValueError:
+            return f'Отсутствует расписание {group}\n', ''
+
+        parity_count = []  # костыль для проверки четности, сравнение с первой неделей (первой парой) сема
+        for component in full_cal.walk():
+            if component.get('dtstart'):
+                dtstart_par = component.get('dtstart').dt
+                parity_count.append(dtstart_par)
+        parity_count.sort()
+
+        schedule_list = []
+        prepods_list = []
+
+        for i in range(14):  # 14 - две недели, четная/нечетная
+            day = datetime.now(pytz.timezone('Europe/Moscow')).date() + timedelta(days=i)
+            for component in full_cal.walk():
+                if component.get('dtstart'):
+                    dtstart = component.get('dtstart').dt
+                    if (day.isocalendar()[1] - dtstart.isocalendar()[1]) % 2 == 0 and dtstart.weekday() == day.weekday():
+
+                        if (day.isocalendar()[1] - parity_count[0].isocalendar()[1]) % 2 == 0:  # Чётность пары
+                            parity = '1'  # если криво меняется на "% 2 != 0" строкой выше
+                        else:
+                            parity = '0'
+
+                        dtstart = str(dtstart).split()[1][:5]
+                        summary = component.get('SUMMARY').split()
+                        description = component.get('DESCRIPTION')
+
+                        name = 'Ошибка ФИО'  # ФИО преподавателя
+                        classroom = ''  # может сломаться?
+                        subject = ' '.join(summary[:-1])
+                        full_subject = ''  # полное название предмета
+                        subject_type = summary[-1]
+
+                        if description != '':  # достаем аудиторию и ФИО преподавателя
+                            description_comma_split = description.split(',')
+                            description = description.split('\n')
+                            full_subject = description[1]
+                            if any(char.isdigit() for char in description_comma_split[0]) is True:
+                                classroom = description_comma_split[0]
+                                description[0] = ' '.join(description[0].split()[1:])
+                                name = description[0]
+                            elif description[-1] == 'Форма обучения: Дистанционная':
+                                classroom = 'дистанционно'
+                                name = description[0]
+
+                            if description[0] == 'Преподаватель не назначен':
+                                name = description[0]
+                        try:
+                            lesson_number = timetable.index(dtstart)
+                            lesson_number += 1  # тупейший фикс, чтобы было все понятнее в экселе
+                        except ValueError:
+                            lesson_number = dtstart
+
+                        prepods_list.append([subject, subject_type, full_subject, name])
+                        schedule_list.append(
+                            [days[0][day.weekday()], parity, lesson_number, subject, subject_type,
+                             full_subject, name, classroom])
+        # перенос в датафрейм
+        schedule = pd.DataFrame(schedule_list,
+                                columns=['weekday', 'parity', 'lesson_number', 'subject', 'subject_type',
+                                         'full_subject', 'teacher', 'classroom'],
+                                dtype=str)
+        schedule[schedule.columns] = schedule.apply(lambda x: x.str.strip())  # убираем гадости в виде пробелов
+
+        prepods = pd.DataFrame(prepods_list, columns=['subject', 'subject_type', 'full_subject', 'name'], dtype=str)
+        prepods[prepods.columns] = prepods.apply(lambda x: x.str.strip())
+        prepods = prepods.drop_duplicates()
+
+    except Exception as e:
+        return str(e), ''
+
+    return schedule, prepods
 
 
 def get_table(group=None, day=None, teacher_id=None, type='short') -> str:
@@ -763,10 +880,10 @@ def parse_exams(group, set_default_next_sem=False):
     return return_data, got_exams
 
 
-def update_group_params():
+def update_groups_params():
     """
     Обновляет group_ids.db в связи с появлением новых групп - загружает соответствующие им id на ИС "Расписание" ЛЭТИ
-    :return: сообщение с оповещением для админской беседы, список групп для удаления (нужно рассылать оповещения)
+    :return: сообщение с оповещением для админской беседы, список групп для удаления, df пользователей для удаления
     """
 
     # Получаем данные
@@ -810,11 +927,20 @@ def update_group_params():
         # Старые группы (к удалению)
         remove_groups = [(el[1],) for el in to_remove]
         if to_remove:
+            cur.executemany(f"SELECT vk_chat_id, tg_chat_id, group_id FROM group_gcals "
+                            f"WHERE group_id=?", remove_groups)
+            groups_to_remove = pd.DataFrame(cur.fetchall(), columns=['vk_chat_id', 'tg_chat_id', 'group_id'])
+
             cur.executemany(f"DELETE FROM group_gcals WHERE group_id=?", remove_groups)
             con.commit()
+
+        # Собираем информацию о пользователях, у которых сбрасывается группа. Им нужно разослать уведомления
+        cur.execute(f"SELECT group_id, user_id, telegram_id FROM user_ids "
+                    f"WHERE group_id NOT IN (SELECT DISTINCT group_id FROM group_gcals)")
+        users_to_remove = pd.DataFrame(cur.fetchall(), columns=['group_id', 'vk_id', 'tg_id'])
+
         cur.execute(f"DELETE FROM user_ids WHERE group_id NOT IN (SELECT DISTINCT group_id FROM group_gcals)")
         con.commit()
-        # TODO уведомления группы и пользователей об удалении
 
         # Новые группы
         if to_add:
@@ -833,11 +959,20 @@ def update_group_params():
         con.commit()
     con.close()
 
+    # Удаляем файлы БД удаленных групп
+    for group in groups_to_remove.group_id.to_list():
+        try:
+            os.remove(f"{path}/databases/{group}.db")
+        except OSError:
+            pass
+
     add_groups = [el[1] for el in to_add]
     message = f'Обновлена БД all_groups'
     if to_add:
         message += f'\nДобавлены группы ({len(add_groups)} шт.): {", ".join(add_groups)}'
     if to_remove:
-        remove_groups = [el[1] for el in to_remove]
-        message += f'\nУдалены группы ({len(remove_groups)} шт.): {", ".join(remove_groups)}'
-    return message, remove_groups
+        message += (f'\nУдалены группы ({groups_to_remove.shape[0]} шт.): '
+                    f'{", ".join(groups_to_remove.group_id.to_list())}'
+                    f'\nУдалено пользователей ({users_to_remove.shape[0]}):'
+                    f'\n{users_to_remove.groupby("group_id").count()}')
+    return message, groups_to_remove, users_to_remove

@@ -4,7 +4,7 @@
 """
 import os
 import sqlite3
-from shiza.etu_parsing import load_prepods_table_cache, load_table_cache, update_group_params
+from shiza.etu_parsing import load_prepods_table_cache, load_table_cache
 from shiza.databases_shiza_helper import generate_subject_ids, generate_subject_keyboards, \
     generate_subject_keyboards_tg, load_calendar_cache, generate_main_keyboard, generate_links_keyboard, \
     add_preset_books, generate_departments_keyboards, generate_prepods_keyboards
@@ -12,8 +12,6 @@ from shiza.databases_shiza_helper import generate_subject_ids, generate_subject_
 path = f'{os.path.abspath(os.curdir)}/'
 
 if __name__ == '__main__':
-    update_group_params()
-
     generate_departments_keyboards()
     generate_prepods_keyboards()
     load_prepods_table_cache()

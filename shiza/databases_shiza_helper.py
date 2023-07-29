@@ -7,17 +7,15 @@ import os
 import time
 import traceback
 from typing import Tuple, Any
-
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from keyboards_telegram.create_keyboards import payload_to_callback
 import sqlite3
 import pandas as pd
 import requests
-from icalendar import Calendar
 import pytz
 from datetime import datetime, timedelta
-from shiza.etu_parsing import parse_exams, load_calendar_cache, load_table_cache
+from shiza.etu_parsing import parse_exams, load_calendar_cache, load_table_cache, get_group_schedule_from_ics
 from datetime import date
 import math
 from transliterate import translit
@@ -251,7 +249,7 @@ def load_teacher_ids(group):
     return 0
 
 
-def create_database(group, is_global_parsing=False, keep_old_data_override=False, override_bool=False):
+def create_database(group, is_global_parsing=False):
     """
     Создание БД для группы и все сопутствующие операции.
     БД создается из экспортируемого .ical-календаря с расписанием группы, потому что так когда-то было удобнее.
@@ -259,109 +257,29 @@ def create_database(group, is_global_parsing=False, keep_old_data_override=False
     :param str group: номер группы
     :param bool is_global_parsing: if True, парсинг будет производиться в глобальном режиме - меньше уведомлений,
         все группы подряд (кроме кастомных)
-    :param bool keep_old_data_override: if True, оставляет прошлые методы в БД, если они были (для допсы)
-    :param bool override_bool: оверрайд для оверрайда keep_old_data_override...
     :return: сообщения с результатом парсинга для пользователя и для админов (в отладку)
     """
 
-    if not keep_old_data_override:
-        month_today = date.today().month  # чтобы посмотреть, оставлять ли методы
-        keep_old_data = True if month_today in [2, 7, 8, 9] else False
-    else:
-        keep_old_data = override_bool
+    month_today = date.today().month  # чтобы посмотреть, оставлять ли методы.
+    # Несколько перекликается с update_study_status, там по флагу semester_start стираются books_old/prepods_old
+    keep_old_data = True if month_today in [1, 2, 6, 7, 8, 9] else False
 
-    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:  # достаем странный айдишник
-        cur = con.cursor()
-        etu_id = cur.execute("SELECT etu_id FROM group_gcals WHERE group_id=?", [group]).fetchone()
-        if etu_id:  # если группа такая существует
-            etu_id = etu_id[0]
-    con.close()
+    schedule, prepods = get_group_schedule_from_ics(group, publicated=True)
 
-    try:  # парсер в расписон и преподов
-        url = f'https://digital.etu.ru/api/schedule/ics-export/group?groups={etu_id}&scheduleId=publicated'
-        try:
-            data_from_url = requests.get(url, headers=headers).text.encode('iso-8859-1')  # тут чето может сломаться
-            data_ics = data_from_url.decode('utf-8').replace('\\r\\', '')
-            full_cal = Calendar.from_ical(data_ics)
-        except requests.exceptions.ConnectTimeout:
-            time.sleep(5)
-            data_from_url = requests.get(url, headers=headers).text.encode('iso-8859-1')
-            data_ics = data_from_url.decode('utf-8').replace('\\r\\', '')
-            full_cal = Calendar.from_ical(data_ics)
-        except ValueError:
-            return f'Отсутствует расписание {group}\n', f'Отсутствует расписание {group}\n'
+    if not isinstance(schedule, pd.DataFrame):  # Проверка
+        if is_global_parsing:
+            return '', f"{group} - ошибка получения данных: {schedule}"
+        return 'Ошибка получения данных о расписании с API ЛЭТИ', f"{group} - ошибка получения данных: {schedule}"
 
-        parity_count = []  # костыль для проверки четности, сравнение с первой неделей (первой парой) сема
-        for component in full_cal.walk():
-            if component.get('dtstart'):
-                dtstart_par = component.get('dtstart').dt
-                parity_count.append(dtstart_par)
-        parity_count.sort()
-
-        schedule_list = []
-        prepods_list = []
-
-        for i in range(14):  # 14 - две недели, четная/нечетная
-            day = datetime.now(pytz.timezone('Europe/Moscow')).date() + timedelta(days=i)
-            for component in full_cal.walk():
-                if component.get('dtstart'):
-                    dtstart = component.get('dtstart').dt
-                    if (day.isocalendar()[1] - dtstart.isocalendar()[1]) % 2 == 0 and dtstart.weekday() == day.weekday():
-
-                        if (day.isocalendar()[1] - parity_count[0].isocalendar()[1]) % 2 == 0:  # Чётность пары
-                            parity = '1'  # если криво меняется на "% 2 != 0" строкой выше
-                        else:
-                            parity = '0'
-
-                        dtstart = str(dtstart).split()[1][:5]
-                        summary = component.get('SUMMARY').split()
-                        description = component.get('DESCRIPTION')
-
-                        name = 'Ошибка ФИО'  # ФИО преподавателя
-                        classroom = ''  # может сломаться?
-                        subject = ' '.join(summary[:-1])
-                        full_subject = ''  # полное название предмета
-                        subject_type = summary[-1]
-
-                        if description != '':  # достаем аудиторию и ФИО преподавателя
-                            description_comma_split = description.split(',')
-                            description = description.split('\n')
-                            full_subject = description[1]
-                            if any(char.isdigit() for char in description_comma_split[0]) is True:
-                                classroom = description_comma_split[0]
-                                description[0] = ' '.join(description[0].split()[1:])
-                                name = description[0]
-                            elif description[-1] == 'Форма обучения: Дистанционная':
-                                classroom = 'дистанционно'
-                                name = description[0]
-
-                            if description[0] == 'Преподаватель не назначен':
-                                name = description[0]
-                        try:
-                            lesson_number = timetable.index(dtstart)
-                            lesson_number += 1  # тупейший фикс, чтобы было все понятнее в экселе
-                        except ValueError:
-                            lesson_number = dtstart
-
-                        prepods_list.append([subject, subject_type, full_subject, name])
-                        schedule_list.append(
-                            [days[0][day.weekday()], parity, lesson_number, subject, subject_type,
-                             full_subject, name, classroom])
-        # перенос в датафрейм
-        schedule = pd.DataFrame(schedule_list,
-                                columns=['weekday', 'parity', 'lesson_number', 'subject', 'subject_type',
-                                         'full_subject', 'teacher', 'classroom'],
-                                dtype=str)
-        schedule[schedule.columns] = schedule.apply(lambda x: x.str.strip())  # убираем гадости в виде пробелов
-        prepods = pd.DataFrame(prepods_list, columns=['subject', 'subject_type', 'full_subject', 'name'], dtype=str)
-        prepods[prepods.columns] = prepods.apply(lambda x: x.str.strip())
-        prepods = prepods.drop_duplicates()
-
-        # Если БД уже есть, стираем и перезаписываем ее
+    # Сохранение предыдущих методичек и таблицы prepods, если сессия была недавно / допса не закончилась
+    try:
         if f'{group}.db' in os.listdir(f'{path}databases/'):
+
             if keep_old_data:
                 with sqlite3.connect(f'{path}databases/{group}.db') as con:
                     cur = con.cursor()
+
+                    # Если старые методички уже есть, оставляем их
                     if not cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='books_old'").fetchall():
                         if cur.execute("SELECT * FROM books").fetchall():
                             generate_subject_keyboards(group, write_as_old=True)
@@ -369,6 +287,8 @@ def create_database(group, is_global_parsing=False, keep_old_data_override=False
                             cur.execute("ALTER TABLE prepods RENAME TO prepods_old")  # так и так есть
                         else:
                             keep_old_data = False  # тогда нечего ссылаться на пустую БД
+
+                    # Генерируем клавиатуры для старых предметов через небольшой троллинг с переименованием таблиц
                     elif f'{group}_subjects_old.json' not in os.listdir(f'{path}keyboards/'):
                         cur.execute("ALTER TABLE books RENAME TO books_temp")
                         cur.execute("ALTER TABLE prepods RENAME TO prepods_temp")
@@ -379,11 +299,11 @@ def create_database(group, is_global_parsing=False, keep_old_data_override=False
                         cur.execute("ALTER TABLE books RENAME TO books_old")
                         cur.execute("ALTER TABLE prepods RENAME TO prepods_old")
                         cur.execute("ALTER TABLE books_temp RENAME TO books")
-                        cur.execute("ALTER TABLE prepods_temp RENAME TO prepods")  # что я творю...
+                        cur.execute("ALTER TABLE prepods_temp RENAME TO prepods")
                     con.commit()
                 con.close()
 
-            if not keep_old_data:
+            if not keep_old_data:  # стираем БД если нет методичек прошлого семестра
                 os.remove(f'{path}databases/{group}.db')
 
         # перенос в SQL
@@ -770,26 +690,26 @@ def add_moderator(user_id, group_num):
     return_message = ''
     con = sqlite3.connect(f'{path}admindb/databases/admins.db')
     cur = con.cursor()
-    if not cur.execute('''SELECT * FROM users WHERE id=?''', [user_id]).fetchall():
-        cur.execute('''INSERT INTO users (id, group_id) VALUES (?, ?)''', [user_id, group_num])
+    if not cur.execute('SELECT * FROM users WHERE id=?', [user_id]).fetchall():
+        cur.execute('INSERT INTO users (id, group_id) VALUES (?, ?)', [user_id, group_num])
 
-    cur.execute('''UPDATE users SET freedom = 'moderator' WHERE id=?''', [user_id])
+    cur.execute("UPDATE users SET freedom = 'moderator' WHERE id=?", [user_id])
     con.commit()
     con.close()
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        if not cur.execute('''SELECT * FROM user_ids WHERE user_id=?''', [user_id]).fetchall():
-            cur.execute('''INSERT INTO user_ids (user_id, group_id) VALUES (?, ?)''', [user_id, group_num])
+        if not cur.execute('SELECT * FROM user_ids WHERE user_id=?', [user_id]).fetchall():
+            cur.execute('INSERT INTO user_ids (user_id, group_id) VALUES (?, ?)', [user_id, group_num])
         else:  # передвигаем юзера в нужную группу если что
-            cur.execute('''UPDATE user_ids SET group_id=? WHERE user_id=?''', (user_id, group_num))
+            cur.execute('UPDATE user_ids SET group_id=? WHERE user_id=?', (user_id, group_num))
         return_message += f'Пользователь @id{user_id} добавлен в модераторы'
     con.close()
 
     # добавляем в общие айди
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        if not cur.execute('''SELECT * FROM user_ids WHERE user_id=?''', [user_id]).fetchall():
-            cur.execute('''INSERT INTO user_ids (user_id, group_id) VALUES (?, ?)''', [user_id, group_num])
+        if not cur.execute('SELECT * FROM user_ids WHERE user_id=?', [user_id]).fetchall():
+            cur.execute('INSERT INTO user_ids (user_id, group_id) VALUES (?, ?)', [user_id, group_num])
     return return_message
 
 
@@ -834,13 +754,12 @@ def change_user_group(group_id, user_id, source='vk'):  # меняет груп�
 
     with sqlite3.connect(f'{path}admindb/databases/admins.db') as con:  # если есть модер новой группы, то есть и её БД.
         cur = con.cursor()
-        if not cur.execute('''SELECT * FROM users WHERE group_id=?''', [group_id]).fetchall():
+        if not cur.execute('SELECT * FROM users WHERE group_id=?', [group_id]).fetchall():
             if f'{group_id}.db' not in os.listdir(f'{path}databases/'):
                 group_exists = False
             else:
                 group_exists = True
 
-            # todo message for tg
             answer = f'Номер группы {group_id} установлен. \nВ этой группе еще нет модератора, поэтому функционал' \
                      f' бота несколько ограничен - нельзя редактировать данные и добавить гугл-календарь и почту ' \
                      f'группы. \nОбратись к администраторам, мы назначим кого-нибудь модератором. \nВзаимодействуй' \
@@ -854,7 +773,6 @@ def change_user_group(group_id, user_id, source='vk'):  # меняет груп�
 def change_user_additional_group(group_id, user_id, source='vk'):  # меняет группу юзера и смотрит, есть ли БД этой группы
     """
     Изменение дополнительной группы юзера
-    TODO: поддержка дополнительной группы в телеграме
 
     :param group_id: номер группы
     :param user_id: id пользователя
@@ -1236,36 +1154,6 @@ def generate_links_keyboard(group):  # создает клавиатуру с с
             f.write(main_temp_telegram.replace("mail_url_placeholder", f'https://{mail}'))
         else:
             f.write(main_temp_telegram)
-    return 0
-
-
-def create_departments_db():
-    """
-    Заполняет базу данных с названиями кафедр и их id
-    :return: 0
-    """
-
-    # Получение данных
-    try:
-        url = 'https://digital.etu.ru/api/general/dicts/departments'
-        df = pd.DataFrame(requests.get(url, headers=headers).json())
-        df = df[['id', 'title', 'type', 'facultyId']]
-        df['facultyId'] = df['facultyId'].fillna(0)
-        if df.empty:
-            raise ValueError('Не удалось получить данные о кафедрах (general/dicts/departments)')
-    except Exception as data_err:
-        # todo tg logs
-        return 0
-
-    # Добавление в базу
-    with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
-        cur = con.cursor()
-        cur.execute('CREATE TABLE IF NOT EXISTS '
-                    'departments (id INTEGER PRIMARY KEY, title TEXT, type TEXT, facultyId INTEGER)')
-        cur.execute('TRUNCATE TABLE departments')
-        df.to_sql('departments', con, if_exists='append', index=False)  # appending to empty table to keep primary key
-        con.commit()
-    con.close()
     return 0
 
 

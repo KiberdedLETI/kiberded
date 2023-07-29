@@ -247,31 +247,28 @@ def get_books(subject, group_id, event, is_old=False):
     :param bool is_old:  if True, смотрит предмет предыдущего семестра
     """
 
-    if is_old:
-        query = f"SELECT DISTINCT " \
-                f"CASE " \
-                    f"WHEN doc_link IS NOT NULL OR doc_link IS NULL AND name IS NOT NULL AND file_link_tg IS NULL " \
-                    f"THEN name " \
-                f"END AS name, " \
-                f"CASE " \
-                    f"WHEN doc_link IS NOT NULL OR doc_link IS NULL AND name IS NOT NULL AND file_link_tg IS NULL " \
-                    f"THEN doc_link " \
-                f"END AS doc_link FROM books_old WHERE subject=? ORDER BY name"
-    else:
-        query = f"SELECT DISTINCT " \
-                f"CASE " \
-                    f"WHEN doc_link IS NOT NULL OR doc_link IS NULL AND name IS NOT NULL AND file_link_tg IS NULL " \
-                    f"THEN name " \
-                f"END AS name, " \
-                f"CASE " \
-                    f"WHEN doc_link IS NOT NULL OR doc_link IS NULL AND name IS NOT NULL AND file_link_tg IS NULL " \
-                    f"THEN doc_link " \
-                f"END AS doc_link FROM books WHERE subject=? ORDER BY name"
+    query = f"SELECT DISTINCT " \
+            f"CASE " \
+                f"WHEN doc_link IS NOT NULL OR doc_link IS NULL AND name IS NOT NULL AND file_link_tg IS NULL " \
+                f"THEN name " \
+            f"END AS name, " \
+            f"CASE " \
+                f"WHEN doc_link IS NOT NULL OR doc_link IS NULL AND name IS NOT NULL AND file_link_tg IS NULL " \
+                f"THEN doc_link " \
+            f"END AS doc_link FROM `{'books_old' if is_old else 'books'}` WHERE subject=? ORDER BY name"
 
     with sqlite3.connect(f'{path}databases/{group_id}.db') as con:
         cur = con.cursor()
+
+        if is_old:
+            if not cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='books_old'").fetchall():
+                send_to_vk(message_send='Ошибка - методички предыдущего семестра уже удалены.',
+                           event=event, keyboard_send=f'{group_id}_subjects')
+                return 0
         all_books = cur.execute(query, [subject]).fetchall()
+
     con.close()
+
     if all_books:
         # первый элемент может быть null, null
         if not all_books[0][0] and not all_books[0][1]:

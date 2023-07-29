@@ -21,10 +21,10 @@ import traceback
 from fun.anekdot import get_random_toast
 from bot_functions.bots_common_funcs import get_last_lesson, read_calendar, read_table, get_day, set_table_mode, \
     get_exam_notification
-from shiza.etu_parsing import update_group_params, load_calendar_cache, load_table_cache, \
-    parse_prepods_schedule, load_prepods_table_cache, parse_exams
+from shiza.etu_parsing import update_groups_params, load_calendar_cache, load_table_cache, \
+    parse_prepods_schedule, load_prepods_table_cache, parse_exams, parse_prepods_db
 from shiza.databases_shiza_helper import generate_prepods_keyboards, generate_departments_keyboards, \
-    create_departments_db, remove_old_data
+    remove_old_data, create_database
 import sys
 import pickle
 import pandas as pd
@@ -66,7 +66,7 @@ def send_vk_message(message, peer_id, attachment=''):
 
     :param int peer_id: id беседы или пользователя для отправки сообщения.
     :param str message: сообщение, обязательный аргумент
-    :param attachment: вложение (опционально)
+    :param str attachment: вложение (опционально)
     """
 
     try:
@@ -345,7 +345,7 @@ def update_study_status(group):
         # Начался семестр
         if is_study:
             # стираем старые БД; генерируем новое.
-            refresh_db_status, admin_book_str = create_database(group, keep_old_data_override=True, override_bool=True)
+            refresh_db_status, admin_book_str = create_database(group)
             daily_return_str = f'С началом семестра! Теперь Дед будет ежедневно присылать утром расписание' \
                                f' на день.\nРасписание, список предметов и преподавателей, а также всякие' \
                                f' методички всегда можно посмотреть в чат-боте.\nУспехов!\n{refresh_db_status}\n' \
@@ -379,8 +379,35 @@ def cron():
     if date.today().strftime('%m') in ['01', '02', '05', '06', '08', '09', '12'] and date.today().weekday() in [0, 4]:
         try:
             send_tg_message(tg_admin_chat, "Парсинг etu_id's. Проверь корректность данных!!!:\n")
-            admin_message, deleted_groups = update_group_params()
+            admin_message, deleted_groups, deleted_users = update_groups_params()
             send_tg_message(tg_admin_chat, admin_message)
+
+            # Рассылка оповещений об удалении группы - по чатам групп и по пользователям
+            if not deleted_groups.empty:
+                for row in deleted_groups.itertuples():
+                    msg = (f"Группа {row.group_id} была удалена из базы данных - "
+                           f"вероятно, из-за слияния групп или завершения обучения."
+                           f"\nДанные беседы группы и пользователей (включая модераторов) удалены из бота."
+                           f"\nЧтобы повторно подключить беседу группы, удалите и добавьте бота заново, "
+                           f"предварительно выбрав в ЛС новый номер группы.")
+
+                    if row.vk_chat_id:
+                        send_vk_message(msg, row.vk_chat_id)
+                    if row.tg_chat_id:
+                        send_tg_message(row.tg_chat_id, msg)
+
+            if not deleted_users.empty:
+                for row in deleted_users.itertuples():
+                    msg = f"Твоя группа {row.group_id} была удалена из базы данных - " \
+                          f"вероятно, из-за слияния групп или завершения обучения." \
+                          f"\nЕсли считаешь, что произошла ошибка, напиши админам: " \
+                          f"https://t.me/evgeniy_setrov или https://t.me/TSheyd"
+
+                    if row.tg_id:
+                        send_tg_message(row.tg_id, f"{msg}\nЧтобы выбрать другую группу, напиши /change_group")
+                    if row.vk_id:
+                        send_vk_message(f"{msg}\nЧтобы выбрать другую группу, напиши что-нибудь.", row.vk_id)
+
         except KeyError as e:
             send_tg_message(tg_admin_chat, e)
         except Exception as e:
@@ -390,13 +417,16 @@ def cron():
 
     # Раз в месяц обновляем расписание преподавателей
     if date.today().day == 3:
-        create_departments_db()  # Обновление списка кафедр
-        parse_prepods_schedule()  # Парсинг расписания преподавателей
-        load_prepods_table_cache()  # Загрузка кэша
-        generate_departments_keyboards()  # Генерация клавиатур с обновленным списком кафедр
-        generate_prepods_keyboards()
+        try:
+            parse_prepods_db()  # Парсинг списка преподавателей и списка кафедр
+            parse_prepods_schedule()  # Парсинг расписания преподавателей
+            load_prepods_table_cache()  # Загрузка кэша
+            generate_departments_keyboards()  # Генерация клавиатур с обновленным списком кафедр
+            generate_prepods_keyboards()
+        except Exception as prepods_parsing_err:
+            send_tg_message(tg_admin_chat, f"Ошибка обновления расписания преподавателей: {prepods_parsing_err}")
 
-    # структура сообщения: донатное (добавляется последним) + update_study_status() + расписание/календарь (все при наличии)
+    # структура сообщения: донатное (добавляется последним) + update_study_status() + расписание/календарь (при наличии)
 
     load_calendar_cache()  # На всякий обновляем кэш календаря и расписания перед отправкой
     load_table_cache()
