@@ -24,7 +24,7 @@ from bot_functions.bots_common_funcs import get_last_lesson, read_calendar, read
 from shiza.etu_parsing import update_groups_params, load_calendar_cache, load_table_cache, \
     parse_prepods_schedule, load_prepods_table_cache, parse_exams
 from shiza.databases_shiza_helper import generate_prepods_keyboards, generate_departments_keyboards, \
-    create_departments_db, remove_old_data
+    create_departments_db, remove_old_data, create_database
 import sys
 import pickle
 import pandas as pd
@@ -345,7 +345,7 @@ def update_study_status(group):
         # Начался семестр
         if is_study:
             # стираем старые БД; генерируем новое.
-            refresh_db_status, admin_book_str = create_database(group, keep_old_data_override=True, override_bool=True)
+            refresh_db_status, admin_book_str = create_database(group)
             daily_return_str = f'С началом семестра! Теперь Дед будет ежедневно присылать утром расписание' \
                                f' на день.\nРасписание, список предметов и преподавателей, а также всякие' \
                                f' методички всегда можно посмотреть в чат-боте.\nУспехов!\n{refresh_db_status}\n' \

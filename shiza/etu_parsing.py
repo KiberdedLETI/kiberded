@@ -365,6 +365,110 @@ def load_calendar_cache(group=None):
     return 0
 
 
+def get_group_schedule_from_ics(group, publicated=True):
+    """
+    Парсер расписания группы из .ics с digital.etu.ru/schedule
+
+    :param str group: номер группы (обычный, не etu_id)
+    :param bool publicated: if False, выгружает предварительное расписание (при наличии)
+    :return: 2 DataFrame - schedule / prepods для загрузки в базу
+    """
+
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:  # достаем странный айдишник
+        cur = con.cursor()
+        etu_id = cur.execute("SELECT etu_id FROM group_gcals WHERE group_id=?", [group]).fetchone()
+        if etu_id:  # если группа такая существует
+            etu_id = etu_id[0]
+    con.close()
+
+    try:  # парсер в расписон и преподов
+        url = (f'https://digital.etu.ru/api/schedule/ics-export/group?'
+               f'groups={etu_id}{"&scheduleId=publicated" if publicated else ""}')
+        try:
+            data_from_url = requests.get(url, headers=headers).text.encode('iso-8859-1')  # тут чето может сломаться
+            data_ics = data_from_url.decode('utf-8').replace('\\r\\', '')
+            full_cal = Calendar.from_ical(data_ics)
+        except requests.exceptions.ConnectTimeout:
+            time.sleep(5)
+            data_from_url = requests.get(url, headers=headers).text.encode('iso-8859-1')
+            data_ics = data_from_url.decode('utf-8').replace('\\r\\', '')
+            full_cal = Calendar.from_ical(data_ics)
+        except ValueError:
+            return f'Отсутствует расписание {group}\n', ''
+
+        parity_count = []  # костыль для проверки четности, сравнение с первой неделей (первой парой) сема
+        for component in full_cal.walk():
+            if component.get('dtstart'):
+                dtstart_par = component.get('dtstart').dt
+                parity_count.append(dtstart_par)
+        parity_count.sort()
+
+        schedule_list = []
+        prepods_list = []
+
+        for i in range(14):  # 14 - две недели, четная/нечетная
+            day = datetime.now(pytz.timezone('Europe/Moscow')).date() + timedelta(days=i)
+            for component in full_cal.walk():
+                if component.get('dtstart'):
+                    dtstart = component.get('dtstart').dt
+                    if (day.isocalendar()[1] - dtstart.isocalendar()[1]) % 2 == 0 and dtstart.weekday() == day.weekday():
+
+                        if (day.isocalendar()[1] - parity_count[0].isocalendar()[1]) % 2 == 0:  # Чётность пары
+                            parity = '1'  # если криво меняется на "% 2 != 0" строкой выше
+                        else:
+                            parity = '0'
+
+                        dtstart = str(dtstart).split()[1][:5]
+                        summary = component.get('SUMMARY').split()
+                        description = component.get('DESCRIPTION')
+
+                        name = 'Ошибка ФИО'  # ФИО преподавателя
+                        classroom = ''  # может сломаться?
+                        subject = ' '.join(summary[:-1])
+                        full_subject = ''  # полное название предмета
+                        subject_type = summary[-1]
+
+                        if description != '':  # достаем аудиторию и ФИО преподавателя
+                            description_comma_split = description.split(',')
+                            description = description.split('\n')
+                            full_subject = description[1]
+                            if any(char.isdigit() for char in description_comma_split[0]) is True:
+                                classroom = description_comma_split[0]
+                                description[0] = ' '.join(description[0].split()[1:])
+                                name = description[0]
+                            elif description[-1] == 'Форма обучения: Дистанционная':
+                                classroom = 'дистанционно'
+                                name = description[0]
+
+                            if description[0] == 'Преподаватель не назначен':
+                                name = description[0]
+                        try:
+                            lesson_number = timetable.index(dtstart)
+                            lesson_number += 1  # тупейший фикс, чтобы было все понятнее в экселе
+                        except ValueError:
+                            lesson_number = dtstart
+
+                        prepods_list.append([subject, subject_type, full_subject, name])
+                        schedule_list.append(
+                            [days[0][day.weekday()], parity, lesson_number, subject, subject_type,
+                             full_subject, name, classroom])
+        # перенос в датафрейм
+        schedule = pd.DataFrame(schedule_list,
+                                columns=['weekday', 'parity', 'lesson_number', 'subject', 'subject_type',
+                                         'full_subject', 'teacher', 'classroom'],
+                                dtype=str)
+        schedule[schedule.columns] = schedule.apply(lambda x: x.str.strip())  # убираем гадости в виде пробелов
+
+        prepods = pd.DataFrame(prepods_list, columns=['subject', 'subject_type', 'full_subject', 'name'], dtype=str)
+        prepods[prepods.columns] = prepods.apply(lambda x: x.str.strip())
+        prepods = prepods.drop_duplicates()
+
+    except Exception as e:
+        return str(e), ''
+
+    return schedule, prepods
+
+
 def get_table(group=None, day=None, teacher_id=None, type='short') -> str:
     """
     Получение сообщения с расписанием из БД
