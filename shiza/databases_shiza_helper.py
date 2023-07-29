@@ -6,19 +6,17 @@ import hashlib
 import os
 import time
 import traceback
-from typing import Tuple, Any
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from keyboards_telegram.create_keyboards import payload_to_callback
 import sqlite3
 import pandas as pd
 import requests
-import pytz
 from datetime import datetime, timedelta
 from shiza.etu_parsing import parse_exams, load_calendar_cache, load_table_cache, get_group_schedule_from_ics
 from datetime import date
 import math
-from transliterate import translit
+
 
 days = [['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'], [' (чёт)', ' (нечёт)']]
 lesson_numbers_allowed = ['1', '2', '3', '4', '5', '6', '7', '8']
@@ -26,60 +24,6 @@ parity_allowed = ['0', '1']
 timetable = ['08:00', '09:50', '11:40', '13:40', '15:30', '17:20', '19:05', '20:50']
 path = f'{os.path.abspath(os.curdir)}/'
 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:45.0) Gecko/20100101 Firefox/45.0'}
-
-
-def get_group(path, user_id) -> tuple:  # admindb группа (для freedom=admin/moderator)
-    """
-    Возвращает группу пользователя
-
-    :param str path: путь к директории с БД
-    :param user_id: id пользователя
-    :return: (group,)
-    """
-
-    with sqlite3.connect(f'{path}admindb/databases/admins.db') as con:
-        cursor = con.cursor()
-        group = cursor.execute("SELECT group_id FROM users WHERE vk_id=?", [user_id]).fetchone()
-    con.close()
-    return group  # Важно! Возвращает (group, ) todo а зачем так возвращает?
-
-
-def get_common_group(path, user_id) -> str:  # группа из общего списка (для freedom=user)
-    """
-    Возвращает группу пользователя из общего списка
-
-    :param str path: путь к директории с БД
-    :param user_id: id пользователя
-    :return: group
-    """
-
-    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
-        cursor = con.cursor()
-        cursor.execute("SELECT group_id FROM user_ids WHERE vk_id=?", [user_id])
-        group = cursor.fetchone()
-    if group is not None:
-        group = group[0]
-    con.close()
-    return group
-
-
-def get_common_additional_group(path, user_id) -> str:  # доп. группа из общего списка (для freedom=user)
-    """
-    Возвращает доп. группу пользователя из общего списка
-
-    :param str path: путь к директории с БД
-    :param user_id: id пользователя
-    :return: group
-    """
-
-    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
-        cursor = con.cursor()
-        cursor.execute("SELECT additional_group_id FROM user_ids WHERE vk_id=?", [user_id])
-        group = cursor.fetchone()
-    if group is not None:
-        group = group[0]
-    con.close()
-    return group
 
 
 def get_stock_groups() -> list:
@@ -207,7 +151,7 @@ def get_database_to_watch(database, path):  # чтобы не получать �
 
 def load_teacher_ids(group):
     """
-    Добавление teacher_id к таблице prepods
+    Добавление teacher_id из общей таблицы преподавателей к таблице prepods БД группы
     :param str group: группа
     :return: 0
     """

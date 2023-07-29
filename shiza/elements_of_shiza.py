@@ -22,9 +22,9 @@ import math
 from vk_api.utils import get_random_id
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from shiza.databases_shiza_helper import watch_all_databases, edit_all_databases, edit_database, \
-    get_group, generate_subject_keyboards, edit_admin_database, add_moderator, create_database, get_database_to_watch, \
-    change_user_group, get_common_group, edit_email, edit_gcal, add_preset_books, view_email, view_gcal, delete_email, \
-    delete_gcal, get_stock_groups, change_user_additional_group, get_common_additional_group, check_group_exists, \
+    generate_subject_keyboards, edit_admin_database, add_moderator, create_database, get_database_to_watch, \
+    change_user_group, edit_email, edit_gcal, add_preset_books, view_email, view_gcal, delete_email, \
+    delete_gcal, get_stock_groups, change_user_additional_group, check_group_exists, \
     load_table_cache, load_calendar_cache, add_donator_group
 
 # common init
@@ -104,13 +104,14 @@ def send_message(peer_id=2000000001, message='Ошибка - пустое соо
             raise Exception(str(vk_error))
 
 
-def shiza_main(user_id, freedom, isAdmin):  # работа с базами данных через вк
+def shiza_main(user_id, group, freedom, isAdmin):  # работа с базами данных через вк
     """
     Основной скрипт Шизы, здесь осуществляется управление редактором БД в чат-боте. 
     Редакторов два - один для модераторов групп, в котором можно редактировать БД своей группы (****.db), 
     другой админский - для редактирования общих баз и ручного запуска парсинга БД всех групп.
 
-    :param int user_id: id пользователя (после @id)
+    :param int user_id: vk_id пользователя (после @id)
+    :param str group: группа пользователя
     :param str freedom: уровень доступа к редактору - 'user'/'moderator'/'admin'
     :param bool isAdmin: if True and freedom=='admin', работа с админским редактором баз.
         Иначе переключает.
@@ -118,7 +119,6 @@ def shiza_main(user_id, freedom, isAdmin):  # работа с базами да�
     """
 
     initialization()
-    group = str(get_group(path=path_db, user_id=user_id)[0])
 
     # Настройки path для админского редактора при IsAdmin
     if isAdmin:
@@ -643,7 +643,11 @@ def change_group_func(user_id):
 
     initialization()
 
-    group = get_common_group(path=path_db, user_id=user_id)
+    with sqlite3.connect(f'{path_db}admindb/databases/group_ids.db') as con:
+        cur = con.cursor()
+        group = cur.execute("SELECT group_id FROM user_ids WHERE vk_id=?", (user_id,)).fetchone()
+    con.close()
+
     logger.warning(f'Запущена шиза change_user юзером @id{str(user_id)} из группы {group}')
     longpoll = VkBotLongPoll(vk_session, group_id)
     send_message(peer_id=user_id, message=f'Напиши номер своей группы')
@@ -715,8 +719,12 @@ def change_additional_group_func(user_id):  # смена/установка но
 
     initialization()
 
-    user_group = str(get_group(path=path_db, user_id=user_id)[0])
-    group = get_common_additional_group(path=path_db, user_id=user_id)
+    with sqlite3.connect(f'{path_db}admindb/databases/group_ids.db') as con:
+        cur = con.cursor()
+        user_group, group = cur.execute("SELECT group_id, additional_group_id FROM user_ids "
+                                        "WHERE vk_id=?", (user_id,)).fetchone()
+    con.close()
+
     logger.warning(f'Запущена шиза change_additional_group юзером @id{str(user_id)} из группы {group}')
     longpoll = VkBotLongPoll(vk_session, group_id)
     send_message(peer_id=user_id, message=f'Напиши четырехзначный номер группы. Чтобы убрать доп.группу из вкладки '

@@ -643,10 +643,10 @@ def main(vk_session, group_token):
                                                      args=[shiza_user])
                         elif payload["target"] == 'edit_database' and freedom in ('admin', 'moderator'):
                             shiza = threading.Thread(target=elements_of_shiza.shiza_main,
-                                                     args=(shiza_user, freedom, 0))
+                                                     args=(shiza_user, users[shiza_user]['group'], freedom, 0))
                         elif payload["target"] == 'edit_admin_database' and freedom == 'admin':
                             shiza = threading.Thread(target=elements_of_shiza.shiza_main,
-                                                     args=(shiza_user, freedom, 1))
+                                                     args=(shiza_user, users[shiza_user]['group'], freedom, 1))
 
                         else:  # все остальное - типа обработка ошибков
                             shiza = threading.Thread(target=elements_of_shiza.empty_thread())
@@ -674,7 +674,8 @@ def main(vk_session, group_token):
                             shiza_user = message["from_id"]
                             send_to_vk(message_send='Перезапуск редактора...', event=event)
                             shiza = threading.Thread(target=elements_of_shiza.shiza_main,
-                                                     args=(shiza_user, get_freedom(message["from_id"]), 0))
+                                                     args=(shiza_user, users[shiza_user]['group'],
+                                                           get_freedom(shiza_user), 0))
                             shiza.start()
                         except Exception as e:
                             send_to_vk(message_send=f'Ошибка перезапуска редактора: {e}', event=event)
