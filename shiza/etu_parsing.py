@@ -47,28 +47,35 @@ lesson_length = 90
 headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:45.0) Gecko/20100101 Firefox/45.0'}
 
 
-def get_departments_data() -> dict:
+def get_departments_data() -> pd.DataFrame:
     """
     Заглядывает в раздел с кафедрами, возвращает его данные
-    :return: JSON с данными {id: title}
+    :return: DataFrame [['id', 'title', 'type', 'facultyId']]
     """
-    url = f'https://digital.etu.ru/api/general/dicts/departments'
-    data = requests.get(url, headers=headers).json()
-    res = {d['id']: d['title'] for d in data}
-    return res
+
+    # Получение данных
+    try:
+        url = 'https://digital.etu.ru/api/general/dicts/departments'
+        df = pd.DataFrame(requests.get(url, headers=headers).json())
+        df = df[['id', 'title', 'type', 'facultyId']].set_index('id')
+        df['facultyId'] = df['facultyId'].fillna(0)
+        if df.empty:
+            raise ValueError('Не удалось получить данные о кафедрах (general/dicts/departments)')
+    except Exception as data_err:
+        raise ValueError(f"Неизвестная ошибка получения данных departments: {data_err}")
+    return df
 
 
-def parse_prepods():
+def parse_prepods_db():
     """
-    Парсит id и ФИО преподавателей в таблицу prepods
+    Создает и заполняет таблицы departments, prepods в БД prepods.db
     :return: 0
     """
 
     insert_data = pd.DataFrame(columns=['id', 'dep_id', 'initials', 'name', 'surname', 'midname', 'roles'])
+    departments_data = get_departments_data()
 
-    for dep, title in get_departments_data().items():
-        print(title)
-
+    for dep in departments_data.index.tolist():
         url = f'https://digital.etu.ru/api/general/dicts/teachers?departmentId={dep}'
         data = requests.get(url, headers=headers).json()
 
@@ -88,13 +95,21 @@ def parse_prepods():
             insert_data.loc[len(insert_data)] = [id, dep, initials, name, surname, midname, roles]
 
     insert_data = list(insert_data.itertuples(index=False, name=None))
-    # print(insert_data)
 
     with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
         cur = con.cursor()
-        cur.execute('DROP TABLE IF EXISTS prepods')
-        cur.execute('CREATE TABLE prepods (id integer, department_id integer, '
+
+        # Заполнение таблицы departments
+        cur.execute('CREATE TABLE IF NOT EXISTS '
+                    'departments (id INTEGER PRIMARY KEY, title TEXT, type TEXT, facultyId INTEGER)')
+        cur.execute('DELETE FROM departments')
+        departments_data.to_sql('departments', con, if_exists='append')  # appending to empty table to keep PK
+        con.commit()
+
+        # Заполнение таблицы prepods
+        cur.execute('CREATE TABLE IF NOT EXISTS prepods (id integer, department_id integer, '
                     'initials text, name text, surname text, midname text, roles text)')
+        cur.execute('DELETE FROM prepods')
         cur.executemany('INSERT INTO prepods VALUES (?, ?, ?, ?, ?, ?, ?)', insert_data)
         con.commit()
     con.close()
@@ -185,14 +200,12 @@ def parse_prepods_schedule_from_ics(url):
 
 def parse_prepods_schedule():
     """
-    Парсит расписание преподавателей
+    Заполняет таблицу schedule БД prepods.db
 
     :param int department_id: айди кафедры
     :param int id: айди препода
     :return:
     """
-
-    parse_prepods()  # Обновляем список преподов
 
     with sqlite3.connect(f'{path}admindb/databases/prepods.db') as con:
         cur = con.cursor()

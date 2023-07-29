@@ -22,9 +22,9 @@ from fun.anekdot import get_random_toast
 from bot_functions.bots_common_funcs import get_last_lesson, read_calendar, read_table, get_day, set_table_mode, \
     get_exam_notification
 from shiza.etu_parsing import update_groups_params, load_calendar_cache, load_table_cache, \
-    parse_prepods_schedule, load_prepods_table_cache, parse_exams
+    parse_prepods_schedule, load_prepods_table_cache, parse_exams, parse_prepods_db
 from shiza.databases_shiza_helper import generate_prepods_keyboards, generate_departments_keyboards, \
-    create_departments_db, remove_old_data, create_database
+    remove_old_data, create_database
 import sys
 import pickle
 import pandas as pd
@@ -417,11 +417,14 @@ def cron():
 
     # Раз в месяц обновляем расписание преподавателей
     if date.today().day == 3:
-        create_departments_db()  # Обновление списка кафедр
-        parse_prepods_schedule()  # Парсинг расписания преподавателей
-        load_prepods_table_cache()  # Загрузка кэша
-        generate_departments_keyboards()  # Генерация клавиатур с обновленным списком кафедр
-        generate_prepods_keyboards()
+        try:
+            parse_prepods_db()  # Парсинг списка преподавателей и списка кафедр
+            parse_prepods_schedule()  # Парсинг расписания преподавателей
+            load_prepods_table_cache()  # Загрузка кэша
+            generate_departments_keyboards()  # Генерация клавиатур с обновленным списком кафедр
+            generate_prepods_keyboards()
+        except Exception as prepods_parsing_err:
+            send_tg_message(tg_admin_chat, f"Ошибка обновления расписания преподавателей: {prepods_parsing_err}")
 
     # структура сообщения: донатное (добавляется последним) + update_study_status() + расписание/календарь (при наличии)
 
