@@ -260,15 +260,18 @@ def create_database(group, is_global_parsing=False):
     :return: сообщения с результатом парсинга для пользователя и для админов (в отладку)
     """
 
-    month_today = date.today().month  # чтобы посмотреть, оставлять ли методы
+    month_today = date.today().month  # чтобы посмотреть, оставлять ли методы.
+    # Несколько перекликается с update_study_status, там по флагу semester_start стираются books_old/prepods_old
     keep_old_data = True if month_today in [1, 2, 6, 7, 8, 9] else False
 
     schedule, prepods = get_group_schedule_from_ics(group, publicated=True)
-    if not isinstance(schedule, pd.DataFrame):
+
+    if not isinstance(schedule, pd.DataFrame):  # Проверка
         if is_global_parsing:
             return '', f"{group} - ошибка получения данных: {schedule}"
         return 'Ошибка получения данных о расписании с API ЛЭТИ', f"{group} - ошибка получения данных: {schedule}"
 
+    # Сохранение предыдущих методичек и таблицы prepods, если сессия была недавно / допса не закончилась
     try:
         if f'{group}.db' in os.listdir(f'{path}databases/'):
 
@@ -276,6 +279,7 @@ def create_database(group, is_global_parsing=False):
                 with sqlite3.connect(f'{path}databases/{group}.db') as con:
                     cur = con.cursor()
 
+                    # Если старые методички уже есть, оставляем их
                     if not cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='books_old'").fetchall():
                         if cur.execute("SELECT * FROM books").fetchall():
                             generate_subject_keyboards(group, write_as_old=True)
@@ -284,6 +288,7 @@ def create_database(group, is_global_parsing=False):
                         else:
                             keep_old_data = False  # тогда нечего ссылаться на пустую БД
 
+                    # Генерируем клавиатуры для старых предметов через небольшой троллинг с переименованием таблиц
                     elif f'{group}_subjects_old.json' not in os.listdir(f'{path}keyboards/'):
                         cur.execute("ALTER TABLE books RENAME TO books_temp")
                         cur.execute("ALTER TABLE prepods RENAME TO prepods_temp")
@@ -294,11 +299,11 @@ def create_database(group, is_global_parsing=False):
                         cur.execute("ALTER TABLE books RENAME TO books_old")
                         cur.execute("ALTER TABLE prepods RENAME TO prepods_old")
                         cur.execute("ALTER TABLE books_temp RENAME TO books")
-                        cur.execute("ALTER TABLE prepods_temp RENAME TO prepods")  # что я творю...
+                        cur.execute("ALTER TABLE prepods_temp RENAME TO prepods")
                     con.commit()
                 con.close()
 
-            else:
+            if not keep_old_data:  # стираем БД если нет методичек прошлого семестра
                 os.remove(f'{path}databases/{group}.db')
 
         # перенос в SQL
@@ -755,7 +760,6 @@ def change_user_group(group_id, user_id, source='vk'):  # меняет груп�
             else:
                 group_exists = True
 
-            # todo message for tg
             answer = f'Номер группы {group_id} установлен. \nВ этой группе еще нет модератора, поэтому функционал' \
                      f' бота несколько ограничен - нельзя редактировать данные и добавить гугл-календарь и почту ' \
                      f'группы. \nОбратись к администраторам, мы назначим кого-нибудь модератором. \nВзаимодействуй' \
@@ -769,7 +773,6 @@ def change_user_group(group_id, user_id, source='vk'):  # меняет груп�
 def change_user_additional_group(group_id, user_id, source='vk'):  # меняет группу юзера и смотрит, есть ли БД этой группы
     """
     Изменение дополнительной группы юзера
-    TODO: поддержка дополнительной группы в телеграме
 
     :param group_id: номер группы
     :param user_id: id пользователя
