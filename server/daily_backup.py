@@ -52,7 +52,7 @@ def write_file_id_to_db(date, type, file_id):
 
 if __name__ == '__main__':
     now = datetime.now()
-    file = now.strftime('%Y-%m-%d_00-01')
+    file = now.strftime('%Y-%m-%d_23-01')
     mes1 = send_file(f'../../backups/databases/{file}.tar.gz', f'Databases_{file[:-6]}.tar.gz')
     mes2 = send_file(f'../../backups/keyboards/{file}.tar.gz', f'Keyboards_{file[:-6]}.tar.gz')
     mes3 = send_file(f'../../backups/keyboards_telegram/{file}.tar.gz', f'keyboards_telegram_{file[:-6]}.tar.gz')
