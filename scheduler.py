@@ -742,7 +742,7 @@ def check_toast():
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        all_groups = cur.execute("SELECT group_id, vk_chat_id, tg_chat_id FROM group_gcals WHERE send_toast=1").fetchall()
+        all_groups = cur.execute("SELECT group_id, vk_chat_id, tg_chat_id FROM group_gcals WHERE with_toast=1").fetchall()
 
         for i in range(len(all_groups)):
             is_last_day, toast_time = get_last_lesson(all_groups[i][0])
