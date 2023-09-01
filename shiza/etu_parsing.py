@@ -928,7 +928,7 @@ def update_groups_params():
         remove_groups = [(el[1],) for el in to_remove]
         if to_remove:
             cur.execute(f"SELECT vk_chat_id, tg_chat_id, group_id FROM group_gcals "
-                        f"WHERE group_id=?", remove_groups)
+                        f"WHERE group_id IN {tuple([el[1] for el in to_remove])}")
             groups_to_remove = pd.DataFrame(cur.fetchall(), columns=['vk_chat_id', 'tg_chat_id', 'group_id'])
 
             cur.execute(f"DELETE FROM group_gcals WHERE group_id=?", remove_groups)
