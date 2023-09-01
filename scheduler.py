@@ -391,10 +391,17 @@ def cron():
                            f"\nЧтобы повторно подключить беседу группы, удалите и добавьте бота заново, "
                            f"предварительно выбрав в ЛС новый номер группы.")
 
+
                     if row.vk_chat_id:
-                        send_vk_message(msg, row.vk_chat_id)
+                        try:
+                            send_vk_message(msg, row.vk_chat_id)
+                        except Exception as e:
+                            pass
                     if row.tg_chat_id:
-                        send_tg_message(row.tg_chat_id, msg)
+                        try:
+                            send_tg_message(row.tg_chat_id, msg)
+                        except Exception as e:
+                            pass
 
             if not deleted_users.empty:
                 for row in deleted_users.itertuples():
@@ -404,9 +411,15 @@ def cron():
                           f"https://t.me/evgeniy_setrov или https://t.me/TSheyd"
 
                     if row.tg_id:
-                        send_tg_message(row.tg_id, f"{msg}\nЧтобы выбрать другую группу, напиши /change_group")
+                        try:
+                            send_tg_message(row.tg_id, f"{msg}\nЧтобы выбрать другую группу, напиши /change_group")
+                        except Exception as e:
+                            pass
                     if row.vk_id:
-                        send_vk_message(f"{msg}\nЧтобы выбрать другую группу, напиши что-нибудь.", row.vk_id)
+                        try:
+                            send_vk_message(f"{msg}\nЧтобы выбрать другую группу, напиши что-нибудь.", row.vk_id)
+                        except Exception as e:
+                            pass
 
         except KeyError as e:
             send_tg_message(tg_admin_chat, e)
