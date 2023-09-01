@@ -918,13 +918,13 @@ def update_groups_params():
         to_add = new_gs - old_gs
 
 
-        staying = set(df.fullNumber.values) & set(old.group_id.values)
+        staying_nums = set(df.fullNumber.values) & set(old.group_id.values)
         # Сперва обновляем (только, остальное все равно потом) etu_id у тех, кто НЕ в обеих группах (был и остается)
-        staying = list(df.loc[df.fullNumber.isin(list(staying)), ['id', 'fullNumber']].itertuples(index=False, name=None))
+        staying = list(df.loc[df.fullNumber.isin(list(staying_nums)), ['id', 'fullNumber']].itertuples(index=False, name=None))
         cur.executemany("UPDATE group_gcals SET etu_id=? WHERE group_id=?", staying)
         con.commit()
 
-        to_remove = old_gs - set(staying)
+        to_remove = set(old.loc[~old.group_id.isin(staying_nums), ['etu_id', 'group_id']].itertuples(index=False, name=None))
 
         # Теперь разбираемся с изменениями
         # Старые группы (к удалению)
