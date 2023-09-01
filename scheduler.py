@@ -265,10 +265,10 @@ def get_day_photo() -> str:
 def get_groups() -> pd.DataFrame:
     """
     Получение списка групп, ссылок на календарь и chat_ids
-    :return: df[[group_id, gcal_link, vk_chat_id, tg_chat_id, tg_last_msg]] (index=group_id)
+    :return: df[[group_id, gcal_link, vk_chat_id, tg_chat_id, tg_last_msg, send_tables]] (index=group_id)
     """
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
-        q = "SELECT group_id, gcal_link, vk_chat_id, tg_chat_id, tg_last_msg FROM group_gcals"
+        q = "SELECT group_id, gcal_link, vk_chat_id, tg_chat_id, tg_last_msg, send_tables FROM group_gcals"
         df = pd.read_sql(q, con).set_index('group_id')
     return df
 
