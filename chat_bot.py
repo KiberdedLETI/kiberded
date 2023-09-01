@@ -102,7 +102,10 @@ def update_user_data(user_id=None):
         # Получаем все остальные данные
         cur.execute("SELECT vk_id, group_id, additional_group_id, answer_false_commands "
                     "FROM user_ids WHERE vk_id=?", (user_id,))
-        user_id, group_id, additional_group_id, answer_false_commands = cur.fetchone()
+        try:
+            user_id, group_id, additional_group_id, answer_false_commands = cur.fetchone()
+        except TypeError:
+            raise UserGroupError(user_id, 'upd_user_params')
         users[int(user_id)] = {
             'group': group_id,
             'additional_group': additional_group_id,
