@@ -927,11 +927,11 @@ def update_groups_params():
         # Старые группы (к удалению)
         remove_groups = [(el[1],) for el in to_remove]
         if to_remove:
-            cur.executemany(f"SELECT vk_chat_id, tg_chat_id, group_id FROM group_gcals "
-                            f"WHERE group_id=?", remove_groups)
+            cur.execute(f"SELECT vk_chat_id, tg_chat_id, group_id FROM group_gcals "
+                        f"WHERE group_id=?", remove_groups)
             groups_to_remove = pd.DataFrame(cur.fetchall(), columns=['vk_chat_id', 'tg_chat_id', 'group_id'])
 
-            cur.executemany(f"DELETE FROM group_gcals WHERE group_id=?", remove_groups)
+            cur.execute(f"DELETE FROM group_gcals WHERE group_id=?", remove_groups)
             con.commit()
 
         # Собираем информацию о пользователях, у которых сбрасывается группа. Им нужно разослать уведомления
