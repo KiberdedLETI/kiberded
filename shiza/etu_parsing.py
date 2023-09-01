@@ -944,7 +944,7 @@ def update_groups_params():
 
         # Новые группы
         if to_add:
-            to_add = list(df.loc[df.index.isin([el[0] for el in to_add])].itertuples(index=False, name=None))
+            to_add = list(df.loc[df.id.isin([el[0] for el in to_add])].itertuples(index=False, name=None))
             cur.executemany("INSERT INTO group_gcals "
                             "(etu_id, group_id, course, semester, studying_type, level, "
                             "semester_start, semester_end, exam_start, exam_end) "
@@ -960,11 +960,12 @@ def update_groups_params():
     con.close()
 
     # Удаляем файлы БД удаленных групп
-    for group in groups_to_remove.group_id.to_list():
-        try:
-            os.remove(f"{path}/databases/{group}.db")
-        except OSError:
-            pass
+    if to_remove:
+        for group in groups_to_remove.group_id.to_list():
+            try:
+                os.remove(f"{path}/databases/{group}.db")
+            except OSError:
+                pass
 
     add_groups = [el[1] for el in to_add]
     message = f'Обновлена БД all_groups'
