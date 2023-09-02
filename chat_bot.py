@@ -300,7 +300,7 @@ def disable_err_message_notifications(user_id) -> str:
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cursor = con.cursor()
-        cursor.execute(f'UPDATE user_ids SET answer_false_commands = 0 WHERE user_id = {user_id}')
+        cursor.execute(f'UPDATE user_ids SET answer_false_commands = 0 WHERE vk_id = {user_id}')
     con.close()
 
     users[user_id]['err_notifications'] = False
