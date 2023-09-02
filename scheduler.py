@@ -113,7 +113,7 @@ def dump_message(message) -> int:  # BIG Brother Is Watching You.
     chat_id = message.chat.id
     message_id = message.message_id  # чтобы точно задампились все сообщения, потому что могут быть удаленные и
     # отправленные несколько раз в секунду
-    with open(f'{path}messages_backup/{date}/schedule_{date_mes}_{chat_id}_{message_id}.pickle', 'wb') as f:
+    with open(f'{path}messages_backup/{date}/schedule_{date_mes}_{chat_id}_{message_id}.pickle', 'ab') as f:
         pickle.dump(message, f)
 
     return 0
