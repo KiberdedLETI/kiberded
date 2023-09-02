@@ -32,6 +32,7 @@ global config
 global vk_session
 global vk
 global num_of_anekdots
+import os
 
 # common init
 logger = logging.getLogger('scheduler')
@@ -59,6 +60,9 @@ tg_admin_chat = config.get('Kiberded').get('telegram_admin_chat')
 bot = telebot.TeleBot(tg_token)
 now_date = datetime.now().strftime('%Y-%m-%d')  # необходимо для бэкапов сообщений
 
+folder = f'{path}messages_backup/{now_date}'
+if not os.path.isdir(f'{folder}'):
+    os.mkdir(f'{folder}')
 
 def send_vk_message(message, peer_id, attachment=''):
     """
