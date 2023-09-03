@@ -564,9 +564,12 @@ def main(vk_session, group_token):
                             message_ans = f'Расписание группы {additional_group}\n' + get_exams(additional_group)
 
                         elif command == 'table_empty':  # todo открывать расписание пораньше?
-                            message_ans = 'Расписание на новый семестр еще не выложено, ' \
-                                          'следи за апдейтами на digital.etu.ru/schedule ' \
-                                          '\nРасписание в боте появляется на следующий день после выхода'
+                            if users[user_id]['study_status'] == 'study':  # и mixed?
+                                message_ans = 'Чтобы обновить расписание, выйди из раздела "расписание" и зайди обратно'
+                            else:
+                                message_ans = 'Расписание на новый семестр еще не выложено, ' \
+                                              'следи за апдейтами на digital.etu.ru/schedule ' \
+                                              '\nРасписание в боте появляется на следующий день после выхода'
 
                         elif command == 'get_books':
                             message_ans = get_books(payload["subject"], group, event)
