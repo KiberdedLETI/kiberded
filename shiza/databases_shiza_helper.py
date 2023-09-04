@@ -586,7 +586,7 @@ def add_donator_group(group_to_add, source='vk'):
     """
 
     # Проверка и добавление группы в донатеры
-    with sqlite3.connect(f"{path}databases/group_ids.db") as con:
+    with sqlite3.connect(f"{path}databases/admindb/group_ids.db") as con:
         cur = con.cursor()
         q = f'SELECT `{source}_chat_id` FROM group_gcals WHERE group_id=?'
         donate_chat = cur.execute(q, [group_to_add]).fetchall()
@@ -599,7 +599,7 @@ def add_donator_group(group_to_add, source='vk'):
     con.close()
 
     # Получаем список модераторов группы для оповещения
-    with sqlite3.connect(f'{path}databases/admins.db') as con:
+    with sqlite3.connect(f'{path}databases/admindb/admins.db') as con:
         cur = con.cursor()
         moder_info = cur.execute('SELECT vk_id FROM users WHERE group_id=?',
                                  [group_to_add]).fetchall()
