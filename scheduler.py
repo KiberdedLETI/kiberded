@@ -272,7 +272,8 @@ def get_groups() -> pd.DataFrame:
     :return: df[[group_id, gcal_link, vk_chat_id, tg_chat_id, tg_last_msg, send_tables]] (index=group_id)
     """
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
-        q = "SELECT group_id, gcal_link, vk_chat_id, tg_chat_id, tg_last_msg, send_tables FROM group_gcals"
+        q = ("SELECT group_id, gcal_link, vk_chat_id, tg_chat_id, tg_last_msg, send_tables, gcal_over_tables "
+             "FROM group_gcals")
         df = pd.read_sql(q, con).set_index('group_id')
     return df
 
