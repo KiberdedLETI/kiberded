@@ -904,6 +904,7 @@ def update_groups_params():
     df = pd.DataFrame(data)
     df = df[['id', 'fullNumber', 'course', 'semester', 'studyingType', 'educationLevel',
              "semesterStart", "semesterEnd", "examStart", "examEnd"]]
+    df = df.loc[df.studyingType != 'заоч']  # Поддержки групп заочников не завезли
 
     # Помимо основных бэкапов, создаем простую копию БД group_ids, на случай необходимости быстрого восстановления
     os.system(f"cp {path}admindb/databases/group_ids.db {path}admindb/databases/group_ids_before_update.db")
