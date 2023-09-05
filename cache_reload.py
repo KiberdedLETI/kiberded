@@ -23,7 +23,7 @@ if __name__ == '__main__':
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         con.row_factory = lambda cur, row: row[0]
         cur = con.cursor()
-        stock_dbs = cur.execute('SELECT group_id FROM group_gcals').fetchall()
+        stock_dbs = cur.execute('SELECT group_id FROM group_gcals WHERE isCustomDB IS NOT NULL').fetchall()
     con.close()
 
     for group in stock_dbs:
