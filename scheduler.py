@@ -294,12 +294,12 @@ def update_study_status(group):
     # достаем из БД параметры "идет ли семестр" и "идет ли сессия"
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
-        all_dates = cur.execute(f'SELECT group_id, semester_start, semester_end, exam_start, exam_end, isStudy, isExam '
+        all_dates = cur.execute(f'SELECT semester_start, semester_end, exam_start, exam_end, isStudy, isExam '
                                 f'FROM group_gcals WHERE group_id=?', [group]).fetchall()[0]
 
     # переводим в дату, чтобы можно было сравнить
-    semester_start = datetime.strptime(all_dates[1], '%Y-%m-%d').date()
-    semester_end = datetime.strptime(all_dates[2], '%Y-%m-%d').date()
+    semester_start = datetime.strptime(all_dates[0], '%Y-%m-%d').date()
+    semester_end = datetime.strptime(all_dates[1], '%Y-%m-%d').date()
     is_study_old = all_dates[4]
     is_exam_old = all_dates[5]
 
@@ -307,8 +307,8 @@ def update_study_status(group):
     is_study = 1 if semester_start <= today <= semester_end else 0
 
     try:  # isExam внутри try, потому что не у всех групп есть сессия (exam_start, exam_end)
-        exam_start = datetime.strptime(all_dates[3], '%Y-%m-%d').date()
-        exam_end = datetime.strptime(all_dates[4], '%Y-%m-%d').date()
+        exam_start = datetime.strptime(all_dates[2], '%Y-%m-%d').date()
+        exam_end = datetime.strptime(all_dates[3], '%Y-%m-%d').date()
         is_exam = 1 if exam_start <= today <= exam_end else 0  # обновляем данные
 
         # если семестр скоро закончится, пробуем подтянуть данные сессии
