@@ -512,10 +512,11 @@ def cron():
                 log_msg_tg += [f"{group} - {'календарь' if gcal_over_tables else 'расписание'}\n"]
 
         except Exception as send_tables_err:
-            log_msg += f"{group} - ОШИБКА {send_tables_err}\n" \
-                       f"--------- vk: {vk_chat}\n" \
-                       f"--------- tg: {tg_chat}\n" \
-                       f"--------- msg: {msg}\n\n"
+            log_msg += (f"{group} - ОШИБКА {send_tables_err}"
+                        f"\n{traceback.format_exc()}\n"
+                        f"--------- vk: {vk_chat}\n"
+                        f"--------- tg: {tg_chat}\n"
+                        f"--------- msg: {msg}\n\n")
             continue
 
     log_msg = f"Выполнена рассылка расписаний\n" \
