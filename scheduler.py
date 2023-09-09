@@ -464,6 +464,7 @@ def cron():
         vk_chat = group_data.loc[group, 'vk_chat_id']  # int by default
         tg_chat = group_data.loc[group, 'tg_chat_id']
         msg = ""
+        attachment = ""
 
         try:
             # обновление данных - изменения в учебном состоянии (семестр/сессия)
@@ -494,7 +495,6 @@ def cron():
             msg = f"{daily_str}\n{msg}"
 
             # ежедневная пикча для донатеров
-            attachment = ""
             if group_data.loc[group, 'is_donator'] and group_data.loc[group, 'with_dayofday']:
                 attachment = get_day_photo()
 
@@ -512,10 +512,12 @@ def cron():
                 log_msg_tg += [f"{group} - {'календарь' if gcal_over_tables else 'расписание'}\n"]
 
         except Exception as send_tables_err:
-            log_msg += f"{group} - ОШИБКА {send_tables_err}\n" \
-                       f"--------- vk: {vk_chat}\n" \
-                       f"--------- tg: {tg_chat}\n" \
-                       f"--------- msg: {msg}\n\n"
+            log_msg += (f"{group} - ОШИБКА {send_tables_err}"
+                        f"\n{traceback.format_exc()}\n"
+                        f"--------- vk: {vk_chat}\n"
+                        f"--------- tg: {tg_chat}\n"
+                        f"--------- attach: {attachment}\n"
+                        f"--------- msg: {msg}\n\n")
             continue
 
     log_msg = f"Выполнена рассылка расписаний\n" \
