@@ -565,7 +565,7 @@ def get_anekdot_user_ids(source='vk') -> list:  # список юзеров дл
         data = []
         cursor.execute(f'CREATE TABLE IF NOT EXISTS {source}_users(id text, count text, source text)')
 
-        for row in cursor.execute(f'SELECT * FROM {source}_users'):
+        for row in cursor.execute(f'SELECT `id`, `count` FROM {source}_users'):
             data.append(tuple((int(row[0]), int(row[1]))))
     con.close()
     return data
@@ -589,7 +589,7 @@ def anekdots():
         try:
             msg = "Ежедневные анекдоты:\n" if id[1] > 1 else "Ежедневный анекдот:\n"
             msg += '\n'.join([get_anekdot(random.randint(0, num_of_anekdots)) for k in range(id[1])])
-            send_tg_message(msg, id[0])
+            send_tg_message(id[0], msg)
         except Exception as e:
             send_tg_message(tg_admin_chat, f"Ошибка отправки {id[1]} анекдотов юзеру @{id[0]}: {e}")
     return 0
