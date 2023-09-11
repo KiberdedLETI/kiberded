@@ -215,7 +215,12 @@ def send_tg_message(chat_id, text, **kwargs) -> telebot.types.Message:
 def pin_vk_message(response, peer_id):  # закрепление сообщения (если есть права администратора беседы)
     try:
         message_id = response[0].get('conversation_message_id')
-        vk_session.method('messages.pin', {"peer_id": peer_id, "conversation_message_id": message_id, "v": 5.131})
+        if message_id:
+            vk_session.method('messages.pin', {"peer_id": peer_id, "conversation_message_id": message_id, "v": 5.131})
+        else:
+            send_vk_message(f'Что-то сломалось с закрепом сообщения у chat_id={peer_id}'
+                            f'\nmessage_id={message_id}\nmessage:\n{response}', 2000000001)
+
     except vk_api.exceptions.ApiError as vk_error:
         if '[9]' in str(vk_error):  # ошибка flood-control: если флудим, то ждем секунду ответа
             time.sleep(1)
