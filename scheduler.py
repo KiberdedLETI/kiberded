@@ -273,7 +273,7 @@ def get_groups() -> pd.DataFrame:
     """
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         q = ("SELECT group_id, gcal_link, vk_chat_id, tg_chat_id, tg_last_msg, send_tables, "
-             "gcal_over_tables, gcal_over_exam, is_donator, with_dayofday FROM group_gcals")
+             "gcal_over_tables, gcal_over_exams, is_donator, with_dayofday FROM group_gcals")
         df = pd.read_sql(q, con).set_index('group_id')
     return df
 
@@ -477,13 +477,13 @@ def cron():
             # Собираем сообщение с расписанием: календарь если прописан календарь (независимо от учебного статуса),
             # иначе обычное расписание если учеба, плюс оповещение об экзаменах/консультациях, если таковые есть.
             gcal_over_tables = bool(group_data.loc[group, 'gcal_over_tables'])
-            gcal_over_exam = bool(group_data.loc[group, 'gcal_over_exam'])
+            gcal_over_exams = bool(group_data.loc[group, 'gcal_over_exams'])
 
             table = read_calendar(group) if gcal_over_tables else read_table(group) if is_study else ""
             if table.split()[-1] not in ['Пусто', '\nПусто']:
                 msg += table
 
-            if is_exam and not gcal_over_exam:
+            if is_exam and not gcal_over_exams:
                 exam_msg = get_exam_notification(group)
                 if exam_msg:
                     msg += f"\n{exam_msg}"
