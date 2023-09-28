@@ -1069,6 +1069,18 @@ def set_lk_secrets_next_step(message):  # обработка ввода данн
     msg = bot.edit_message_text(msg.text + f'\nДанные успешно записаны.', message.chat.id, msg.id)
 
 
+@bot.message_handler(commands=['stat'], chat_types='private', is_registered=True)  # временно, для отладки
+def stat(message):
+    dump_message(message)
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        cur = con.cursor()
+        data = cur.execute("SELECT lk_email, lk_password FROM user_ids WHERE tg_id=?", [message.chat.id]).fetchall()
+        data = list(data[0])
+
+    answer = attendance.get_today_statistics(data[0], data[1])
+    send_message(message.chat.id, answer)
+
+
 # Команды для модераторов:
 @bot.message_handler(commands=['add_book'], is_moderator=True)
 def add_book(message):
@@ -1600,7 +1612,9 @@ def callback_query(call):
 
         elif command == 'cancel_set_lk_secrets':
             bot.clear_step_handler_by_chat_id(chat_id=call.from_user.id)
-            send_message(call.from_user.id, 'Ввод данных отменен.')
+            kb = ''
+            message_ans = 'Ввод данных отменен'
+
 
         # elif command == 'add_chat':
         # pass
