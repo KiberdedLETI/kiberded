@@ -44,6 +44,10 @@ def auth_in_lk(session, email, password) -> tuple:
     data_ans = session.post(url_login, data=datapost)
 
     code = data_ans.status_code
+
+    if code == 200 and data_ans.url == 'https://lk.etu.ru/login':  # в случае неверных учетных данных возвращается 200
+        # и не проихсодит переадресации на https://lk.etu.ru/student
+        code = 419
     return code, session
 
 
