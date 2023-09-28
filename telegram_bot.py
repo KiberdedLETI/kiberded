@@ -1039,7 +1039,7 @@ def set_lk_secrets(message):
                                         'на условиях "как есть", и мы не несем никакой ответственности в случае'
                                         'каких-либо сливов.\n\nВведи на первой строке электронную почту (логин от ЛК),'
                                         'на второй - пароль, например: \n\nexample@example.com\n'
-                                        'thisissuperstrongpassword\n\n или нажми на кнопку отмены.', markup=markup)
+                                        'thisissuperstrongpassword\n\n или нажми на кнопку отмены.', reply_markup=markup)
     bot.register_next_step_handler(msg, set_lk_secrets_next_step)
 
 
