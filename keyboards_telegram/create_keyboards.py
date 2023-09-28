@@ -1295,6 +1295,23 @@ def kb_prepod_schedule(prepod_id, day):
     return markup
 
 
+# мини-клавиатура отмены ввода данных от ЛК
+def kb_cancel_set_lk_secrets():
+    logger.info(f'Генерируем мини-клавиатуру отмены ввода данных от ЛК')
+
+    markup = InlineKeyboardMarkup()
+
+    payload = {"type": "action",
+               "command": "cancel_set_lk_secrets"
+               }
+    callback_data = payload_to_callback(payload)
+    logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
+    btn_cancel = InlineKeyboardButton('Отмена', callback_data=callback_data)
+    markup.row(btn_cancel)
+    logger.info(f'Клавиатура отмены ввода данных от ЛК готова.\n')
+    return markup
+
+
 if __name__ == '__main__':
     keyboards = [
         'kb_main_cal',
@@ -1322,7 +1339,8 @@ if __name__ == '__main__':
         'kb_heads_or_tails_retoss',
         'kb_table_settings',
         'kb_set_tables_mode',
-        'kb_set_tables_mode_cal'
+        'kb_set_tables_mode_cal',
+        'kb_cancel_set_lk_secrets'
     ]
     for keyboard in keyboards:
         try:

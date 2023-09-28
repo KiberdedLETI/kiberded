@@ -29,6 +29,7 @@ from requests.exceptions import ReadTimeout, ConnectionError
 from bot_functions.bots_common_funcs import read_calendar, read_table, get_day, \
     compile_group_stats, add_user_to_table, get_exams, get_prepods, group_is_donator, \
     add_user_to_anekdot, set_table_mode, get_tables_settings, get_donators, create_link_to_telegram
+from bot_functions import attendance
 from fun.anekdot import get_random_anekdot, get_random_toast
 from fun.minigames import get_coin_flip_result, start_classical_rock_paper_scissors, \
     stop_classical_rock_paper_scissors, classical_rock_paper_scissors
@@ -982,6 +983,7 @@ def help_private(message):
                  '\n/main - кнопка на случай, если вдруг куда-то пропала основная нижняя клавиатура' \
                  '\n/auth - авторизация через ВКонтакте, для доступа к методичкам и синхронизации настроек' \
                  '\n/help - справка, ты здесь' \
+                 '\n/set_lk_secrets - установка логина и пароля от личного кабинета ЛЭТИ' \
                  '\n/add_book - добавление книг' \
                  '\n/add_moderator - добавить модератора' \
                  '\n/add_dayofday_picture - добавление пикчи дня дня в общую базу картиночек' \
@@ -992,6 +994,7 @@ def help_private(message):
                  '\n/main - кнопка на случай, если вдруг куда-то пропала основная нижняя клавиатура' \
                  '\n/auth - авторизация через ВКонтакте, для доступа к методичкам и синхронизации настроек' \
                  '\n/help - справка, ты здесь' \
+                 '\n/set_lk_secrets - установка логина и пароля от личного кабинета ЛЭТИ' \
                  '\n/add_book - добавление книг' \
                  '\nЧтобы добавить бота в беседу, напиши "/start@kiberded_bot_leti" в чате после добавления' \
                  '\n\nОбщая справка по боту: будет позже'
@@ -1001,6 +1004,7 @@ def help_private(message):
                  '\n/auth - авторизация через ВКонтакте, для доступа к методичкам и синхронизации настроек' \
                  '\n/change_group - изменить группу' \
                  '\n/help - справка, ты здесь' \
+                 '\n/set_lk_secrets - установка логина и пароля от личного кабинета ЛЭТИ' \
                  '\nЧтобы добавить бота в беседу, напиши "/start@kiberded_bot_leti" в чате после добавления' \
                  '\n\nОбщая справка под боту: будет позже'
     send_message(message.chat.id, answer)
@@ -1020,6 +1024,49 @@ def minigames(message):
 
     markup = open_keyboard('kb_minigames')
     send_message(message.chat.id, 'Выбери игру', reply_markup=markup)
+
+
+@bot.message_handler(commands=['set_lk_secrets'], chat_types='private', is_registered=True)
+def set_lk_secrets(message):
+    dump_message(message)
+
+    markup = open_keyboard('kb_cancel_set_lk_secrets')
+    msg = send_message(message.chat.id, 'Ты попал в меню установки логина и пароля от личного кабинета ЛЭТИ.\n\n'
+                                        'На данный момент ведется разработка интеграции с системой посещаемости, '
+                                        'благодаря чему (может быть) можно будет отмечаться на парах прямо из деда. '
+                                        '\n\nВНИМАНИЕ! Данные от личного кабинета хранятся на собственных серверах'
+                                        'в НЕзашифрованном виде, и вообще, использование этого сервиса происходит'
+                                        'на условиях "как есть", и мы не несем никакой ответственности в случае'
+                                        'каких-либо сливов.\n\nВведи на первой строке электронную почту (логин от ЛК),'
+                                        'на второй - пароль, например: \n\nexample@example.com\n'
+                                        'thisissuperstrongpassword\n\n или нажми на кнопку отмены.')
+    bot.register_next_step_handler(msg, set_lk_secrets_next_step)
+
+
+def set_lk_secrets_next_step(message):  # обработка ввода данных от лк
+    dump_message(message)
+
+    vec = message.text.split('\n')
+    if len(vec) == 2:
+        email = vec[0]
+        password = vec[1]
+    else:
+        send_message(message.chat.id, 'Необходимо ввести на первой строке email, на второй - пароль. Попробуй запустить'
+                                      'меню установки заново.')
+        return 0
+    msg = send_message(message.chat.id, 'Попытка войти в ЛК с переданными данными....')
+    code, session = attendance.auth_in_lk(attendance.start_new_session(), email, password)
+    if code == 200:
+        msg = bot.edit_message_text(msg.text + f'\nУспешно! \n\nЗапись данных в базу...', message.chat.id, msg.id)
+    else:
+        msg = bot.edit_message_text(msg.text + f'\nАутентификация в ЛК не удалась. Попробуй еще раз и проверь '
+                                               f'введенные данные.', message.chat.id, msg.id)
+        return 0
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        cur = con.cursor()
+        cur.execute("UPDATE user_ids SET lk_email=?, lk_password=? WHERE tg_id=?", (email, password, message.chat.id))
+
+    msg = bot.edit_message_text(msg.text + f'\nДанные успешно записаны.', message.chat.id, msg.id)
 
 
 # Команды для модераторов:
@@ -1550,6 +1597,10 @@ def callback_query(call):
                 message_ans = stop_classical_rock_paper_scissors(call.from_user.id, id)
             else:
                 message_ans = classical_rock_paper_scissors(call.from_user.id, id, choose)
+
+        elif command == 'cancel_set_lk_secrets':
+            bot.clear_step_handler_by_chat_id(chat_id=call.from_user.id)
+            send_message(call.from_user.id, 'Ввод данных отменен.')
 
         # elif command == 'add_chat':
         # pass
