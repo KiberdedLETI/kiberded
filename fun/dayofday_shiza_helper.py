@@ -28,6 +28,7 @@ except FileNotFoundError:
         sys.exit()
 
 token = config.get('Kiberded').get('token')
+vk_id = config.get('Kiberded').get('vk_ded_page_id')
 vk_login = config.get('Kiberded').get('vk_ded_page_login')
 vk_password = config.get('Kiberded').get('vk_ded_page_password')
 
@@ -37,9 +38,9 @@ def dayofday_db_updater():
     try:
         vk_session = vk_api.VkApi(vk_login, vk_password)
         vk_session.auth()
-        response = vk_session.method('photos.get', {'owner_id': 648179760, 'album_id': 280009249, 'count': 1000})
+        response = vk_session.method('photos.get', {'owner_id': vk_id, 'album_id': 280009249, 'count': 1000})
         items = json.loads(json.dumps(response.get('items')))
-        message = 'Запущено обнолвение базы с фотками'
+        message = 'Запущено обновление базы с фотками'
         os.system(f'python3 {path}send2debug.py {message}')  # запуск скрипта для отправки сообщения в конфу
         con = sqlite3.connect(f'{path}admindb/databases/day_of_day.db')
         cur = con.cursor()
@@ -129,7 +130,7 @@ def add_photo(id, master):  # добавляет фото №id в альбом,
         photo_file = upload.photo(photos=f'{path}cache/{id}.jpg', album_id=280009249)
         print(photo_file)
         vk_bot.messages.send(random_id=get_random_id(), chat_id=1,
-            message=f'Фотка добавлена: https://vk.com/photo648179760_{photo_file[0]["id"]}')
+            message=f'Фотка добавлена: https://vk.com/photo{vk_id}_{photo_file[0]["id"]}')
     except vk_api.AuthError:
         os.system(
             f'python3 {path}send2debug.py Произошла ошибка при авторизации страницы для деда, '
