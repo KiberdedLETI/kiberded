@@ -49,6 +49,7 @@ except FileNotFoundError:
 token = config.get('Kiberded').get('token')
 tg_token = config.get('Kiberded').get('token_telegram')
 num_of_anekdots = config.get('Kiberded').get('num_of_base')  # количество анекдотов в базе
+timetable = config.get('Kiberded').get('timetable')
 path = config.get('Kiberded').get('path')
 cron_time = config.get('Kiberded').get('cron_time')
 tables_time = config.get('Kiberded').get('tables_time')
@@ -799,6 +800,14 @@ def send_toast(chat_id, tg_chat_id=None):
     return 0
 
 
+def attendance_schedule():
+    """
+    Рассылка в тг уведомлений об отмечаемости тем, кто подписан на данный сервис.
+    :return: 0
+    """
+    ...
+
+
 def initialization():
     global vk_session
     global vk
@@ -831,6 +840,10 @@ if is_sendToast:
 schedule.every().hour.at(':20').do(load_calendar_cache)  # рандомные минуты, потому что я могу.
 schedule.every(2).hours.at(':32').do(load_table_cache)  # рандомные минуты, потому что я могу.
 schedule.every().day.at("07:00").do(anekdots)
+
+# отмечалка посещаемости:
+for time_element in timetable:
+    schedule.every().day.at(time_element).do(attendance_schedule)
 
 try:
     while True:
