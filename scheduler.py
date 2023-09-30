@@ -510,6 +510,7 @@ def cron():
 
             # Отправка сообщения в нужный чат
             if vk_chat:
+                vk_chat = int(vk_chat)
                 response = send_vk_message(message=msg, peer_id=vk_chat, attachment=attachment)
                 pin_vk_message(response, vk_chat)
                 log_msg_vk += [f"{group} - {'календарь' if gcal_over_tables else 'расписание'}\n"]
@@ -816,7 +817,7 @@ def initialization():
     vk = vk_session.get_api()
 
     send_vk_message('Планировочный дед активирован', 2000000001)
-    send_tg_message(-1001668185586, 'Планировочный дед активирован')
+    send_tg_message(tg_admin_chat, 'Планировочный дед активирован')
     logger.warning('Планировочный дед активирован')
     return 0
 

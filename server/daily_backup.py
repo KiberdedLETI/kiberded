@@ -29,6 +29,7 @@ except FileNotFoundError:
 
 token = config.get('Kiberded').get('token_telegram_backup')
 path = config.get('Kiberded').get('path')
+backup_chat = config.get('Kiberded').get('telegram_backup_chat')
 
 bot = telebot.TeleBot(token)
 
@@ -36,10 +37,10 @@ bot = telebot.TeleBot(token)
 def send_file(file_path, name):
     if os.path.isfile(file_path):
         doc = open(file_path, 'rb')
-        mes = bot.send_document(-640134320, doc, visible_file_name=name)
+        mes = bot.send_document(backup_chat, doc, visible_file_name=name)
         return mes.document.file_id
     else:
-        mes = bot.send_message(-640134320, "Файл не существует")
+        mes = bot.send_message(backup_chat, "Файл не существует")
         logger.error('Файл не существует')
         return 0
 
