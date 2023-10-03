@@ -1069,8 +1069,8 @@ def set_lk_secrets_next_step(message):  # обработка ввода данн
     msg = bot.edit_message_text(msg.text + f'\nДанные успешно записаны.', message.chat.id, msg.id)
 
 
-@bot.message_handler(commands=['stat'], chat_types='private', is_registered=True)  # временно, для отладки
-def stat(message):
+@bot.message_handler(commands=['attendance_stat'], chat_types='private', is_registered=True)  # временно, для отладки
+def attendance_stat(message):
     dump_message(message)
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()

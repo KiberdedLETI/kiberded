@@ -21,6 +21,7 @@ import traceback
 from fun.anekdot import get_random_toast
 from bot_functions.bots_common_funcs import get_last_lesson, read_calendar, read_table, get_day, set_table_mode, \
     get_exam_notification
+from bot_functions import attendance as attendance
 from shiza.etu_parsing import update_groups_params, load_calendar_cache, load_table_cache, \
     parse_prepods_schedule, load_prepods_table_cache, parse_exams, parse_prepods_db
 from shiza.databases_shiza_helper import generate_prepods_keyboards, generate_departments_keyboards, \
@@ -806,7 +807,63 @@ def attendance_schedule():
     Рассылка в тг уведомлений об отмечаемости тем, кто подписан на данный сервис.
     :return: 0
     """
-    ...
+    now_time = time.gmtime(time.time())
+
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        cur = con.cursor()
+        all_users = cur.execute(
+            "SELECT tg_id, lk_email, lk_password, failed_login_attempts FROM user_ids WHERE attendance_cron=1").fetchall()
+
+        for i in range(len(all_users)):
+            tg_id, email, password, failed_login_attempts = all_users[i][0], all_users[i][1], all_users[i][2], \
+                                                            all_users[i][3]
+
+            # загрузка статы за день
+            session = attendance.start_new_session()
+            code, session = attendance.auth_in_lk(session, email, password)
+            if code != 200:
+                if failed_login_attempts <= 2:
+                    msg = send_tg_message(tg_id, 'Аутентификация в ЛК для работы с посещаемостью не удалась. Возможно, '
+                                                 'в базе хранятся неактуальные данные.')
+                    cur.execute("""UPDATE user_ids SET failed_login_attempts = ? WHERE tg_id = ?""",
+                                (failed_login_attempts + 1, tg_id))
+                else:
+                    msg = send_tg_message(tg_id, 'Аутентификация в ЛК для работы с посещаемостью не удалась. Возможно, '
+                                                 'в базе хранятся неактуальные данные. \n\nКоличество неудачных входов '
+                                                 'подряд больше трех, поэтому автонапоминание об отмечаемости '
+                                                 'отключено.')
+                    cur.execute("""UPDATE user_ids SET failed_login_attempts = ?, attendance_cron = ? WHERE tg_id = ?""",
+                                (0, 0, tg_id))
+                continue
+            code, session = attendance.auth_in_attendance(session)
+            if code != 200:
+                if failed_login_attempts <= 2:
+                    msg = send_tg_message(tg_id, 'Аутентификация в ИС Посещаемость для работы с посещаемостью не '
+                                                 'удалась. Возможно, в базе хранятся неактуальные данные.')
+                    cur.execute("""UPDATE user_ids SET failed_login_attempts = ? WHERE tg_id = ?""",
+                                (failed_login_attempts + 1, tg_id))
+                else:
+                    msg = send_tg_message(tg_id, 'Аутентификация в ИС Посещаемость для работы с посещаемостью не '
+                                                 'удалась. Возможно, в базе хранятся неактуальные данные. \n\n'
+                                                 'Количество неудачных входов подряд больше трех, поэтому '
+                                                 'автонапоминание об отмечаемости отключено.')
+                    cur.execute(
+                        """UPDATE user_ids SET failed_login_attempts = ?, attendance_cron = ? WHERE tg_id = ?""",
+                        (0, 0, tg_id))
+                continue
+            code, time_data, user, checkin, alldata = attendance.get_info_from_attendance(session)
+
+            for lesson_elem in checkin:
+                time_start = time.strptime(lesson_elem['start'], '%Y-%m-%dT%H:%M:%S.000%z')
+                time_end = time.strptime(lesson_elem['end'], '%Y-%m-%dT%H:%M:%S.000%z')
+                day_class = time_start.tm_yday
+                day_now = now_time.tm_yday
+
+                if day_now == day_class and time_start <= now_time <= time_end:
+                    # пока что так, в дальнейшем добавить кнопочки и сделать отмечалку посещаемости
+                    send_tg_message(tg_id, f'У тебя сейчас пара {lesson_elem["lesson"]["shortTitle"]}. Не забудь '
+                                           f'отметиться!')
+    return 0
 
 
 def initialization():
