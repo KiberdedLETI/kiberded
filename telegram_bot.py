@@ -1077,8 +1077,51 @@ def stat(message):
         data = cur.execute("SELECT lk_email, lk_password FROM user_ids WHERE tg_id=?", [message.chat.id]).fetchall()
         data = list(data[0])
 
-    answer = attendance.get_today_statistics(data[0], data[1])
-    send_message(message.chat.id, answer)
+    msg = send_message(message.chat.id, 'Логинюсь в ЛК...')
+    session = attendance.start_new_session()
+    code, session = attendance.auth_in_lk(session, data[0], data[1])
+    if code == 200:
+        bot.edit_message_text(msg.text + '✅\nЛогинюсь в ИС Посещаемость...', msg.chat.id, msg.id)
+    else:
+        bot.edit_message_text(f'Аутентификация в ЛК не удалась. Возможно в базе хранятся неправильные данные для входа.'
+                              f'\nТекущие данные:\n\nemail: {data[0]}\nПароль: ***{data[1][:-3]}. \n\nЕсли данные'
+                              f'верны, попробуй еще раз.', msg.chat.id, msg.id)
+        return 0
+    code, session = attendance.auth_in_attendance(session)
+    if code == 200:
+        bot.edit_message_text(msg.text + '✅\nЗагружаю статистику за день...', msg.chat.id, msg.id)
+    else:
+        bot.edit_message_text(f'Аутентификация в ИС Посещаемость не удалась.', msg.chat.id, msg.id)
+        return 0
+    code, time_data, user, checkin, alldata = attendance.get_info_from_attendance(session)
+
+    answer = 'Статистика за сегодня: \n\n'
+    for lesson_elem in checkin:
+        time_start = time.strptime(lesson_elem['start'], '%Y-%m-%dT%H:%M:%S.000%z')
+        time_end = time.strptime(lesson_elem['end'], '%Y-%m-%dT%H:%M:%S.000%z')
+        day_class = time_start.tm_yday
+        day_now = time.gmtime(time.time()).tm_yday
+
+        if day_now == day_class:
+            lesson_name = lesson_elem['lesson']['shortTitle']
+            subject_type = lesson_elem['lesson']['subjectType']
+            self_reported = lesson_elem['selfReported']
+
+            if self_reported:
+                self_reported_ans = '✅'
+            elif self_reported == False:  # не надо делать elif not self_reported, т.к. в случае отсутствия отметки
+                # сработает это условие (тип Nonetype), а по моей логике должно сработать условие else
+                self_reported_ans = '❌'
+            else:
+                self_reported_ans = '🟢'
+
+            answer += f'{time_start.tm_hour:02}:{time_start.tm_min:02} - {time_end.tm_hour:02}:{time_end.tm_min:02}: ' \
+                      f'{lesson_name} ({subject_type}): {self_reported_ans}\n'
+
+    if code == 200:
+        bot.edit_message_text(answer, msg.chat.id, msg.id)
+    else:
+        bot.edit_message_text('Не удалось загрузить статистику о сегодняшних отметках.', msg.chat.id, msg.id)
 
 
 # Команды для модераторов:
