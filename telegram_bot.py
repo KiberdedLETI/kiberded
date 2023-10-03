@@ -1081,7 +1081,7 @@ def stat(message):
     session = attendance.start_new_session()
     code, session = attendance.auth_in_lk(session, data[0], data[1])
     if code == 200:
-        bot.edit_message_text(msg.text + '✅\nЛогинюсь в ИС Посещаемость...', msg.chat.id, msg.id)
+        msg = bot.edit_message_text(msg.text + '✅\nЛогинюсь в ИС Посещаемость...', msg.chat.id, msg.id)
     else:
         bot.edit_message_text(f'Аутентификация в ЛК не удалась. Возможно в базе хранятся неправильные данные для входа.'
                               f'\nТекущие данные:\n\nemail: {data[0]}\nПароль: ***{data[1][:-3]}. \n\nЕсли данные'
@@ -1089,7 +1089,7 @@ def stat(message):
         return 0
     code, session = attendance.auth_in_attendance(session)
     if code == 200:
-        bot.edit_message_text(msg.text + '✅\nЗагружаю статистику за день...', msg.chat.id, msg.id)
+        msg = bot.edit_message_text(msg.text + '✅\nЗагружаю статистику за день...', msg.chat.id, msg.id)
     else:
         bot.edit_message_text(f'Аутентификация в ИС Посещаемость не удалась.', msg.chat.id, msg.id)
         return 0
@@ -1119,7 +1119,7 @@ def stat(message):
                       f'{lesson_name} ({subject_type}): {self_reported_ans}\n'
 
     if code == 200:
-        bot.edit_message_text(answer, msg.chat.id, msg.id)
+        msg = bot.edit_message_text(answer, msg.chat.id, msg.id)
     else:
         bot.edit_message_text('Не удалось загрузить статистику о сегодняшних отметках.', msg.chat.id, msg.id)
 
