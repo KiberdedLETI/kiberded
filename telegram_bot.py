@@ -921,6 +921,40 @@ def add_telegram_user_id(vk_id, tg_id, id_type='user'):
         return f"Группа в Телеграме успешно привязана к vk_chat_id={vk_id}, группа {group}.", group
 
 
+def check_in_at_lesson(chat_id, lesson_id):
+    """
+    Функция для отмечания на паре
+
+    """
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        cur = con.cursor()
+        data = cur.execute("SELECT lk_email, lk_password FROM user_ids WHERE tg_id=?", [chat_id]).fetchall()
+        data = list(data[0])
+
+    msg = send_message(chat_id, 'Отмечаемся на паре... Логинюсь в ЛК...')
+    session = attendance.start_new_session()
+    code, session = attendance.auth_in_lk(session, data[0], data[1])
+    if code == 200:
+        msg = bot.edit_message_text(msg.text + '✅\nЛогинюсь в ИС Посещаемость...', msg.chat.id, msg.id)
+    else:
+        bot.edit_message_text(f'Аутентификация в ЛК не удалась. Возможно в базе хранятся неправильные данные для входа.'
+                              f'\nТекущие данные:\n\nemail: {data[0]}\nПароль: ***{data[1][:-3]}. \n\nЕсли данные'
+                              f'верны, попробуй еще раз.', msg.chat.id, msg.id)
+        return 0
+    code, session = attendance.auth_in_attendance(session)
+    # todo запрос к api
+    code = 419  # временная заглушка
+    if code == 200:
+        msg = bot.edit_message_text('Ты успешно отметился на паре. Проверить стату за день можно'
+                                    'через \\attendance_stat', msg.chat.id, msg.id)
+    else:
+        bot.edit_message_text(f'Отметиться на паре не удалось. Возможно, время уже вышло.'
+                              f'\n\nНа данный момент функционал не реализован, поэтому и не удалось.',
+                              msg.chat.id, msg.id)
+        return 0
+    return 0
+
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     dump_message(message)
@@ -1657,6 +1691,12 @@ def callback_query(call):
             bot.clear_step_handler_by_chat_id(chat_id=call.from_user.id)
             kb = ''
             message_ans = 'Ввод данных отменен'
+
+        elif command == 'attendance_checkin':
+            kb = ''
+            message_ans = ''  # для того, чтобы просто вызвать функцию отмечания
+
+            check_in_at_lesson(call.from_user.id, payload["id"])
 
 
         # elif command == 'add_chat':

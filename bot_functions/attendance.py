@@ -104,3 +104,16 @@ def get_info_from_attendance(session, all_data=False) -> tuple:
 
     alldata = session.get(url_all).json() if all_data else {}
     return code, time_data, user, checkin, alldata
+
+
+def check_in_at_lesson(session, id) -> tuple:
+    """
+    Отмечание на паре.
+    :param requests.session session: текущая сессия (requests.session())
+    :param id: id пары
+    :return tuple: кортеж из кода статуса запроса инфы о парах и json-ответов:
+    """
+    url = ''  # todo сделать url
+    data_ans = session.get(url)
+    code = data_ans.status_code
+    return code, session

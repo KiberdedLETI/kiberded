@@ -66,6 +66,7 @@ folder = f'{path}messages_backup/{now_date}'
 if not os.path.isdir(f'{folder}'):
     os.mkdir(f'{folder}')
 
+
 def send_vk_message(message, peer_id, attachment=''):
     """
     Отправка сообщения с обработкой Flood-control
@@ -238,6 +239,18 @@ def pin_vk_message(response, peer_id):  # закрепление сообщен�
             raise Exception(vk_error)
     except TypeError as type_error:
         logger.warning(f'Сообщение не закреплено: {type_error}, peer_id={peer_id}')
+
+
+def open_keyboard(name):
+    """
+    Чтение клавиатуры из .json-файла
+
+    :param str name: название клавиатуры
+    :return: markup клавиатуры
+    """
+    with open(f'{path}keyboards_telegram/{name}.json', 'r', encoding='utf-8') as f:
+        markup: telebot.types.InlineKeyboardMarkup = f.read()  # тут все нормально с типами, не верь IDE и глазам
+    return markup
 
 
 def get_anekdot(num) -> str:
@@ -807,7 +820,7 @@ def attendance_schedule():
     Рассылка в тг уведомлений об отмечаемости тем, кто подписан на данный сервис.
     :return: 0
     """
-    now_time = time.gmtime(time.time())
+    now_time = time.gmtime(time.time() + 3600*3)  # пока что костыль, учет +0300
 
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
@@ -861,8 +874,11 @@ def attendance_schedule():
 
                 if day_now == day_class and time_start <= now_time <= time_end:
                     # пока что так, в дальнейшем добавить кнопочки и сделать отмечалку посещаемости
-                    send_tg_message(tg_id, f'У тебя сейчас пара {lesson_elem["lesson"]["shortTitle"]}. Не забудь '
-                                           f'отметиться!')
+                    markup = open_keyboard('kb_attendance_checkin')
+                    markup.replace('XXXX', lesson_elem["id"])  #  тут все норм с типами
+                    send_tg_message(tg_id, f'У тебя сейчас пара {lesson_elem["lesson"]["shortTitle"]} ('
+                                           f'{lesson_elem["lesson"]["subjectType"]}). Не забудь отметиться!',
+                                    reply_markup=markup)
     return 0
 
 
