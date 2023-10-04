@@ -942,8 +942,7 @@ def check_in_at_lesson(chat_id, lesson_id):
                               f'верны, попробуй еще раз.', msg.chat.id, msg.id)
         return 0
     code, session = attendance.auth_in_attendance(session)
-    # todo запрос к api
-    code = 419  # временная заглушка
+    code, session = attendance.check_in_at_lesson(session, lesson_id)
     if code == 200:
         msg = bot.edit_message_text('Ты успешно отметился на паре. Проверить стату за день можно'
                                     'через \\attendance_stat', msg.chat.id, msg.id)

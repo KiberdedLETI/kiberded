@@ -875,7 +875,7 @@ def attendance_schedule():
                 if day_now == day_class and time_start <= now_time <= time_end:
                     # пока что так, в дальнейшем добавить кнопочки и сделать отмечалку посещаемости
                     markup = open_keyboard('kb_attendance_checkin')
-                    markup.replace('XXXX', lesson_elem["id"])  #  тут все норм с типами
+                    markup.replace('XXXX', str(lesson_elem["id"]))  #  тут все норм с типами
                     send_tg_message(tg_id, f'У тебя сейчас пара {lesson_elem["lesson"]["shortTitle"]} ('
                                            f'{lesson_elem["lesson"]["subjectType"]}). Не забудь отметиться!',
                                     reply_markup=markup)
