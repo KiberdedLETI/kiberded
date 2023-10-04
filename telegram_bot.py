@@ -943,12 +943,11 @@ def check_in_at_lesson(chat_id, lesson_id):
         return 0
     code, session = attendance.auth_in_attendance(session)
     code, session = attendance.check_in_at_lesson(session, lesson_id)
-    if code == 200:
+    if code == 201:
         msg = bot.edit_message_text('Ты успешно отметился на паре. Проверить стату за день можно'
                                     'через \\attendance_stat', msg.chat.id, msg.id)
     else:
-        bot.edit_message_text(f'Отметиться на паре не удалось. Возможно, время уже вышло.'
-                              f'\n\nНа данный момент функционал не реализован, поэтому и не удалось.',
+        bot.edit_message_text(f'Отметиться на паре не удалось. Возможно, время уже вышло.',
                               msg.chat.id, msg.id)
         return 0
     return 0
