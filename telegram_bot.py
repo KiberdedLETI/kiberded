@@ -921,6 +921,39 @@ def add_telegram_user_id(vk_id, tg_id, id_type='user'):
         return f"Группа в Телеграме успешно привязана к vk_chat_id={vk_id}, группа {group}.", group
 
 
+def get_attendance_statistics_today(checkin):
+    """
+    Формирует адекватный строковый ответ о статистике посещаемости за сегодня из ответа с
+    https://digital.etu.ru/attendance/api/schedule/check-in
+
+    :param checkin: json ответ
+    :return str: ответ в виде строки
+    """
+    answer = 'Статистика за сегодня: \n\n'
+    for lesson_elem in checkin:
+        time_start = time.strptime(lesson_elem['start'], '%Y-%m-%dT%H:%M:%S.000%z')
+        time_end = time.strptime(lesson_elem['end'], '%Y-%m-%dT%H:%M:%S.000%z')
+        day_class = time_start.tm_yday
+        day_now = time.gmtime(time.time()).tm_yday
+
+        if day_now == day_class:
+            lesson_name = lesson_elem['lesson']['shortTitle']
+            subject_type = lesson_elem['lesson']['subjectType']
+            self_reported = lesson_elem['selfReported']
+
+            if self_reported:
+                self_reported_ans = '✅'
+            elif self_reported == False:  # не надо делать elif not self_reported, т.к. в случае отсутствия отметки
+                # сработает это условие (тип Nonetype), а по моей логике должно сработать условие else
+                self_reported_ans = '❌'
+            else:
+                self_reported_ans = '🟢'
+
+            answer += f'{time_start.tm_hour:02}:{time_start.tm_min:02} - {time_end.tm_hour:02}:{time_end.tm_min:02}: ' \
+                      f'{lesson_name} ({subject_type}): {self_reported_ans}\n'
+    return answer
+
+
 def check_in_at_lesson(chat_id, lesson_id):
     """
     Функция для отмечания на паре
@@ -942,14 +975,27 @@ def check_in_at_lesson(chat_id, lesson_id):
                               f'верны, попробуй еще раз.', msg.chat.id, msg.id)
         return 0
     code, session = attendance.auth_in_attendance(session)
+    if code == 200:
+        msg = bot.edit_message_text(msg.text + '✅\nОтмечаюсь на паре...', msg.chat.id, msg.id)
+    else:
+        bot.edit_message_text(f'Аутентификация в ИС Посещаемость не удалась.', msg.chat.id, msg.id)
+        return 0
     code, session = attendance.check_in_at_lesson(session, lesson_id)
     if code == 201:
-        msg = bot.edit_message_text('Ты успешно отметился на паре. Проверить стату за день можно'
-                                    'через \\attendance_stat', msg.chat.id, msg.id)
+        msg = bot.edit_message_text(msg.text + '✅\nТы успешно отметился на паре.\n\n', msg.chat.id, msg.id)
     else:
-        bot.edit_message_text(f'Отметиться на паре не удалось. Возможно, время уже вышло.',
+        bot.edit_message_text(f'Отметиться на паре не удалось. Возможно, время уже вышло. Код ошибки: {code}',
                               msg.chat.id, msg.id)
         return 0
+    code, time_data, user, checkin, alldata = attendance.get_info_from_attendance(session)
+
+    answer = get_attendance_statistics_today(checkin)
+
+    if code == 200:
+        msg = bot.edit_message_text(msg.text + answer, msg.chat.id, msg.id)
+    else:
+        msg = bot.edit_message_text(msg.text + 'Не удалось загрузить статистику о сегодняшних отметках. Попробуй еще раз '
+                                         'через /attendance_stat или вручную.', msg.chat.id, msg.id)
     return 0
 
 
@@ -1127,28 +1173,7 @@ def attendance_stat(message):
         return 0
     code, time_data, user, checkin, alldata = attendance.get_info_from_attendance(session)
 
-    answer = 'Статистика за сегодня: \n\n'
-    for lesson_elem in checkin:
-        time_start = time.strptime(lesson_elem['start'], '%Y-%m-%dT%H:%M:%S.000%z')
-        time_end = time.strptime(lesson_elem['end'], '%Y-%m-%dT%H:%M:%S.000%z')
-        day_class = time_start.tm_yday
-        day_now = time.gmtime(time.time()).tm_yday
-
-        if day_now == day_class:
-            lesson_name = lesson_elem['lesson']['shortTitle']
-            subject_type = lesson_elem['lesson']['subjectType']
-            self_reported = lesson_elem['selfReported']
-
-            if self_reported:
-                self_reported_ans = '✅'
-            elif self_reported == False:  # не надо делать elif not self_reported, т.к. в случае отсутствия отметки
-                # сработает это условие (тип Nonetype), а по моей логике должно сработать условие else
-                self_reported_ans = '❌'
-            else:
-                self_reported_ans = '🟢'
-
-            answer += f'{time_start.tm_hour:02}:{time_start.tm_min:02} - {time_end.tm_hour:02}:{time_end.tm_min:02}: ' \
-                      f'{lesson_name} ({subject_type}): {self_reported_ans}\n'
+    answer = get_attendance_statistics_today(checkin)
 
     if code == 200:
         msg = bot.edit_message_text(answer, msg.chat.id, msg.id)
