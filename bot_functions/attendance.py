@@ -114,6 +114,6 @@ def check_in_at_lesson(session, id) -> tuple:
     :return tuple: кортеж из кода статуса запроса инфы о парах и json-ответов:
     """
     url = f'https://digital.etu.ru/attendance/api/schedule/check-in/{id}'
-    data_ans = session.get(url)
+    data_ans = session.post(url)
     code = data_ans.status_code
     return code, session

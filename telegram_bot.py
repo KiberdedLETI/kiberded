@@ -982,7 +982,7 @@ def check_in_at_lesson(chat_id, lesson_id):
         return 0
     code, session = attendance.check_in_at_lesson(session, lesson_id)
     if code == 201:
-        msg = bot.edit_message_text(msg.text + '✅\nТы успешно отметился на паре.\n\n', msg.chat.id, msg.id)
+        msg = bot.edit_message_text(msg.text + '✅\nТы успешно отметился на паре.', msg.chat.id, msg.id)
     else:
         bot.edit_message_text(f'Отметиться на паре не удалось. Возможно, время уже вышло. Код ошибки: {code}',
                               msg.chat.id, msg.id)
@@ -992,7 +992,7 @@ def check_in_at_lesson(chat_id, lesson_id):
     answer = get_attendance_statistics_today(checkin)
 
     if code == 200:
-        msg = bot.edit_message_text(msg.text + answer, msg.chat.id, msg.id)
+        msg = bot.edit_message_text(msg.text + f"\n\n" + answer, msg.chat.id, msg.id)
     else:
         msg = bot.edit_message_text(msg.text + 'Не удалось загрузить статистику о сегодняшних отметках. Попробуй еще раз '
                                          'через /attendance_stat или вручную.', msg.chat.id, msg.id)
