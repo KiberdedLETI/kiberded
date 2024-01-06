@@ -106,49 +106,14 @@ def get_info_from_attendance(session, all_data=False) -> tuple:
     return code, time_data, user, checkin, alldata
 
 
-def get_today_statistics(email, password, without_session=True, session=None) -> str:
+def check_in_at_lesson(session, id) -> tuple:
     """
-    Возвращает статистику отмечаний за сегодняшний день.
-    Да, возможно эта функция не нужна. Да, возможно ее надо сделать более универсальной.
-    Да, возможно я даже это сделаю. Но пока так.
-
-    :param str email: email, он же логин от ЛК
-    :param str password: пароль от ЛК
-    :param bool without_session: флаг, необходимо ли открывать новую сессию. Если да, то надо ее передать.
+    Отмечание на паре.
     :param requests.session session: текущая сессия (requests.session())
-
-    :return str: ответ в текстовом виде
+    :param id: id пары
+    :return tuple: кортеж из кода статуса запроса инфы о парах и json-ответов:
     """
-    if without_session:
-        session = start_new_session()
-    code, session = auth_in_lk(session, email, password)
-    code, session = auth_in_attendance(session)
-    code, time_data, user, checkin, alldata = get_info_from_attendance(session)
-
-    answer = 'Статистика за сегодня: \n\n'
-    for lesson_elem in checkin:
-        time_start = time.strptime(lesson_elem['start'], '%Y-%m-%dT%H:%M:%S.000%z')
-        time_end = time.strptime(lesson_elem['end'], '%Y-%m-%dT%H:%M:%S.000%z')
-        day_class = time_start.tm_yday
-        day_now = time.gmtime(time.time()).tm_yday
-
-        if day_now == day_class:
-            lesson_name = lesson_elem['lesson']['shortTitle']
-            subject_type = lesson_elem['lesson']['subjectType']
-            self_reported = lesson_elem['selfReported']
-
-            if self_reported:
-                self_reported_ans = '✅'
-            elif self_reported == False:  # не надо делать elif not self_reported, т.к. в случае отсутствия отметки
-                # сработает это условие (тип Nonetype), а по моей логике должно сработать условие else
-                self_reported_ans = '❌'
-            else:
-                self_reported_ans = '🟢'
-
-            answer += f'{time_start.tm_hour:02}:{time_start.tm_min:02} - {time_end.tm_hour:02}:{time_end.tm_min:02}: ' \
-                      f'{lesson_name} ({subject_type}): {self_reported_ans}\n'
-
-    return answer
-
-
-
+    url = f'https://digital.etu.ru/attendance/api/schedule/check-in/{id}'
+    data_ans = session.post(url)
+    code = data_ans.status_code
+    return code, session

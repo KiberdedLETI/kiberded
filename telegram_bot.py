@@ -921,6 +921,84 @@ def add_telegram_user_id(vk_id, tg_id, id_type='user'):
         return f"Группа в Телеграме успешно привязана к vk_chat_id={vk_id}, группа {group}.", group
 
 
+def get_attendance_statistics_today(checkin):
+    """
+    Формирует адекватный строковый ответ о статистике посещаемости за сегодня из ответа с
+    https://digital.etu.ru/attendance/api/schedule/check-in
+
+    :param checkin: json ответ
+    :return str: ответ в виде строки
+    """
+    answer = 'Статистика за сегодня: \n\n'
+    for lesson_elem in checkin:
+        time_start = time.strptime(lesson_elem['start'], '%Y-%m-%dT%H:%M:%S.000%z')
+        time_end = time.strptime(lesson_elem['end'], '%Y-%m-%dT%H:%M:%S.000%z')
+        day_class = time_start.tm_yday
+        day_now = time.gmtime(time.time()).tm_yday
+
+        if day_now == day_class:
+            lesson_name = lesson_elem['lesson']['shortTitle']
+            subject_type = lesson_elem['lesson']['subjectType']
+            self_reported = lesson_elem['selfReported']
+
+            if self_reported:
+                self_reported_ans = '✅'
+            elif self_reported == False:  # не надо делать elif not self_reported, т.к. в случае отсутствия отметки
+                # сработает это условие (тип Nonetype), а по моей логике должно сработать условие else
+                self_reported_ans = '❌'
+            else:
+                self_reported_ans = '🟢'
+
+            answer += f'{time_start.tm_hour:02}:{time_start.tm_min:02} - {time_end.tm_hour:02}:{time_end.tm_min:02}: ' \
+                      f'{lesson_name} ({subject_type}): {self_reported_ans}\n'
+    return answer
+
+
+def check_in_at_lesson(chat_id, lesson_id):
+    """
+    Функция для отмечания на паре
+
+    """
+    with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
+        cur = con.cursor()
+        data = cur.execute("SELECT lk_email, lk_password FROM user_ids WHERE tg_id=?", [chat_id]).fetchall()
+        data = list(data[0])
+
+    msg = send_message(chat_id, 'Отмечаемся на паре... Логинюсь в ЛК...')
+    session = attendance.start_new_session()
+    code, session = attendance.auth_in_lk(session, data[0], data[1])
+    if code == 200:
+        msg = bot.edit_message_text(msg.text + '✅\nЛогинюсь в ИС Посещаемость...', msg.chat.id, msg.id)
+    else:
+        bot.edit_message_text(f'Аутентификация в ЛК не удалась. Возможно в базе хранятся неправильные данные для входа.'
+                              f'\nТекущие данные:\n\nemail: {data[0]}\nПароль: ***{data[1][:-3]}. \n\nЕсли данные'
+                              f'верны, попробуй еще раз.', msg.chat.id, msg.id)
+        return 0
+    code, session = attendance.auth_in_attendance(session)
+    if code == 200:
+        msg = bot.edit_message_text(msg.text + '✅\nОтмечаюсь на паре...', msg.chat.id, msg.id)
+    else:
+        bot.edit_message_text(f'Аутентификация в ИС Посещаемость не удалась.', msg.chat.id, msg.id)
+        return 0
+    code, session = attendance.check_in_at_lesson(session, lesson_id)
+    if code == 201:
+        msg = bot.edit_message_text(msg.text + '✅\nТы успешно отметился на паре.', msg.chat.id, msg.id)
+    else:
+        bot.edit_message_text(f'Отметиться на паре не удалось. Возможно, время уже вышло. Код ошибки: {code}',
+                              msg.chat.id, msg.id)
+        return 0
+    code, time_data, user, checkin, alldata = attendance.get_info_from_attendance(session)
+
+    answer = get_attendance_statistics_today(checkin)
+
+    if code == 200:
+        msg = bot.edit_message_text(msg.text + f"\n\n" + answer, msg.chat.id, msg.id)
+    else:
+        msg = bot.edit_message_text(msg.text + 'Не удалось загрузить статистику о сегодняшних отметках. Попробуй еще раз '
+                                         'через /attendance_stat или вручную.', msg.chat.id, msg.id)
+    return 0
+
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     dump_message(message)
@@ -1069,16 +1147,38 @@ def set_lk_secrets_next_step(message):  # обработка ввода данн
     msg = bot.edit_message_text(msg.text + f'\nДанные успешно записаны.', message.chat.id, msg.id)
 
 
-@bot.message_handler(commands=['stat'], chat_types='private', is_registered=True)  # временно, для отладки
-def stat(message):
+@bot.message_handler(commands=['attendance_stat'], chat_types='private', is_registered=True)  # временно, для отладки
+def attendance_stat(message):
     dump_message(message)
     with sqlite3.connect(f'{path}admindb/databases/group_ids.db') as con:
         cur = con.cursor()
         data = cur.execute("SELECT lk_email, lk_password FROM user_ids WHERE tg_id=?", [message.chat.id]).fetchall()
         data = list(data[0])
 
-    answer = attendance.get_today_statistics(data[0], data[1])
-    send_message(message.chat.id, answer)
+    msg = send_message(message.chat.id, 'Логинюсь в ЛК...')
+    session = attendance.start_new_session()
+    code, session = attendance.auth_in_lk(session, data[0], data[1])
+    if code == 200:
+        msg = bot.edit_message_text(msg.text + '✅\nЛогинюсь в ИС Посещаемость...', msg.chat.id, msg.id)
+    else:
+        bot.edit_message_text(f'Аутентификация в ЛК не удалась. Возможно в базе хранятся неправильные данные для входа.'
+                              f'\nТекущие данные:\n\nemail: {data[0]}\nПароль: ***{data[1][:-3]}. \n\nЕсли данные'
+                              f'верны, попробуй еще раз.', msg.chat.id, msg.id)
+        return 0
+    code, session = attendance.auth_in_attendance(session)
+    if code == 200:
+        msg = bot.edit_message_text(msg.text + '✅\nЗагружаю статистику за день...', msg.chat.id, msg.id)
+    else:
+        bot.edit_message_text(f'Аутентификация в ИС Посещаемость не удалась.', msg.chat.id, msg.id)
+        return 0
+    code, time_data, user, checkin, alldata = attendance.get_info_from_attendance(session)
+
+    answer = get_attendance_statistics_today(checkin)
+
+    if code == 200:
+        msg = bot.edit_message_text(answer, msg.chat.id, msg.id)
+    else:
+        bot.edit_message_text('Не удалось загрузить статистику о сегодняшних отметках.', msg.chat.id, msg.id)
 
 
 # Команды для модераторов:
@@ -1614,6 +1714,12 @@ def callback_query(call):
             bot.clear_step_handler_by_chat_id(chat_id=call.from_user.id)
             kb = ''
             message_ans = 'Ввод данных отменен'
+
+        elif command == 'attendance_checkin':
+            kb = ''
+            message_ans = ''  # для того, чтобы просто вызвать функцию отмечания
+
+            check_in_at_lesson(call.from_user.id, payload["id"])
 
 
         # elif command == 'add_chat':
