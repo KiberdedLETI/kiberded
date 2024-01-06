@@ -490,7 +490,8 @@ def cron():
             gcal_over_exams = bool(group_data.loc[group, 'gcal_over_exams'])
 
             table = read_calendar(group) if gcal_over_tables else read_table(group) if is_study else ""
-            if table.split()[-1] not in ['Пусто', '\nПусто']:
+
+            if table and table.split()[-1] not in ['Пусто', '\nПусто']:
                 msg += table
 
             if is_exam and not gcal_over_exams:
