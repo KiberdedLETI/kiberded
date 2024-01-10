@@ -1312,6 +1312,24 @@ def kb_cancel_set_lk_secrets():
     return markup
 
 
+# мини-клавиатура с кнопкой отмечания на паре
+def kb_attendance_checkin():
+    logger.info(f'Генерируем мини-клавиатуру с кнопкой отмечания на паре')
+
+    markup = InlineKeyboardMarkup()
+
+    payload = {"type": "action",
+               "command": "attendance_checkin",
+               "id": "XXXX"
+               }
+    callback_data = payload_to_callback(payload)
+    logger.info(f'Перевод payload в callback_data: {len(callback_data)} символа \n\t{payload}\n\t->\n\t{callback_data}')
+    btn_checkin = InlineKeyboardButton('Отметиться на текущей паре', callback_data=callback_data)
+    markup.row(btn_checkin)
+    logger.info(f'Клавиатура с кнопкой отмечания на паре готова.\n')
+    return markup
+
+
 if __name__ == '__main__':
     keyboards = [
         'kb_main_cal',
@@ -1340,7 +1358,8 @@ if __name__ == '__main__':
         'kb_table_settings',
         'kb_set_tables_mode',
         'kb_set_tables_mode_cal',
-        'kb_cancel_set_lk_secrets'
+        'kb_cancel_set_lk_secrets',
+        'kb_attendance_checkin'
     ]
     for keyboard in keyboards:
         try:

@@ -1,0 +1,10 @@
+{
+    "inline_keyboard": [
+        [
+            {
+                "text": "Отметиться на текущей паре",
+                "callback_data": "t:action,c:attendance_checkin,id:XXXX"
+            }
+        ]
+    ]
+}
