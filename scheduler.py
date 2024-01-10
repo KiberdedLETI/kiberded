@@ -335,7 +335,8 @@ def update_study_status(group):
 
     # В период сессии обновляем расписание сессии, еженедельно
     if today.weekday() == 2 and is_exam:
-        daily_return_str += parse_exams(group)
+        exam_str, got_exams = parse_exams(group)
+        daily_return_str += exam_str
 
     # пытаемся (чуть-чуть) заранее подгружать расписание до начала семестра/сессии todo
     #if semester_start-timedelta(days=2) <= today:  # осенью эт получается 30-08, зимой ~ начало февраля, норм
