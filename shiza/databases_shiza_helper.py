@@ -1318,6 +1318,7 @@ def add_preset_books(group, is_global_parsing=False) -> str:  # добавлен
         books[books.columns] = books.apply(lambda x: x.str.strip())  # чистим пробелы в данных
         with con:  # заносим в SQL БД
             books.to_sql(con=con, name='books', if_exists='replace', index=False)
+            con.commit()
         con.close()
         user_str = f'В раздел "Методички" загружены учебники по умолчанию. {user_str}'
         if is_global_parsing and not admin_str:
