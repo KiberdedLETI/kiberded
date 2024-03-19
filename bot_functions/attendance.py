@@ -23,6 +23,50 @@ def start_new_session() -> requests.session:
     return session
 
 
+def initialize_session_in_etuID(session) -> tuple:
+    """
+    Инициализация сессии в ETU ID и получение XSRF-токена
+
+    :param requests.session session: текущая сессия (requests.session())
+    """
+    
+    url_login = 'https://api.id.etu.ru/initialize'
+
+    data_ans = session.get(url_login)
+
+    code = data_ans.status_code
+
+    return code, session
+
+
+def auth_in_etuID(session, email, password) -> tuple:
+    """
+    Авторизация в ETU ID в рамках текущей сессии.
+
+    :param requests.session session: текущая сессия (requests.session())
+    :param str email: email, он же логин от ЛК
+    :param str password: пароль от ЛК
+    :return tuple: кортеж из кода статуса запроса и сессии: [code, session]
+    """
+    url_login = 'https://api.id.etu.ru/auth/login'
+
+    datapost = {'remember': '0',
+                'email': email,
+                'password': password}
+    
+    # вытаскиваем XSRF-TOKEN из cookies:
+    xsrf_token = session.cookies.get('XSRF-TOKEN')[:-3] + '='  # костыль: нужно убрать три последних символа и добавить знак равно. чистый реверс-инжиниринг
+
+    # добавляем в заголовки:
+    session.headers.update({'X-XSRF-TOKEN': xsrf_token})
+
+    data_ans = session.post(url_login, data=datapost)
+
+    code = data_ans.status_code
+
+    return code, session, data_ans
+
+
 def auth_in_lk(session, email, password) -> tuple:
     """
     Авторизация в ЛК в рамках текущей сессии.
