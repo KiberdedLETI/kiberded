@@ -917,9 +917,9 @@ schedule.every().hour.at(':20').do(load_calendar_cache)  # рандомные м
 schedule.every(2).hours.at(':32').do(load_table_cache)  # рандомные минуты, потому что я могу.
 schedule.every().day.at("07:00").do(anekdots)
 
-# отмечалка посещаемости:
-for time_element in timetable:
-    schedule.every().day.at(time_element).do(attendance_schedule)
+# отмечалка посещаемости: нужно изменить auth_in_lk
+# for time_element in timetable:
+    # schedule.every().day.at(time_element).do(attendance_schedule)
 
 try:
     while True:
