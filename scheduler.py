@@ -773,7 +773,7 @@ def send_personal_tables(table_time='None'):
                             logger.warning(f'Расписание отправлено юзеру {user_id} из гр. {group}')
 
                 except telebot.apihelper.ApiTelegramException as e:
-                    if 'Error code: 403' in e:
+                    if 'Error code: 403' in str(e):
                         # Forbidden: bot was blocked by the user
                         pass
 
